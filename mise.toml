@@ -1,0 +1,9 @@
+[tools]
+aube = "latest"
+"npm:@fission-ai/openspec" = "latest"
+python = "3.13"
+
+[tasks.serve]
+description = "Serve the playable game locally at http://127.0.0.1:4173/killbox.html"
+dir = "src"
+run = "python3 -m http.server 4173 --bind 127.0.0.1"
