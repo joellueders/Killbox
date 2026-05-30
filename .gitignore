@@ -1,0 +1,5 @@
+.DS_Store
+*.bak-*
+!src/assets/icons/
+!src/assets/icons/**/
+!src/assets/icons/**/*.png
