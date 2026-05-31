@@ -1,6 +1,25 @@
+# OS junk
 .DS_Store
 **/.DS_Store
+Thumbs.db
+Desktop.ini
+.Spotlight-V100/
+.Trashes/
+._*
+
+# Editor cruft
+*.swp
+*.swo
+*~
+
+# Generated backups and scratch files
 *.bak-*
+*.tmp
+*.temp
+
+# Local caches
+.cache/
+
 !src/assets/icons/
 !src/assets/icons/**/
 !src/assets/icons/**/*.png
