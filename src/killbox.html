@@ -118,6 +118,35 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
 .buildCard.activeBuild { border-color: #7ac6e8; box-shadow: 0 0 0 1px rgba(122,198,232,.25) inset, 0 0 0 2px rgba(122,198,232,.95), 0 0 18px #7ac6e855, 0 2px 0 #120c08; }
 .buildCard.activeHotbar { border-color: #7ac6e8; box-shadow: 0 0 0 1px rgba(122,198,232,.35) inset, 0 0 0 2px rgba(122,198,232,1), 0 0 24px #7ac6e8aa, 0 2px 0 #120c08; }
 .buildCard.cooldown { filter: grayscale(.82) brightness(.76); opacity: .8; }
+.buildCard.weaponSlot.weaponReady {
+  border-color: #7ac6e8;
+  box-shadow: 0 0 0 1px rgba(122,198,232,.35) inset, 0 0 0 2px rgba(122,198,232,.95), 0 0 24px #7ac6e8cc, 0 2px 0 #120c08;
+}
+.buildCard.weaponSlot.weaponReady.upgraded {
+  border-color: #9fe8ff;
+  box-shadow: 0 0 0 1px rgba(159,232,255,.35) inset, 0 0 0 2px rgba(122,198,232,.95), 0 0 30px rgba(122,198,232,.85), 0 2px 0 #120c08;
+}
+.buildCard.upgraded .buildName { color: #fff2cc; }
+.buildCard.upgraded .buildHint { color: #bfe7ff; }
+.upgradePips {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  justify-content: flex-end;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: 0;
+  color: #7ac6e8;
+  text-shadow: 0 1px 0 #120c08, 0 0 8px rgba(122,198,232,.55);
+  pointer-events: none;
+}
+.upgradePips.tier1 { color: #8edcff; }
+.upgradePips.tier2 { color: #7ac6e8; }
+.upgradePips.tier3 { color: #ffd46b; text-shadow: 0 1px 0 #120c08, 0 0 8px rgba(255,212,107,.55); }
 .buildCard.emptySlot {
   opacity: .42;
   filter: grayscale(.8) brightness(.76);
@@ -1242,19 +1271,6 @@ textarea {
 }
 .inspectorSticky .inspectorLabel { margin-top: 0; }
 
-/* ── Boss warning banner ─────────────────────────────────────────── */
-#bossWarning {
-  position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
-  z-index: 6; pointer-events: none;
-  background: linear-gradient(180deg, #68180fee, #190706ee);
-  border: 3px solid #f0c96b; border-radius: 6px;
-  padding: 12px 28px; text-align: center;
-  font-size: 22px; font-weight: 900; color: #ffd27a;
-  letter-spacing: .06em; opacity: 0;
-  transition: opacity .35s ease;
-  box-shadow: 0 0 32px #ff4a1f88, 0 8px 0 #080403;
-}
-#bossWarning.visible { opacity: 1; }
 .waveBanner {
   position: fixed;
   left: 50%;
@@ -2460,11 +2476,6 @@ kbd {
     <span class="hudLabel">COMBO</span>
     <span id="hudCombo" class="hudValue">x1</span>
   </div>
-  <div class="hudSep">|</div>
-  <div class="hudStat">
-    <span class="hudLabel">SCORE</span>
-    <span id="hudScore" class="hudValue">0</span>
-  </div>
   <div id="weaponHudBoxTop" class="heroAbilityHud"><span id="weaponChargeHudTop"></span></div>
 </div>
 <!-- ── Build Hotbar ─────────────────────── -->
@@ -2474,7 +2485,6 @@ kbd {
 </div>
 
 <!-- ── Boss warning ────────────────────────── -->
-<div id="bossWarning">⚠ THE SLIME KING STIRS ⚠</div>
 
 <!-- ── Main UI ─────────────────────────────── -->
 <div class="ui" id="ui">
@@ -5016,7 +5026,6 @@ function ui() {
   if ($('hudWaveArchetype')) $('hudWaveArchetype').textContent = displayWave > 0 ? `• ${displayArch.label || 'Swarm'}` : '• --';
   if ($('waveArchetypeLabel')) $('waveArchetypeLabel').textContent = displayWave > 0 ? `• ${displayArch.label || 'Swarm'}` : '• --';
   if ($('score')) $('score').textContent = S.score;
-  if ($('hudScore')) $('hudScore').textContent = Math.floor(S.score);
   if ($('hudCombo')) $('hudCombo').textContent = S.combo > 0 ? `x${S.combo}` : `x1`;
   S.speed = normalizeSpeedValue(S.speed);
   const speedText = S.speed + 'x';
@@ -5227,13 +5236,13 @@ function updateLoadoutInspector() {
   if (!panel) return;
   const k = LOADOUT_STATE.inspectedId || LOADOUT_STATE.selectedIds[0] || '';
   if (!k) {
-    panel.innerHTML = `<div class="selGrid"><div class="selIcon"><span class="icon">⚔</span></div><div><div class="selTitle">LOADOUT</div><div class="selRole">Build a murder plan</div><div class="selDesc">Bring damage. Bring control. Sneak in one terrible contingency and pretend it was the plan all along.</div><div class="selMeta">Best with: a balance of damage, control, and one emergency button</div></div></div>`;
+    panel.innerHTML = `<div class="selGrid"><div class="selIcon"><span class="icon">⚔</span></div><div><div class="selTitle">LOADOUT</div><div class="selRole">Pick a weapon, tower, trap, and trinket.</div><div class="selDesc">Short list, clear choice.</div></div></div>`;
     return;
   }
   const copy = LOADOUT_INSPECTOR_COPY[k];
   if (!copy) {
     const label = WEAPONS[k]?.name || TOWERS[k]?.n || TRINKETS[k]?.name || shortTowerName(k) || k;
-    panel.innerHTML = `<div class="selGrid"><div class="selIcon"><span class="icon">${loadoutFeatureIcon(k)}</span></div><div><div class="selTitle">${label}</div><div class="selRole">Unknown trick</div><div class="selDesc">No battle note on file. Probably because it hits hard and doesn’t explain itself.</div><div class="selMeta">Best with: chaos and denial</div></div></div>`;
+    panel.innerHTML = `<div class="selGrid"><div class="selIcon"><span class="icon">${loadoutFeatureIcon(k)}</span></div><div><div class="selTitle">${label}</div><div class="selRole">Unknown trick</div><div class="selDesc">No battle note on file.</div></div></div>`;
     return;
   }
   const stats = (copy.stats || []).map(([label, value]) => `<div class="loadoutStat"><span>${label}</span><b>${value}</b></div>`).join('');
@@ -5735,7 +5744,12 @@ function chooseMutation(choice) {
       loadout: S.loadout,
     });
     if (u.kind === 'tower') S.trapMutations.push(u.id);
-    else S.heroMutations.push(u.id);
+    else {
+      S.heroMutations.push(u.id);
+      S.hero.upgrades = S.hero.upgrades || [];
+      if (!S.hero.upgrades.includes(u.id)) S.hero.upgrades.push(u.id);
+      S.hero.upgradeLevel = (S.hero.upgradeLevel || 0) + 1;
+    }
     if (S.waveStats) (S.waveStats.upgradesSelected = S.waveStats.upgradesSelected || []).push(`${u.kind}:${u.id}`);
     toast(`Mutation: ${up.name}`);
   }
@@ -6041,7 +6055,10 @@ function finishWave() {
   S.paused = false;
   S.hero.hp    = Math.min(S.hero.max, S.hero.hp + 25);
   S.firePatches = (S.firePatches || []).filter(f => !f.slime);
-  hideBossWarning();
+  S.waveBanner = '';
+  S.waveBannerTime = 0;
+  const wb = $('waveBanner');
+  if (wb) wb.className = 'waveBanner hidden';
 
   const bonus = Math.floor((ECONOMY_TUNING.waveBonusBase + S.wave * ECONOMY_TUNING.waveBonusPerWave + Math.floor(S.wave * S.wave * ECONOMY_TUNING.waveBonusRamp)) * ECONOMY_TUNING.waveBonusMultiplier * (arch.rewardMult || 1));
 
@@ -6149,6 +6166,35 @@ function renderWaveBanner() {
   }
 }
 
+function getHotbarUpgradeTier(k) {
+  if (!k) return 0;
+  const heroUpgrades = new Set(S.hero?.upgrades || []);
+  let tier = 0;
+  if (WEAPONS[k]) {
+    for (const id of heroUpgrades) {
+      const up = HERO_UPGRADES[id];
+      if (!up) continue;
+      const targets = new Set([...(up.weapons || []), up.targetItem, up.targetIcon, up.targetItemAlt, up.targetIconAlt].filter(Boolean));
+      if (targets.has(k)) tier++;
+    }
+    return Math.min(3, tier);
+  }
+  if (k === 'tar') {
+    if ((S.mods.trapTarRate || 1) !== 1) tier++;
+    if ((S.mods.trapPush || 1) !== 1) tier++;
+  } else if (k === 'spikes') {
+    if ((S.mods.trapReset || 1) !== 1) tier++;
+    if ((S.mods.trapSpikeDmg || 1) !== 1) tier++;
+  } else if (k === 'spring') {
+    if ((S.mods.trapReset || 1) !== 1) tier++;
+  } else if (k === 'spire') {
+    if ((S.mods.spireChain || 0) !== 0) tier++;
+  } else if (k === 'barrier') {
+    if ((S.mods.barrierHp || 1) !== 1) tier++;
+  }
+  return Math.min(3, tier);
+}
+
 function renderBuildButtons() {
   const box = $('builds');
   const rail = $('buildHotbar');
@@ -6170,11 +6216,15 @@ function renderBuildButtons() {
         b.onclick = () => {};
       } else if (WEAPONS[k]) {
         const w = WEAPONS[k];
-        const secName = k === 'ranger' ? 'RMB' : 'RMB';
-        const secText = S.hero.weapon === k
-          ? (S.hero.secondaryCd > 0 ? `${secName} ${S.hero.secondaryCd.toFixed(1)}s` : `${secName} READY`)
-          : 'WEAPON';
-        b.innerHTML = `<span class="hotkey">${hotkey}</span><span class="buildIcon">${miniWeaponIcon(k)}</span><span class="buildName">${w.shortName || w.name}</span><span class="buildPrice">${secText}</span><span class="buildHint">Weapon</span>`;
+        const tier = getHotbarUpgradeTier(k);
+        const cd = S.hero.weapon === k ? S.hero.secondaryCd : 0;
+        const ready = S.hero.weapon === k && cd <= 0;
+        const pips = tier ? `<span class="upgradePips tier${Math.min(3, tier)}">${'◆'.repeat(Math.min(3, tier))}</span>` : '';
+        b.dataset.tier = String(tier);
+        b.classList.toggle('weaponSlot', true);
+        b.classList.toggle('upgraded', tier > 0);
+        b.classList.toggle('weaponReady', ready);
+        b.innerHTML = `<span class="hotkey">${hotkey}</span><span class="buildIcon">${miniWeaponIcon(k)}</span><span class="buildName">${w.shortName || w.name}</span><span class="buildPrice">${cd > 0 ? `${cd.toFixed(1)}s` : '&nbsp;'}</span>${pips}`;
         b.onclick = () => { S.hero.weapon = k; S.weapon = k; S.selected = null; S.sel = null; $('info').innerHTML = `<b>${w.name}</b><br>${w.desc}`; ui(); };
       } else if (isTrinketItem(k)) {
         const tr = TRINKETS[k];
@@ -6186,7 +6236,11 @@ function renderBuildButtons() {
       } else {
         const t = TOWERS[k];
         const rotateHint = t.directional ? ` · RMB rotate` : '';
-        b.innerHTML = `<span class="hotkey">${hotkey}</span><span class="buildIcon">${miniTowerIcon(k)}</span><span class="buildName">${shortTowerName(k)}</span><span class="buildPrice">${t.c}g</span><span class="buildHint">Build${rotateHint}</span>`;
+        const tier = getHotbarUpgradeTier(k);
+        const pips = tier ? `<span class="upgradePips tier${Math.min(3, tier)}">${'◆'.repeat(Math.min(3, tier))}</span>` : '';
+        b.dataset.tier = String(tier);
+        b.classList.toggle('upgraded', tier > 0);
+        b.innerHTML = `<span class="hotkey">${hotkey}</span><span class="buildIcon">${miniTowerIcon(k)}</span><span class="buildName">${shortTowerName(k)}</span><span class="buildPrice">${t.c}g</span><span class="buildHint">Build${rotateHint}</span>${pips}`;
         b.onclick   = () => { S.selected = k; S.sel = null; $('info').innerHTML = `<b>${t.n}</b><br>${towerLongDesc(k)}`; ui(); };
       }
       if (rail) rail.appendChild(b);
@@ -6205,22 +6259,31 @@ function renderBuildButtons() {
     if (WEAPONS[b.dataset.t]) {
       const equipped = S.hero.weapon === b.dataset.t;
       const active = equipped && !S.selected;
+      const tier = getHotbarUpgradeTier(b.dataset.t);
       b.classList.toggle('equipped', equipped);
       b.classList.toggle('activeHotbar', active);
       b.classList.toggle('activeBuild', false);
+      b.classList.toggle('weaponSlot', true);
+      b.classList.toggle('weaponReady', equipped && S.hero.secondaryCd <= 0);
+      b.classList.toggle('upgraded', tier > 0);
+      b.dataset.tier = String(tier);
       const price = b.querySelector('.buildPrice');
-      if (price) {
-        price.textContent = equipped
-          ? (S.hero.secondaryCd > 0 ? `RMB ${S.hero.secondaryCd.toFixed(1)}s` : 'RMB READY')
-          : 'WEAPON';
-      }
+      if (price) price.textContent = equipped && S.hero.secondaryCd > 0 ? `${S.hero.secondaryCd.toFixed(1)}s` : '';
       b.classList.toggle('cooldown', equipped && S.hero.secondaryCd > 0);
+      const pips = b.querySelector('.upgradePips');
+      if (pips) {
+        pips.textContent = tier ? '◆'.repeat(Math.min(3, tier)) : '';
+        pips.className = `upgradePips ${tier >= 3 ? 'tier3' : tier === 2 ? 'tier2' : tier === 1 ? 'tier1' : ''}`;
+        pips.hidden = tier <= 0;
+      }
     } else if (isTrinketItem(b.dataset.t)) {
       const rem = trinketCooldownRemaining(b.dataset.t);
       b.classList.toggle('cooldown', rem > 0);
       b.classList.toggle('equipped', false);
       b.classList.toggle('activeBuild', false);
       b.classList.toggle('activeHotbar', false);
+      b.classList.toggle('weaponSlot', false);
+      b.classList.toggle('upgraded', false);
       const price = b.querySelector('.buildPrice');
       if (price) price.textContent = rem > 0 ? Math.ceil(rem) + 's' : 'READY';
     } else {
@@ -6228,6 +6291,15 @@ function renderBuildButtons() {
       b.classList.toggle('activeBuild', active);
       b.classList.toggle('activeHotbar', false);
       b.classList.toggle('equipped', false);
+      const tier = getHotbarUpgradeTier(b.dataset.t);
+      b.classList.toggle('upgraded', tier > 0);
+      b.dataset.tier = String(tier);
+      const pips = b.querySelector('.upgradePips');
+      if (pips) {
+        pips.textContent = tier ? '◆'.repeat(Math.min(3, tier)) : '';
+        pips.className = `upgradePips ${tier >= 3 ? 'tier3' : tier === 2 ? 'tier2' : tier === 1 ? 'tier1' : ''}`;
+        pips.hidden = tier <= 0;
+      }
     }
   });
   if (infoCard) {
@@ -7888,22 +7960,24 @@ function updateComboOnKill(e, tower, byHero, baseGold, baseScore) {
       baseGold += comboBonusGold;
       if (S.waveStats) S.waveStats.goldEarned += comboBonusGold;
       if (S.runStats) S.runStats.goldEarned += comboBonusGold;
-      if (S.combo >= 3) floatText('+' + comboBonusGold + 'g', e.x + 4, e.y - 16, '#ffd77d');
+      if (comboBonusGold >= 50) {
+        floatText(`COMBO BONUS ${comboBonusGold}g`, e.x - 54, e.y - 16, '#ffd77d');
+      }
     }
     if (comboBonusScore > 0) S.score += comboBonusScore;
-    if (S.combo >= 3) {
-      const comboLabel = S.combo >= 5 ? `${S.combo}x COMBO` : `${S.combo} HIT`;
+    if (S.combo >= 5) {
+      const comboLabel = S.combo >= 8 ? `${S.combo}x COMBO` : `${S.combo} HIT`;
       floatText(comboLabel, e.x - 18, e.y - 30, S.combo >= 8 ? '#ffcf6a' : '#8edcff');
     }
     if (S.waveStats) S.waveStats.comboMax = Math.max(S.waveStats.comboMax || 0, S.comboMax || 0);
-    if (S.combo >= 5) {
+    if (S.combo >= 8) {
       S.comboBanner = `${S.combo}x COMBO +${Math.floor((mult - 1) * 100)}%`;
-      S.comboBannerKind = S.combo >= 8 ? 'boss' : 'danger';
+      S.comboBannerKind = 'boss';
       S.comboBannerTime = 0.8;
       const b = $('comboBanner');
       if (b) {
         b.textContent = S.comboBanner;
-        b.className = `comboBanner show ${S.combo >= 8 ? 'boss' : 'danger'}`;
+        b.className = 'comboBanner show boss';
       }
     }
   }
@@ -7940,8 +8014,9 @@ function enemyDeathFeedback(e, tower, byHero) {
   shockwave(e.x, e.y, cue.shock, e.type === 'slimeking' ? 150 : Math.max(38, e.rad * 1.6), e.type === 'slimeking' ? .45 : .22);
   if (cue.fx && cue.fx !== 'shatter') impactFx(e.x, e.y, cue.fx);
   if (cue.fx === 'shatter' || e.freeze > 0 || e.chill > 0) shockwave(e.x, e.y, '#e9fbff', 38, .2);
+  const isRoutineEnemy = ['runner', 'slinger', 'brute'].includes(e.type);
   const heroThreatAlreadyCalledOut = byHero && hasHeroThreatCue(e);
-  if (cue.text && !heroThreatAlreadyCalledOut) {
+  if (cue.text && !heroThreatAlreadyCalledOut && !isRoutineEnemy) {
     floatText(cue.text, e.x - Math.min(48, cue.text.length * 2.4), e.y - 42, e.type === 'slimeking' ? '#ffe09c33' : '#ffe56b');
   }
   if (e.type === 'bomber') shake(7, .18);
@@ -8034,12 +8109,18 @@ function kill(e, tower, byHero = false) {
       shockwave(e.x, e.y, '#8edcff', 52, .16);
     }
   }
-  if (g >= 50 || e.type === 'slimeking') floatText('+' + g + 'g', e.x, e.y, '#ffe09c33');
+  if (g >= 75 || e.type === 'slimeking' || ['ogre', 'hunter', 'shield', 'healer', 'siege', 'warden', 'hexcaller'].includes(e.type)) {
+    const label = e.type === 'slimeking' ? `${g}g` : `${g}g`;
+    floatText(label, e.x - Math.min(28, String(label).length * 4), e.y - 18, '#ffe09c33');
+  }
   if (e.type === 'slimeking') {
     S.bossActive = false;
     S.bossDeathPause = Math.max(S.bossDeathPause || 0, 3);
     clearSlimeTrail();
-    hideBossWarning();
+    S.waveBanner = '';
+    S.waveBannerTime = 0;
+    const wb = $('waveBanner');
+    if (wb) wb.className = 'waveBanner hidden';
     dropHealthOrb(e.x, e.y, 999, true);
     toast('The Slime King bursts.');
     S.clearFlash = Math.max(S.clearFlash || 0, .9);
@@ -8636,9 +8717,8 @@ function spawnSlimeKing() {
     appearanceHpMult,
   });
   S.bossIntro = appearance >= 4 ? 2.2 : appearance >= 2 ? 2.0 : 1.35;
-  showBossWarning();
+  announceWave(S.bossAppearance > 1 ? `SLIME KING RETURNS x${S.bossAppearance}` : 'SLIME KING STIRS', 'boss', 1.25);
   playSfx('bossWarning');
-  toast(appearance === 1 ? `THE SLIME KING STIRS (${Math.round(appearanceHpMult * 100)}% HP)` : `THE SLIME KING RETURNS x${appearance}`);
 }
 
 function clearSlimeTrail() {
@@ -8730,14 +8810,6 @@ function slimeKingRainBarrage(e, target) {
   boom(e.x, e.y, '#4fa34f33', phase >= 3 ? 12 : 8);
 }
 
-function showBossWarning() {
-  const el = $('bossWarning');
-  if (!el) return;
-  el.textContent = S.bossAppearance > 1 ? `⚠ THE SLIME KING RETURNS x${S.bossAppearance} ⚠` : '⚠ THE SLIME KING STIRS ⚠';
-  el.classList.add('visible');
-}
-function hideBossWarning() { $('bossWarning').classList.remove('visible'); }
-
 function slimeKingStep(e, dt) {
   const hpPct = e.hp / e.max;
   const appearance = e.appearance || 1;
@@ -8794,6 +8866,7 @@ function slimeKingStep(e, dt) {
       e.x = e.leapStartX;
       e.y = e.leapStartY;
       floatText('LEAP!', e.x - 14, e.y - e.rad - 58, '#f3d3ff');
+      announceWave('SLIME KING STIRS', 'boss', 1.25);
       playSfx('bossWarning');
     } else {
       const tx = e.leapTargetX;
@@ -9721,9 +9794,6 @@ function buildWaveRewardChoices(exclude = {}) {
   const tower = towerPick.upgrade || (towerPool.length ? pick(towerPool) : (fallbackTowerKey ? Object.values(TRAP_UPGRADES).find(u => {
     const targets = new Set([u.targetItem, u.targetItemAlt, ...(Array.isArray(u.items) ? u.items : []), ...(Array.isArray(u.towers) ? u.towers : [])].filter(Boolean));
     return targets.has(fallbackTowerKey);
-  }) || Object.values(TRAP_UPGRADES).find(u => {
-    const targets = new Set([u.targetItem, u.targetItemAlt, ...(Array.isArray(u.items) ? u.items : []), ...(Array.isArray(u.towers) ? u.towers : [])].filter(Boolean));
-    return targets.size;
   }) || null : null));
   const mutagenId = chooseNextMutagenId(excludeMutagenIds);
   const mutagen = mutagenId ? MULTIVERSE_MUTAGENS[mutagenId] : null;
@@ -9838,7 +9908,8 @@ function triggerLegendaryPowerup(type, orb) {
   S.hero.weaponRecoil = 0;
   if (type === 'heaven') {
     startTempEffect('heaven', 180, { x: orb.x, y: orb.y, lightningCd: 0, brightness: 1 });
-    playSfx('bossWarning');
+      announceWave(S.bossAppearance > 1 ? `SLIME KING RETURNS x${S.bossAppearance}` : 'SLIME KING STIRS', 'boss', 1.25);
+      playSfx('bossWarning');
     announceWave('THREE MINUTES IN HEAVEN', 'boss', 1.8);
     return;
   }
@@ -10092,15 +10163,10 @@ function renderWaveSummary(bonus, interest) {
   const hpText = `${Math.max(0, Math.floor(S.hero.hp))}/${S.hero.max}`;
   const summaryHtml = `
     <div><small>Total kills</small><b>${totalKills}</b></div>
-    <div><small>Hero kills</small><b>${s.heroKills || 0}</b></div>
-    <div><small>Tower kills</small><b>${s.towerKills || 0}</b></div>
     <div><small>Best combo</small><b>x${s.comboMax || 0}</b></div>
-    <div><small>Powerups</small><b>${s.powerups || 0}</b></div>
     <div><small>Gold earned</small><b>+${Math.floor(goldEarned)}g</b></div>
-    <div><small>Score gained</small><b>+${scoreGain}</b></div>
     <div><small>Lives lost</small><b>${s.leaked || 0}</b></div>
     <div><small>Hero HP</small><b>${hpText}</b></div>
-    <div><small>Current gold</small><b>${Math.floor(S.gold)}g</b></div>
   `;
   if ($('clearStats')) $('clearStats').innerHTML = summaryHtml;
   if ($('mutationWaveSummary')) $('mutationWaveSummary').innerHTML = summaryHtml;
@@ -10112,17 +10178,12 @@ function runSummaryHtml() {
   const goldEarned = (s.goldEarned || 0) + (s.bonusGold || 0) + (s.interestGold || 0);
   return `
     <div class="waveSummary">
-      <div><small>Total kills</small><b>${totalKills}</b></div>
-      <div><small>Hero kills</small><b>${s.heroKills || 0}</b></div>
-      <div><small>Tower kills</small><b>${s.towerKills || 0}</b></div>
-      <div><small>Best combo</small><b>x${s.comboMax || 0}</b></div>
-      <div><small>Powerups</small><b>${s.powerups || 0}</b></div>
-      <div><small>Gold earned</small><b>+${Math.floor(goldEarned)}g</b></div>
-      <div><small>Lives lost</small><b>${s.leaked || 0}</b></div>
-      <div><small>Waves cleared</small><b>${s.wavesCleared || 0}</b></div>
-      <div><small>Final score</small><b>${S.score}</b></div>
-      <div><small>Reached wave</small><b>${S.wave}</b></div>
-    </div>
+    <div><small>Total kills</small><b>${totalKills}</b></div>
+    <div><small>Best combo</small><b>x${s.comboMax || 0}</b></div>
+    <div><small>Gold earned</small><b>+${Math.floor(goldEarned)}g</b></div>
+    <div><small>Waves cleared</small><b>${s.wavesCleared || 0}</b></div>
+    <div><small>Reached wave</small><b>${S.wave}</b></div>
+  </div>
   `;
 }
 
