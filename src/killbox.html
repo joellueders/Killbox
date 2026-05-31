@@ -3805,7 +3805,7 @@ const S = {
   devToolsOpen: false, devUnlimitedGold: false, devInvincible: false, devShowInfo: false,
   devArenaChoice: 'field',
   weapon: 'blunderbuss', loadout: [],
-  towers: [], barriers: [], barrels: [], enemies: [], shots: [], heroShots: [], enemyShots: [], parts: [], texts: [], oilPatches: [], firePatches: [], healthOrbs: [], effects: [], bloodDecals: [], bloodDecalCursor: 0, bloodLayerDirty: false, queue: [],
+  towers: [], barriers: [], barrels: [], enemies: [], shots: [], heroShots: [], enemyShots: [], parts: [], texts: [], oilPatches: [], firePatches: [], healthOrbs: [], effects: [], bloodDecals: [], bloodDecalCursor: 0, bloodLayerDirty: false, debrisDecals: [], debrisDecalCursor: 0, debrisLayerDirty: false, liveGibs: [], queue: [],
   seenEnemyThreats: {},
   threatPopupQueue: [],
   timer: 0, spawnCount: 0,
@@ -4068,6 +4068,7 @@ function clearWorldForDebugWarp() {
   S.parts = [];
   S.texts = [];
   clearBloodDecals();
+  clearGibDebris();
   S.oilPatches = [];
   S.firePatches = [];
   S.healthOrbs = [];
@@ -4651,6 +4652,7 @@ function resetRunForLevelSwitch(levelId) {
   S.parts = [];
   S.texts = [];
   clearBloodDecals();
+  clearGibDebris();
   S.oilPatches = [];
   S.firePatches = [];
   S.healthOrbs = [];
@@ -8006,6 +8008,7 @@ function enemyDeathFeedback(e, tower, byHero) {
   if (!cue) return;
   if (cue.sfx) playSfx(cue.sfx);
   spawnBloodSplats(e.x, e.y, e);
+  spawnGibBurst(e.x, e.y, e);
   shockwave(e.x, e.y, cue.shock, e.type === 'slimeking' ? 150 : Math.max(38, e.rad * 1.6), e.type === 'slimeking' ? .45 : .22);
   if (cue.fx && cue.fx !== 'shatter') impactFx(e.x, e.y, cue.fx);
   if (cue.fx === 'shatter' || e.freeze > 0 || e.chill > 0) shockwave(e.x, e.y, '#e9fbff', 38, .2);
@@ -11127,6 +11130,184 @@ function drawBloodDecals() {
   ctx.restore();
 }
 
+const GIB_DEBRIS_MAX = 900;
+const GIB_LIVE_MAX = 80;
+const GIB_COLORS = ['#24170f', '#3b291b', '#5a3d25', '#6f1014', '#8d6f49', '#d2c3a0', '#c9cbd0', '#6a7d55'];
+let gibLayerCanvas = null;
+let gibLayerCtx = null;
+
+function ensureGibLayer() {
+  const gw = Math.ceil(Math.max(W || 0, OX + COLS * G + 90));
+  const gh = Math.ceil(Math.max(H || 0, OY + ROWS * G + 90));
+  if (!gibLayerCanvas || gibLayerCanvas.width !== gw || gibLayerCanvas.height !== gh) {
+    gibLayerCanvas = document.createElement('canvas');
+    gibLayerCanvas.width = gw;
+    gibLayerCanvas.height = gh;
+    gibLayerCtx = gibLayerCanvas.getContext('2d', { alpha: true });
+    if (S.debrisDecals && S.debrisDecals.length) S.debrisLayerDirty = true;
+  }
+  return gibLayerCtx;
+}
+
+function clearGibDebris() {
+  S.debrisDecals = [];
+  S.debrisDecalCursor = 0;
+  S.debrisLayerDirty = false;
+  S.liveGibs = [];
+  const gctx = ensureGibLayer();
+  gctx.clearRect(0, 0, gibLayerCanvas.width, gibLayerCanvas.height);
+}
+
+function drawGibShape(gctx, g) {
+  gctx.save();
+  gctx.translate(g.x, g.y);
+  gctx.rotate(g.rot || 0);
+  gctx.globalAlpha = g.alpha ?? 1;
+  gctx.fillStyle = g.c || '#4a2d1d';
+  gctx.strokeStyle = g.edge || '#130b08';
+  gctx.lineWidth = Math.max(1, g.r * .16);
+  if (g.shape === 'square') {
+    gctx.fillRect(-g.r * .65, -g.r * .5, g.r * 1.3, g.r);
+    gctx.strokeRect(-g.r * .65, -g.r * .5, g.r * 1.3, g.r);
+  } else if (g.shape === 'tri') {
+    gctx.beginPath();
+    gctx.moveTo(g.r, 0);
+    gctx.lineTo(-g.r * .55, -g.r * .58);
+    gctx.lineTo(-g.r * .35, g.r * .72);
+    gctx.closePath();
+    gctx.fill();
+    gctx.stroke();
+  } else if (g.shape === 'tooth') {
+    gctx.fillStyle = '#d8cfb5';
+    gctx.beginPath();
+    gctx.moveTo(0, -g.r);
+    gctx.quadraticCurveTo(g.r * .62, -g.r * .1, g.r * .18, g.r * .7);
+    gctx.quadraticCurveTo(-g.r * .48, g.r * .32, 0, -g.r);
+    gctx.fill();
+    gctx.stroke();
+  } else if (g.shape === 'eye') {
+    gctx.fillStyle = '#d9e6d2';
+    gctx.beginPath();
+    gctx.ellipse(0, 0, g.r * .9, g.r * .65, 0, 0, 7);
+    gctx.fill();
+    gctx.stroke();
+    gctx.fillStyle = '#111916';
+    gctx.beginPath();
+    gctx.arc(g.r * .12, 0, Math.max(1.4, g.r * .24), 0, 7);
+    gctx.fill();
+  } else {
+    gctx.beginPath();
+    const sides = g.sides || 7;
+    for (let i = 0; i < sides; i++) {
+      const a = (i / sides) * Math.PI * 2;
+      const rr = g.r * (.55 + (g.seed?.[i % 5] || .5) * .58);
+      const px = Math.cos(a) * rr;
+      const py = Math.sin(a) * rr;
+      if (!i) gctx.moveTo(px, py);
+      else gctx.lineTo(px, py);
+    }
+    gctx.closePath();
+    gctx.fill();
+    gctx.stroke();
+  }
+  gctx.restore();
+}
+
+function rebuildGibLayer() {
+  const gctx = ensureGibLayer();
+  gctx.clearRect(0, 0, gibLayerCanvas.width, gibLayerCanvas.height);
+  for (const d of S.debrisDecals) drawGibShape(gctx, d);
+  S.debrisLayerDirty = false;
+}
+
+function addSettledGib(g) {
+  const decal = { ...g, vx: 0, vy: 0, life: 0 };
+  if (S.debrisDecals.length < GIB_DEBRIS_MAX) {
+    S.debrisDecals.push(decal);
+    drawGibShape(ensureGibLayer(), decal);
+    return;
+  }
+  S.debrisDecals[S.debrisDecalCursor] = decal;
+  S.debrisDecalCursor = (S.debrisDecalCursor + 1) % GIB_DEBRIS_MAX;
+  S.debrisLayerDirty = true;
+}
+
+function spawnGibBurst(x, y, e) {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+  const boss = e?.type === 'slimeking';
+  const large = isLargeEnemy(e);
+  const chance = boss ? 1 : large ? .32 : .08 + Math.random() * .07;
+  if (!boss && Math.random() > chance) return;
+  const count = boss
+    ? 14 + Math.floor(Math.random() * 8)
+    : large
+      ? 4 + Math.floor(Math.random() * 5)
+      : 2 + Math.floor(Math.random() * 5);
+  const base = boss ? 9 : large ? 6.5 : 4.2;
+  const shapes = ['chunk', 'chunk', 'square', 'tri', 'tooth', 'eye'];
+  while ((S.liveGibs || []).length > GIB_LIVE_MAX) addSettledGib(S.liveGibs.shift());
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const sp = (boss ? 260 : large ? 190 : 135) * (.35 + Math.random() * .85);
+    S.liveGibs.push({
+      x, y,
+      vx: Math.cos(a) * sp,
+      vy: Math.sin(a) * sp,
+      z: 0,
+      vz: 120 + Math.random() * (boss ? 260 : large ? 190 : 130),
+      rot: Math.random() * Math.PI * 2,
+      spin: (Math.random() - .5) * 9,
+      r: base * (.7 + Math.random() * 1.25),
+      c: GIB_COLORS[Math.floor(Math.random() * GIB_COLORS.length)],
+      edge: '#130b08',
+      shape: shapes[Math.floor(Math.random() * shapes.length)],
+      sides: 5 + Math.floor(Math.random() * 4),
+      seed: Array.from({ length: 5 }, () => Math.random()),
+      life: .32 + Math.random() * .48,
+      alpha: .92,
+      bounces: 0,
+    });
+  }
+  if (boss || large) {
+    burst(x, y, boss ? '#6a0a0f' : '#5a3d25', boss ? 16 : 8, 'debris', boss ? 250 : 160);
+  }
+}
+
+function updateGibs(dt) {
+  if (!S.liveGibs || !S.liveGibs.length) return;
+  const settled = [];
+  for (const g of S.liveGibs) {
+    g.life -= dt;
+    g.x += g.vx * dt;
+    g.y += g.vy * dt;
+    g.vz -= 540 * dt;
+    g.z = Math.max(0, (g.z || 0) + g.vz * dt);
+    g.rot += (g.spin || 0) * dt;
+    g.vx *= Math.pow(.035, dt);
+    g.vy *= Math.pow(.035, dt);
+    if (g.life <= 0 || g.bounces > 1) {
+      settled.push(g);
+      continue;
+    }
+    if ((g.z || 0) <= 0 && g.vz < 0) {
+      g.z = 0;
+      g.vz *= -.22;
+      g.vx *= .45;
+      g.vy *= .45;
+      g.bounces++;
+    }
+  }
+  S.liveGibs = S.liveGibs.filter(g => !settled.includes(g));
+  for (const g of settled) addSettledGib(g);
+}
+
+function drawGibDebris() {
+  ensureGibLayer();
+  if (S.debrisLayerDirty) rebuildGibLayer();
+  if (S.debrisDecals && S.debrisDecals.length) ctx.drawImage(gibLayerCanvas, 0, 0);
+  for (const g of S.liveGibs || []) drawGibShape(ctx, { ...g, y: g.y - (g.z || 0) });
+}
+
 function destroyStructure(x, y, label = 'tower') {
   burst(x, y, label === 'barrier' ? '#9b6b37' : '#77706a', label === 'barrier' ? 26 : 30, 'debris', 210);
   burst(x, y, '#3a2514', 10, 'smoke', 85);
@@ -11310,6 +11491,7 @@ function step(dt) {
   S.firePatches = S.firePatches.filter(f => f.life > 0);
 
   cleanParticles(dt);
+  updateGibs(dt);
   updateLowHealthWarning(dt);
   if (S.comboTimer > 0) {
     S.comboTimer = Math.max(0, S.comboTimer - dt);
@@ -11377,6 +11559,7 @@ function draw(t) {
   ctx.translate(-CAMERA.x, -CAMERA.y);
   drawMap(t);
   drawBloodDecals();
+  drawGibDebris();
   if (S.hero.lastStandBeaconActive) {
     const gx = cx(GOAL.c) + 30, gy = cy(GOAL.r);
     ctx.save();
@@ -13399,7 +13582,7 @@ function loadPass() {
     S.slimeKingAppearances = o.slimeKingAppearances || 0;
     if (S.aiEngineerOwned) { S.engineer.active = true; S.engineer.hp = S.engineer.max; }
     S.enemies = []; S.shots = []; S.heroShots = []; S.enemyShots = [];
-    S.parts = []; S.texts = []; clearBloodDecals(); S.oilPatches = []; S.firePatches = []; S.healthOrbs = [];
+    S.parts = []; S.texts = []; clearBloodDecals(); clearGibDebris(); S.oilPatches = []; S.firePatches = []; S.healthOrbs = [];
     S.queue = []; S.waveActive = false; S.phase = 'build';
     S.started = true; S.gameOver = false;
     S.waveCountdown = getWaveCountdownDuration((S.wave || 0) + 1);
