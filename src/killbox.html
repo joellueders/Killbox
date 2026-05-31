@@ -724,7 +724,7 @@ button:disabled { opacity: .42; cursor: not-allowed; filter: grayscale(.45) brig
   text-transform: uppercase;
 }
 .pickerTile.rewardCard .name {
-  font-size: 24px;
+  font-size: 21px;
   line-height: .98;
   letter-spacing: 0;
   margin: 0;
@@ -734,7 +734,7 @@ button:disabled { opacity: .42; cursor: not-allowed; filter: grayscale(.45) brig
   position: relative;
   z-index: 1;
   flex: 1 1 auto;
-  min-height: 132px;
+  min-height: 116px;
   display: grid;
   place-items: center;
   border-radius: 14px;
@@ -743,8 +743,8 @@ button:disabled { opacity: .42; cursor: not-allowed; filter: grayscale(.45) brig
   overflow: hidden;
 }
 .pickerTile.rewardCard .mutationIcon {
-  width: min(160px, 100%);
-  height: min(160px, 100%);
+  width: min(140px, 100%);
+  height: min(140px, 100%);
   display: grid;
   place-items: center;
   color: #fff6ff;
@@ -757,15 +757,15 @@ button:disabled { opacity: .42; cursor: not-allowed; filter: grayscale(.45) brig
   object-position: center;
 }
 .pickerTile.rewardCard .meta {
-  font-size: 14px;
+  font-size: 12px;
   line-height: 1.22;
-  min-height: 2.8em;
+  min-height: 2.4em;
   overflow: visible;
   color: #fff4d3;
   font-weight: 800;
 }
 .pickerTile.rewardCard .note {
-  font-size: 12px;
+  font-size: 11px;
   color: #d9e3ff;
   font-weight: 700;
   text-transform: uppercase;
@@ -818,15 +818,15 @@ button:disabled { opacity: .42; cursor: not-allowed; filter: grayscale(.45) brig
 }
 .pickerTile.rewardCard.multiverse .note { color: #f0d8ff; }
 #mutationChoices .pickerTile.rewardCard {
-  min-height: 288px;
+  min-height: 244px;
 }
 #mutationChoices .pickerTile.rewardCard .mutationTop,
 #mutationChoices .pickerTile.rewardCard .mutationBottom {
   width: 100%;
 }
 #mutationChoices .pickerTile.rewardCard .mutationIcon {
-  width: 150px;
-  height: 150px;
+  width: 132px;
+  height: 132px;
   max-width: 100%;
   max-height: 100%;
 }
@@ -835,7 +835,10 @@ button:disabled { opacity: .42; cursor: not-allowed; filter: grayscale(.45) brig
   max-height: 100%;
 }
 #mutationChoices .pickerTile.rewardCard .mutationArt {
-  min-height: 144px;
+  min-height: 112px;
+}
+#mutationWaveSummary {
+  margin-bottom: 8px;
 }
 #mutation .mutationFooter {
   display: grid;
@@ -1139,28 +1142,34 @@ textarea {
 }
 .waveSummary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  margin: 14px 0 18px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin: 10px 0 12px;
 }
 .waveSummary div {
   background: #120b07cc;
   border: 1px solid #a8753b;
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: 7px 8px;
   box-shadow: inset 0 0 0 1px #0008;
 }
 .waveSummary small {
   display: block;
   color: #d9bc82;
-  font-size: 11px;
+  font-size: 10px;
   text-transform: uppercase;
 }
 .waveSummary b {
   display: block;
   color: #fff2bf;
-  font-size: 21px;
+  font-size: 17px;
   margin-top: 2px;
+}
+@media (max-width: 1080px) {
+  .waveSummary { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 820px) {
+  .waveSummary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 620px) {
   .waveSummary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1237,8 +1246,50 @@ textarea {
 .waveBanner.danger { color: #ffb36b; border-color: #ff8a2a; text-shadow: 0 2px 0 #120905, 0 0 18px #ff8a2a88; }
 .waveBanner.boss { color: #ff7967; border-color: #ff7967; text-shadow: 0 2px 0 #120905, 0 0 20px #ff4a1f99; }
 
+.comboBanner,
+.threatToast {
+  position: fixed;
+  z-index: 8;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .22s ease, transform .22s ease;
+}
+.comboBanner {
+  right: 18px;
+  bottom: 18px;
+  transform: translateY(8px) scale(.98);
+  min-width: 186px;
+  max-width: min(36vw, 280px);
+  padding: 10px 14px;
+  border-radius: 7px;
+  border: 2px solid #f0c96b;
+  background: linear-gradient(180deg, rgba(110, 35, 16, .94), rgba(31, 17, 10, .96));
+  color: #fff1c4;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-size: 20px;
+  font-weight: 900;
+  text-align: right;
+  text-shadow: 0 2px 0 #120905, 0 0 14px rgba(255, 207, 106, .45);
+  box-shadow: 0 10px 28px #0008, inset 0 0 0 1px rgba(255,255,255,.08);
+}
+.comboBanner.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.comboBanner.danger { color: #ffca7f; border-color: #ff8a2a; }
+.comboBanner.boss { color: #ffb2a9; border-color: #ff7967; }
+.threatToast {
+  top: 18px;
+  right: 18px;
+  left: auto;
+  bottom: auto;
+  max-width: min(32vw, 420px);
+  align-items: flex-end;
+}
+
 /* ── Toast ───────────────────────────────────────────────────────── */
-.toast { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); display: flex; flex-direction: column; gap: 6px; pointer-events: none; z-index: 7; align-items: center; max-width: min(92vw, 420px); }
+.toast { position: fixed; left: 18px; bottom: 18px; display: flex; flex-direction: column; gap: 6px; pointer-events: none; z-index: 7; align-items: flex-start; max-width: min(38vw, 360px); }
 .msg   { background: linear-gradient(180deg, #30383dee, #100d0dee); border: 1px solid #b18445; border-radius: 6px; padding: 8px 12px; animation: fade 4s forwards; box-shadow: 0 4px 0 #090604, 0 10px 24px #0007; color: #fff0c7; }
 .msg.threat {
   border-color: #f0c96b;
@@ -1295,8 +1346,8 @@ textarea {
   padding: 22px; box-shadow: 0 20px 70px #000;
 }
 #mutation .card {
-  width: min(980px, calc(100vw - 40px));
-  min-height: 660px;
+  width: min(1120px, calc(100vw - 24px));
+  min-height: 620px;
   max-height: 80vh;
   display: flex;
   flex-direction: column;
@@ -1362,10 +1413,10 @@ textarea {
 #mutationChoices {
   flex: 1 1 auto;
   align-content: start;
-  min-height: 380px;
+  min-height: 300px;
 }
 #mutationChoices .pickerTile {
-  min-height: 220px;
+  min-height: 196px;
 }
 #start .card {
   width: min(1460px, calc(100vw - 26px));
@@ -2531,6 +2582,7 @@ kbd {
 
 <!-- ── Toast container ────────────────────── -->
 <div id="toast" class="toast"></div>
+<div id="threatToast" class="toast threatToast"></div>
 
 <!-- ── Overlays ────────────────────────────── -->
 <div id="start" class="overlay">
@@ -2643,6 +2695,7 @@ kbd {
 </div>
 
 <div id="waveBanner" class="waveBanner hidden"></div>
+<div id="comboBanner" class="comboBanner hidden"></div>
 
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <!--  SCRIPT                                                         -->
@@ -3672,6 +3725,9 @@ const S = {
   comboTimer: 0,
   comboMax: 0,
   comboHitWindow: 2.2,
+  comboBanner: '',
+  comboBannerKind: '',
+  comboBannerTime: 0,
   runStats: { heroKills: 0, towerKills: 0, otherKills: 0, leaked: 0, powerups: 0, goldEarned: 0, bonusGold: 0, interestGold: 0, wavesCleared: 0 },
   selected: null, sel: null, menuOpen: false, aiEngineerOwned: false, placeDir: 1,
   devToolsOpen: false, devUnlimitedGold: false, devInvincible: false, devShowInfo: false,
@@ -4504,6 +4560,8 @@ function resetRunForLevelSwitch(levelId) {
   S.lives = 15;
   S.gold = S.devUnlimitedGold ? 9999 : 180;
   S.waveStats = null;
+  S.seenEnemyThreats = {};
+  S.threatPopupQueue = [];
   S.bossActive = false;
   S.bossSpawned = false;
   S.bossIntro = 0;
@@ -4522,6 +4580,9 @@ function resetRunForLevelSwitch(levelId) {
   S.oilPatches = [];
   S.firePatches = [];
   S.healthOrbs = [];
+  S.comboBanner = '';
+  S.comboBannerKind = '';
+  S.comboBannerTime = 0;
   S.cornerSkulls = [];
   S.selected = null;
   S.sel = null;
@@ -4889,7 +4950,7 @@ function toast(msg) {
   d._toastTimer = setTimeout(() => d.remove(), 4100);
 }
 function threatToast(type) {
-  const host = $('toast');
+  const host = $('threatToast');
   if (!host) return;
   const info = {
     grunt:   ['GRUNT',   'Basic fodder'],
@@ -4904,14 +4965,16 @@ function threatToast(type) {
     siege:   ['SIEGE',   'Breaks barricades'],
   }[type] || [String(type || '').toUpperCase(), 'New threat'];
   S.threatPopupQueue = S.threatPopupQueue || [];
-  S.threatPopupQueue.push(info);
+  const key = `${info[0]}|${info[1]}`;
+  if (S.threatPopupQueue.some(item => item && item.key === key)) return;
+  S.threatPopupQueue.push({ key, info });
   const pump = () => {
     let visibleThreats = [...host.children].filter(n => n.classList && n.classList.contains('threat')).length;
     while (visibleThreats < 2 && S.threatPopupQueue.length) {
       const next = S.threatPopupQueue.shift();
       const d = document.createElement('div');
       d.className = 'msg threat';
-      d.innerHTML = `<span class="threatTag">⚠ NEW THREAT</span><span class="threatName">${next[0]}</span><span class="threatDesc">${next[1]}</span>`;
+      d.innerHTML = `<span class="threatTag">⚠ NEW THREAT</span><span class="threatName">${next.info[0]}</span><span class="threatDesc">${next.info[1]}</span>`;
       host.appendChild(d);
       visibleThreats++;
       d._toastTimer = setTimeout(() => { d.remove(); pump(); }, 5800);
@@ -7284,13 +7347,13 @@ function updateComboOnKill(e, tower, byHero, baseGold, baseScore) {
     floatText(comboLabel, e.x - 18, e.y - 30, S.combo >= 8 ? '#ffcf6a' : '#8edcff');
     if (S.waveStats) S.waveStats.comboMax = Math.max(S.waveStats.comboMax || 0, S.comboMax || 0);
     if (S.combo >= 3) {
-      S.waveBanner = `${S.combo}x COMBO +${Math.floor((mult - 1) * 100)}%`;
-      S.waveBannerKind = S.combo >= 8 ? 'boss' : 'danger';
-      S.waveBannerTime = 0.7;
-      const b = $('waveBanner');
+      S.comboBanner = `${S.combo}x COMBO +${Math.floor((mult - 1) * 100)}%`;
+      S.comboBannerKind = S.combo >= 8 ? 'boss' : 'danger';
+      S.comboBannerTime = 0.8;
+      const b = $('comboBanner');
       if (b) {
-        b.textContent = S.waveBanner;
-        b.className = `waveBanner show ${S.combo >= 8 ? 'boss' : 'danger'}`;
+        b.textContent = S.comboBanner;
+        b.className = `comboBanner show ${S.combo >= 8 ? 'boss' : 'danger'}`;
       }
     }
   }
@@ -10300,6 +10363,14 @@ function step(dt) {
     if (S.comboTimer <= 0) {
       if (S.combo >= 3) toast(`Combo ended at x${S.combo}`);
       S.combo = 0;
+    }
+  }
+  if (S.comboBannerTime > 0) {
+    S.comboBannerTime = Math.max(0, S.comboBannerTime - dt);
+    if (S.comboBannerTime <= 0) {
+      S.comboBanner = '';
+      const b = $('comboBanner');
+      if (b) b.className = 'comboBanner hidden';
     }
   }
 
