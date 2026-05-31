@@ -8240,6 +8240,8 @@ function heroStep(dt) {
   }
 
   const inSlime = S.firePatches.some(f => f.slime && dist(h.x, h.y, f.x, f.y) < f.r + 14);
+  const inPermanentSlime = scarAt(h.x, h.y, 'slime');
+  if (inPermanentSlime) h.slimeScarVisualUntil = Math.max(h.slimeScarVisualUntil || 0, now + .35);
   if (inSlime) {
     h.slimeDebuffUntil = Math.max(h.slimeDebuffUntil || 0, now + 1.55);
     h.slimeDamageTick = Math.max(0, (h.slimeDamageTick || 0) - dt);
@@ -13015,7 +13017,7 @@ function drawHero(t) {
   const w = WEAPONS[h.weapon] || WEAPONS.blunderbuss;
   const now = performance.now() / 1000;
   const blunderShieldActive = h.weapon === 'blunderbuss' && (h.blunderShieldUntil || 0) > now;
-  const slimeActive = (h.slimeDebuffUntil || 0) > now;
+  const slimeActive = (h.slimeDebuffUntil || 0) > now || (h.slimeScarVisualUntil || 0) > now;
   const recoil = (h.weapon === 'blunderbuss' ? (h.weaponRecoil || 0) : 0);
   const heroScale = S.activeWaveMutagen === 'giantism' ? 1.55 : (h.heroScale || 1);
   const lowWarn = S.lowHealthState || 0;
