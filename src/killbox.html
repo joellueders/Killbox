@@ -7263,7 +7263,7 @@ function comboMultiplier(streak = S.combo) {
 }
 
 function updateComboOnKill(e, tower, byHero, baseGold, baseScore) {
-  const now = performance.now() / 1000;
+  if (!byHero) return { gold: baseGold, score: baseScore };
   if (S.waveActive && S.phase === 'combat') {
     const withinWindow = S.comboTimer > 0;
     S.combo = withinWindow ? Math.min(99, S.combo + 1) : 1;
@@ -7293,9 +7293,6 @@ function updateComboOnKill(e, tower, byHero, baseGold, baseScore) {
         b.className = `waveBanner show ${S.combo >= 8 ? 'boss' : 'danger'}`;
       }
     }
-  } else {
-    S.combo = 0;
-    S.comboTimer = 0;
   }
   return { gold: baseGold, score: baseScore };
 }
@@ -7380,7 +7377,7 @@ function kill(e, tower, byHero = false) {
     tower.kills = (tower.kills || 0) + 1;
     if (S.sel === tower) showSelected();
   }
-  updateComboOnKill(e, tower, byHero, g, baseScore);
+  if (byHero) updateComboOnKill(e, tower, byHero, g, baseScore);
   if (byHero) heroThreatKillFeedback(e);
   enemyDeathFeedback(e, tower, byHero);
   if (g > 0) floatText('+' + g + 'g', e.x, e.y, '#ffe09c33');
