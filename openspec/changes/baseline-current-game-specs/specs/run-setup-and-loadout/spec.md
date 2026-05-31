@@ -7,6 +7,13 @@ The system SHALL present a setup flow before a new run begins so the player can 
 - **WHEN** the application loads before a run has started
 - **THEN** the player is shown controls for choosing an arena and selecting loadout items
 
+### Requirement: Display the current release version
+The system SHALL display the current game release version under the title on the loadout screen, and every update prepared for publishing SHALL update that displayed version to match the release being shipped.
+
+#### Scenario: Player opens an updated release
+- **WHEN** the application loads after a release update has been prepared for publishing
+- **THEN** the version shown under the loadout screen title matches the release version
+
 ### Requirement: Require a playable loadout
 The system SHALL require the selected loadout to contain at least one weapon before a run can start.
 
