@@ -11143,6 +11143,56 @@ function spawnBloodSplats(x, y, e) {
   }
 }
 
+function maybeWoundedTrail(e, oldX, oldY, dt) {
+  if (!e || e.dead || !Number.isFinite(oldX) || !Number.isFinite(oldY)) return;
+  const max = e.max || e.hp || 1;
+  const hpPct = e.hp / max;
+  if (hpPct > .55) return;
+  const moved = dist(oldX, oldY, e.x, e.y);
+  if (moved < 1.2) return;
+  const now = performance.now() / 1000;
+  const large = isLargeEnemy(e);
+  const boss = e.type === 'slimeking';
+  const interval = boss ? .11 : large ? .18 : hpPct < .25 ? .28 : .42;
+  if ((e.trailDropAt || 0) > now) return;
+  const chance = boss ? .95 : large ? .72 : hpPct < .25 ? .56 : .32;
+  e.trailDropAt = now + interval + Math.random() * interval;
+  if (Math.random() > chance) return;
+
+  const a = Math.atan2(e.y - oldY, e.x - oldX) + Math.PI;
+  const spread = (e.rad || 10) * (boss ? .85 : large ? .55 : .35);
+  const x = oldX + Math.cos(a) * Math.min(moved, e.rad || 10) + (Math.random() - .5) * spread;
+  const y = oldY + Math.sin(a) * Math.min(moved, e.rad || 10) + (Math.random() - .5) * spread;
+  const base = Math.max(2.6, (e.rad || 10) * (boss ? .46 : large ? .24 : .16));
+
+  if (boss) {
+    addSlimePuddle({
+      x, y,
+      r: base * (.9 + Math.random() * .8),
+      rot: Math.random() * Math.PI * 2,
+      scale: .42 + Math.random() * .34,
+      squash: .42 + Math.random() * .26,
+      alpha: .28 + Math.random() * .18,
+      lobes: 8 + Math.floor(Math.random() * 4),
+      seed: Array.from({ length: 8 }, () => Math.random()),
+    });
+    return;
+  }
+
+  addBloodDecal({
+    x, y,
+    r: base * (.72 + Math.random() * .76),
+    rot: Math.random() * Math.PI * 2,
+    scale: .45 + Math.random() * (large ? .52 : .35),
+    squash: .45 + Math.random() * .35,
+    alpha: .32 + Math.random() * .18,
+    c: BLOOD_PALETTE[Math.floor(Math.random() * BLOOD_PALETTE.length)],
+    lobes: 5 + Math.floor(Math.random() * 5),
+    drips: Math.random() < .25 ? 1 : 0,
+    seed: Array.from({ length: 8 }, () => Math.random()),
+  });
+}
+
 function drawBloodDecals() {
   if (!S.bloodDecals || !S.bloodDecals.length) return;
   ensureBloodLayer();
@@ -11606,7 +11656,11 @@ function step(dt) {
   for (const t of S.towers) towerTick(t, dt);
 
   // Update enemies
-  for (const e of S.enemies) enemyStep(e, dt);
+  for (const e of S.enemies) {
+    const oldX = e.x, oldY = e.y;
+    enemyStep(e, dt);
+    maybeWoundedTrail(e, oldX, oldY, dt);
+  }
 
   // Clean destroyed entities; rebuild path if road changed
   const prevBarrierCount = S.barriers.length;
