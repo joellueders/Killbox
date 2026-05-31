@@ -3798,7 +3798,7 @@ const S = {
   comboBanner: '',
   comboBannerKind: '',
   comboBannerTime: 0,
-  synergyStats: loadSynergyStats(),
+  synergyStats: {},
   synergyLog: [],
   runStats: { heroKills: 0, towerKills: 0, otherKills: 0, leaked: 0, powerups: 0, goldEarned: 0, bonusGold: 0, interestGold: 0, wavesCleared: 0 },
   selected: null, sel: null, menuOpen: false, aiEngineerOwned: false, placeDir: 1,
@@ -7525,6 +7525,8 @@ function maybeNeighborhood(e, x, y, tower, byHero, blastRadius = 0) {
   logSynergy('neighborhood', x ?? e.x, y ?? e.y, { msg: `${crowd} packed`, toast: false });
   return true;
 }
+
+S.synergyStats = loadSynergyStats();
 
 // Returns counts of each enemy type for wave w
 function previewWave(w) {
