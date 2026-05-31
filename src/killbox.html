@@ -2470,7 +2470,7 @@ kbd {
   <div class="stats">
     <div class="stat compactStat" id="statLives"><small><span class="statLabel">LIVES</span></small><span class="statValueRow"><b id="lives">15</b></span></div>
     <div class="stat compactStat"><small><span class="statLabel">GOLD</span></small><span class="statValueRow"><b id="gold">160</b></span></div>
-    <div class="stat compactStat"><small><span class="statLabel">WAVE</span></small><span class="statValueRow"><b id="wave">0</b><span class="smallValue">/ --</span></span></div>
+    <div class="stat compactStat"><small><span class="statLabel">WAVE</span></small><span class="statValueRow"><b id="wave">0</b><span class="smallValue" id="waveArchetypeLabel">• --</span></span></div>
     <div class="stat compactStat speedWrap hidden"><small><span class="statLabel">SPEED</span></small><span class="statValueRow"><select id="gameSpeedSelect" class="speedSelect" aria-label="Wave speed"><option value="1">1x</option><option value="1.5">1.5x</option><option value="2">2x</option><option value="3">3x</option></select></span></div>
   </div>
   <div class="panel">
@@ -3733,6 +3733,8 @@ const S = {
   paused: false, // Manual pause only; do not reuse this for upgradeChoice or wave gating.
   gameOver: false, restarts: 2, waveSnapshot: null,
   lives: 15, gold: 180, wave: 0, score: 0,
+  waveArchetype: 'recovery',
+  waveArchetypeLabel: 'Recovery',
   phase: 'build', // Broad mode: build phase vs combat phase.
   waveStats: null,
   balanceLog: [],
@@ -5019,14 +5021,17 @@ function shake(amt, dur) {
 // ── UI render ─────────────────────────────────────────────────────
 function ui() {
   syncDevGold();
+  const displayWave = S.waveActive ? S.wave : (S.started && !S.gameOver ? S.wave + 1 : S.wave);
+  const displayArch = waveArchetypeForDisplay();
   $('lives').textContent = S.lives;
   if ($('hudLives')) $('hudLives').textContent = S.lives;
   if ($('hp')) $('hp').textContent = Math.max(0, Math.floor(S.hero.hp));
   if ($('p2hp')) $('p2hp').textContent = S.engineer.active ? Math.max(0, Math.floor(S.engineer.hp)) : 'OFF';
   $('gold').textContent  = Math.floor(S.gold);
   if ($('hudGold')) $('hudGold').textContent = Math.floor(S.gold);
-  $('wave').textContent  = S.wave;
-  if ($('hudWave')) $('hudWave').textContent = S.wave;
+  $('wave').textContent  = displayWave;
+  if ($('hudWave')) $('hudWave').textContent = displayWave;
+  if ($('waveArchetypeLabel')) $('waveArchetypeLabel').textContent = displayWave > 0 ? `• ${displayArch.label || 'Swarm'}` : '• --';
   if ($('score')) $('score').textContent = S.score;
   if ($('hudScore')) $('hudScore').textContent = Math.floor(S.score);
   if ($('hudCombo')) $('hudCombo').textContent = S.combo > 0 ? `x${S.combo}` : `x1`;
@@ -6034,6 +6039,7 @@ function populateDevDropDowns() {
 }
 
 function finishWave() {
+  const arch = S.waveArchetypeData || pickWaveArchetype(S.wave || 1);
   if (S.activeWaveMutagen) {
     const mut = MULTIVERSE_MUTAGENS[S.activeWaveMutagen];
     if (mut && typeof mut.remove === 'function') mut.remove();
@@ -6049,7 +6055,7 @@ function finishWave() {
   S.firePatches = (S.firePatches || []).filter(f => !f.slime);
   hideBossWarning();
 
-  const bonus = Math.floor((ECONOMY_TUNING.waveBonusBase + S.wave * ECONOMY_TUNING.waveBonusPerWave + Math.floor(S.wave * S.wave * ECONOMY_TUNING.waveBonusRamp)) * ECONOMY_TUNING.waveBonusMultiplier);
+  const bonus = Math.floor((ECONOMY_TUNING.waveBonusBase + S.wave * ECONOMY_TUNING.waveBonusPerWave + Math.floor(S.wave * S.wave * ECONOMY_TUNING.waveBonusRamp)) * ECONOMY_TUNING.waveBonusMultiplier * (arch.rewardMult || 1));
 
   // Interest on unspent gold: slightly reduced to keep late-game cash from drifting too high.
   const interest = S.gold > ECONOMY_TUNING.interestThreshold ? Math.floor((S.gold - ECONOMY_TUNING.interestThreshold) * ECONOMY_TUNING.interestRate) : 0;
@@ -6069,6 +6075,7 @@ function finishWave() {
   const topDamage = Object.entries(S.waveStats?.damageBySource || {}).sort((a, b) => b[1] - a[1])[0] || null;
   const balanceSummary = {
     wave: S.wave,
+    archetype: arch.label || 'Swarm',
     startGold: S.waveStats?.startGold,
     endGold: Math.floor(S.gold),
     killGold: Math.floor(S.waveStats?.goldEarned || 0),
@@ -6327,6 +6334,7 @@ function renderPreview() {
   if ($('preview').dataset.previewKey === key) return;
   $('preview').dataset.previewKey = key;
   const p = previewWave(S.wave + 1);
+  const arch = WAVE_ARCHETYPE_RULES[p.__archetype] || pickWaveArchetype(S.wave + 1);
   const entries = Object.entries(p).filter(([, v]) => v > 0);
   const roleNames = {
     grunt: 'Grunt',
@@ -6339,6 +6347,11 @@ function renderPreview() {
     shield: 'Shield',
     healer: 'Healer',
     siege: 'Siege',
+    warden: 'Warden',
+    sapper: 'Sapper',
+    phase: 'Phase',
+    splitter: 'Splitter',
+    hexcaller: 'Hex Caller',
   };
   const roleNotes = {
     runner: 'Fast leak',
@@ -6351,8 +6364,13 @@ function renderPreview() {
     slinger: 'Ranged harasser',
     grunt: 'Basic fodder',
     ogre: 'Boss brute',
+    warden: 'Turns away frontal fire',
+    sapper: 'Shreds choke pieces',
+    phase: 'Slips through control',
+    splitter: 'Breaks into runners',
+    hexcaller: 'Buffs nearby enemies',
   };
-  $('preview').innerHTML = `<b>Next Harvest ${S.wave + 1}:</b> ` +
+  $('preview').innerHTML = `<b>Next Harvest ${S.wave + 1} • ${arch.label || 'Swarm'}:</b> ` +
     (entries.length ? entries.map(([k, v]) => `${roleNames[k] || k} · ${roleNotes[k] || 'Lane problem'} ×${v}`).join(', ') : 'none');
 }
 
@@ -6765,6 +6783,8 @@ function makeWaveSnapshot() {
   S.waveSnapshot = JSON.stringify({
     levelId: S.levelId,
     lives: S.lives, gold: S.gold, wave: S.wave, score: S.score,
+    waveArchetype: S.waveArchetype || null,
+    waveArchetypeLabel: S.waveArchetypeLabel || null,
     aiEngineerOwned: S.aiEngineerOwned,
     mods: { ...S.mods },
     hero: Object.assign({}, S.hero),
@@ -6799,6 +6819,9 @@ function restoreWaveSnapshot() {
   S.gameState = 'combat';
   S.paused = false;
   S.lives = o.lives; S.gold = o.gold; S.wave = o.wave; S.score = o.score;
+  S.waveArchetype = o.waveArchetype || S.waveArchetype || 'recovery';
+  S.waveArchetypeLabel = o.waveArchetypeLabel || S.waveArchetypeLabel || 'Recovery';
+  S.waveArchetypeData = WAVE_ARCHETYPE_RULES[S.waveArchetype] || pickWaveArchetype(S.wave || 1);
   S.aiEngineerOwned = !!o.aiEngineerOwned;
   S.mods = { gold: 1.14, dmg: 1, overclockUntil: 0, frenzyUntil: 0, hasteUntil: 0, coinPurseUntil: 0, lastStandUntil: 0, riftShieldUntil: 0, ...(o.mods || {}) };
   S.hero  = { ...S.hero, ...o.hero, cool: 0, inv: 0, dash: 0, dashCd: 0 };
@@ -7026,6 +7049,114 @@ function waveTheme(w) {
   return 'probe';
 }
 
+const WAVE_ARCHETYPE_RULES = {
+  swarm: {
+    label: 'Swarm',
+    countMult: 1.24,
+    hpMult: 0.86,
+    speedMult: 1.0,
+    rewardMult: 1.08,
+    spawnMult: 1.0,
+    specialMult: { hunter: 0.92, bomber: 0.9, shield: 0.88, healer: 0.88, siege: 0.84, warden: 0.86, sapper: 0.86, phase: 0.86, splitter: 0.88, hexcaller: 0.86, brute: 0.9, ogre: 0.82 },
+    fillerWeights: { grunt: 0.7, runner: 0.22, slinger: 0.08 },
+  },
+  elite: {
+    label: 'Elite',
+    countMult: 0.84,
+    hpMult: 1.26,
+    speedMult: 1.0,
+    rewardMult: 1.11,
+    spawnMult: 1.0,
+    specialMult: { hunter: 1.06, bomber: 1.02, shield: 1.18, healer: 1.14, siege: 1.08, warden: 1.18, sapper: 1.06, phase: 1.0, splitter: 1.12, hexcaller: 1.04, brute: 1.34, ogre: 1.18 },
+    fillerWeights: { grunt: 0.45, runner: 0.3, slinger: 0.25 },
+  },
+  breach: {
+    label: 'Breach',
+    countMult: 0.96,
+    hpMult: 0.88,
+    speedMult: 1.14,
+    rewardMult: 1.0,
+    spawnMult: 1.0,
+    specialMult: { hunter: 1.06, bomber: 1.0, shield: 0.98, healer: 0.98, siege: 1.02, warden: 1.04, sapper: 1.0, phase: 1.08, splitter: 1.0, hexcaller: 1.0, brute: 0.98, ogre: 0.96 },
+    fillerWeights: { grunt: 0.33, runner: 0.46, slinger: 0.21 },
+  },
+  siege: {
+    label: 'Siege',
+    countMult: 0.92,
+    hpMult: 1.0,
+    speedMult: 0.97,
+    rewardMult: 1.05,
+    spawnMult: 1.0,
+    specialMult: { hunter: 1.22, bomber: 1.0, shield: 1.1, healer: 1.06, siege: 1.26, warden: 1.16, sapper: 1.34, phase: 1.0, splitter: 0.98, hexcaller: 1.28, brute: 0.98, ogre: 0.94 },
+    fillerWeights: { grunt: 0.5, runner: 0.27, slinger: 0.23 },
+  },
+  onslaught: {
+    label: 'Onslaught',
+    countMult: 1.08,
+    hpMult: 0.98,
+    speedMult: 1.0,
+    rewardMult: 1.06,
+    spawnMult: 0.86,
+    specialMult: { hunter: 1.04, bomber: 1.04, shield: 1.04, healer: 1.04, siege: 1.04, warden: 1.04, sapper: 1.04, phase: 1.04, splitter: 1.04, hexcaller: 1.04, brute: 1.04, ogre: 1.04 },
+    fillerWeights: { grunt: 0.42, runner: 0.34, slinger: 0.24 },
+  },
+  recovery: {
+    label: 'Recovery',
+    countMult: 0.72,
+    hpMult: 0.86,
+    speedMult: 0.96,
+    rewardMult: 0.92,
+    spawnMult: 1.08,
+    specialMult: { hunter: 0.72, bomber: 0.72, shield: 0.75, healer: 0.72, siege: 0.68, warden: 0.72, sapper: 0.68, phase: 0.7, splitter: 0.7, hexcaller: 0.68, brute: 0.78, ogre: 0.72 },
+    fillerWeights: { grunt: 0.78, runner: 0.16, slinger: 0.06 },
+  },
+  boss: {
+    label: 'Boss',
+    countMult: 1,
+    hpMult: 1,
+    speedMult: 1,
+    rewardMult: 1,
+    spawnMult: 1,
+    specialMult: {},
+    fillerWeights: { grunt: 1, runner: 0, slinger: 0 },
+  },
+};
+
+function weightedPick(map, rng) {
+  const entries = Object.entries(map).filter(([, w]) => w > 0);
+  if (!entries.length) return 'grunt';
+  const total = entries.reduce((sum, [, w]) => sum + w, 0);
+  let roll = rng() * total;
+  for (const [key, weight] of entries) {
+    roll -= weight;
+    if (roll <= 0) return key;
+  }
+  return entries[entries.length - 1][0];
+}
+
+function pickWaveArchetype(w) {
+  const wave = Math.max(1, Math.floor(w || 1));
+  if (wave % 3 === 0) return WAVE_ARCHETYPE_RULES.boss;
+  const rng = makeWaveRng(wave * 1000003 + 1777);
+  const pool = wave <= 4
+    ? [['swarm', 5], ['recovery', 4]]
+    : wave <= 10
+      ? [['elite', 3], ['breach', 3], ['siege', 2]]
+      : [['onslaught', 4], ['elite', 3], ['breach', 2]];
+  const total = pool.reduce((sum, [, weight]) => sum + weight, 0);
+  let roll = rng() * total;
+  for (const [id, weight] of pool) {
+    roll -= weight;
+    if (roll <= 0) return WAVE_ARCHETYPE_RULES[id];
+  }
+  return WAVE_ARCHETYPE_RULES[pool[pool.length - 1][0]];
+}
+
+function waveArchetypeForDisplay() {
+  const w = S.waveActive ? Math.max(1, S.wave) : Math.max(1, S.wave + (S.started && !S.gameOver ? 1 : 0));
+  return pickWaveArchetype(w);
+}
+
 // Seeded PRNG (mulberry32) — deterministic per wave so preview === actual spawn mix
 function makeWaveRng(seed) {
   let s = seed | 0;
@@ -7046,37 +7177,34 @@ function getWaveCountdownDuration(wave) {
 // Returns counts of each enemy type for wave w
 function previewWave(w) {
   const rng = makeWaveRng(w * 1000003 + 7);
-  const n = waveSize(w);
+  const arch = pickWaveArchetype(w);
+  const n = Math.max(1, Math.round(waveSize(w) * (arch.countMult || 1)));
   const p = { grunt: 0, runner: 0, slinger: 0, brute: 0, ogre: 0,
                hunter: 0, bomber: 0, shield: 0, healer: 0, siege: 0,
                warden: 0, sapper: 0, phase: 0, splitter: 0, hexcaller: 0 };
 
-  // Special roles scale with wave
-  // pressure layering to require hero intervention
-  p.hunter  = w >= 5  ? Math.max(1, Math.round(n * .035)) : 0;
-  p.bomber  = w >= 6  ? Math.max(1, Math.round(n * .04))  : 0;
-  p.shield  = w >= 4  ? Math.max(1, Math.round(n * .06))  : 0;
-  p.healer  = w >= 6  ? Math.max(1, Math.round(n * .035)) : 0;
-  p.siege   = w >= 7  ? Math.max(1, Math.round(n * .03))  : 0;
-  p.brute   = w >= 4  ? Math.max(1, Math.round(n * .065)) : 0;
-  p.ogre    = w >= 8  ? Math.max(1, Math.round(n * .03))  : 0;
-  p.warden  = w >= 5  ? Math.max(1, Math.round(n * .04))  : 0;
-  p.sapper  = w >= 5  ? Math.max(1, Math.round(n * .035)) : 0;
-  p.hexcaller = w >= 6 ? Math.max(1, Math.round(n * .03))  : 0;
-  p.splitter = w >= 7  ? Math.max(1, Math.round(n * .028)) : 0;
-  p.phase   = w >= 8  ? Math.max(1, Math.round(n * .026)) : 0;
-  if (w >= 7 && p.runner < 2) p.runner = 2;
+  const scale = (type, count) => {
+    if (!count) return 0;
+    const mult = (arch.specialMult && Object.prototype.hasOwnProperty.call(arch.specialMult, type))
+      ? arch.specialMult[type]
+      : (arch.specialMult && arch.specialMult.all) || 1;
+    return Math.max(0, Math.round(count * mult));
+  };
 
-  // Fill remainder with grunts / runners / slingers (deterministic via seeded rng)
-  let used = Object.values(p).reduce((a, b) => a + b, 0);
-  let remaining = Math.max(0, n - used);
+  // Special roles scale with wave and archetype
+  p.hunter    = w >= 5  ? scale('hunter',    Math.max(1, Math.round(n * .035))) : 0;
+  p.bomber    = w >= 6  ? scale('bomber',    Math.max(1, Math.round(n * .04)))  : 0;
+  p.shield    = w >= 4  ? scale('shield',    Math.max(1, Math.round(n * .06)))  : 0;
+  p.healer    = w >= 6  ? scale('healer',    Math.max(1, Math.round(n * .035))) : 0;
+  p.siege     = w >= 7  ? scale('siege',     Math.max(1, Math.round(n * .03)))  : 0;
+  p.brute     = w >= 4  ? scale('brute',     Math.max(1, Math.round(n * .065))) : 0;
+  p.ogre      = w >= 8  ? scale('ogre',      Math.max(1, Math.round(n * .03)))  : 0;
+  p.warden    = w >= 5  ? scale('warden',    Math.max(1, Math.round(n * .04)))  : 0;
+  p.sapper    = w >= 5  ? scale('sapper',    Math.max(1, Math.round(n * .035))) : 0;
+  p.hexcaller = w >= 6  ? scale('hexcaller', Math.max(1, Math.round(n * .03)))  : 0;
+  p.splitter  = w >= 7  ? scale('splitter',  Math.max(1, Math.round(n * .028))) : 0;
+  p.phase     = w >= 8  ? scale('phase',     Math.max(1, Math.round(n * .026))) : 0;
 
-  for (let i = 0; i < remaining; i++) {
-    const r = rng();
-    if (w > 2 && r < .18) p.slinger++;
-    else if (w > 1 && r < .40) p.runner++;
-    else p.grunt++;
-  }
   if (w >= 4) {
     // pressure layering to require hero intervention
     if (p.hunter && p.runner === 0) p.runner = 1;
@@ -7088,7 +7216,19 @@ function previewWave(w) {
     if (p.splitter && p.brute === 0) p.brute = 1;
     if (p.phase && p.runner === 0) p.runner = 1;
   }
+
+  // Fill the remainder with lower-tier enemies according to archetype.
+  let used = Object.values(p).reduce((a, b) => a + b, 0);
+  let remaining = Math.max(0, n - used);
+  const fillerWeights = arch.fillerWeights || { grunt: 0.58, runner: 0.28, slinger: 0.14 };
+  for (let i = 0; i < remaining; i++) {
+    const pick = weightedPick(fillerWeights, rng);
+    p[pick] = (p[pick] || 0) + 1;
+  }
+
   p.__theme = waveTheme(w);
+  p.__archetype = arch.id || 'swarm';
+  p.__archetypeLabel = arch.label || 'Swarm';
   return p;
 }
 
@@ -7151,7 +7291,11 @@ function startWave() {
 
   const p = previewWave(S.wave);
   const theme = p.__theme || waveTheme(S.wave);
+  const arch  = WAVE_ARCHETYPE_RULES[p.__archetype] || pickWaveArchetype(S.wave);
   S.waveTheme = theme;
+  S.waveArchetype = arch.id || 'swarm';
+  S.waveArchetypeLabel = arch.label || 'Swarm';
+  S.waveArchetypeData = arch;
   for (const [type, count] of Object.entries(p))
     for (let i = 0; i < count; i++) S.queue.push(type);
 
@@ -7186,6 +7330,7 @@ function spawn(type) {
   const entry = SPAWN_POINTS[Math.floor(Math.random() * SPAWN_POINTS.length)];
   const path  = spawnPathFor(entry);
   const w     = S.wave;
+  const arch  = S.waveArchetypeData || pickWaveArchetype(w);
 
   // Base stats scale with wave
   let hp  = 50 + w * 32 + Math.pow(w, 1.55) * 11;
@@ -7210,6 +7355,9 @@ function spawn(type) {
     case 'hexcaller':hp *= .9;  val = 22;    rad = 13; spd *= .84; range = 0; shoot = 0; healCool = .65; break;
     case 'slimeking':hp *= 9.5; val = 150;   rad = 32; spd *= .34; range = 330; shoot = .4; break;
   }
+  hp *= arch.hpMult || 1;
+  spd *= arch.speedMult || 1;
+  val = Math.max(1, Math.round(val * (arch.rewardMult || 1)));
 
   // Wild behavior: ~20% of non-special enemies deviate unpredictably
   const canBeWild = !['hunter', 'slimeking', 'siege', 'bomber'].includes(type);
@@ -7261,6 +7409,7 @@ function spawn(type) {
 
 function spawnEnemyAt(type, x, y, path, node = 0) {
   const w = S.wave;
+  const arch = S.waveArchetypeData || pickWaveArchetype(w);
   let hp  = 50 + w * 32 + Math.pow(w, 1.55) * 11;
   let spd = .84 + w * .024;
   let val = 5, rad = 13, range = 0, shoot = 0, healCool = 0;
@@ -7282,6 +7431,9 @@ function spawnEnemyAt(type, x, y, path, node = 0) {
     case 'hexcaller':hp *= .9;  val = 22;    rad = 13; spd *= .84; range = 0; shoot = 0; healCool = .65; break;
     case 'slimeking':hp *= 9.5; val = 150;   rad = 32; spd *= .34; range = 330; shoot = .4; break;
   }
+  hp *= arch.hpMult || 1;
+  spd *= arch.speedMult || 1;
+  val = Math.max(1, Math.round(val * (arch.rewardMult || 1)));
 
   const canBeWild = !['hunter', 'slimeking', 'siege', 'bomber'].includes(type);
   const wild = canBeWild && Math.random() < .20;
@@ -7317,13 +7469,14 @@ function nextSpawnDelay() {
   const groupSize = S.wave < 3 ? 3 : S.wave < 7 ? 4 : 5;
   const withinGroup = S.spawnCount % groupSize !== 0;
   const pressure = Math.min(S.wave, 12);
+  const arch = S.waveArchetypeData || pickWaveArchetype(S.wave || 1);
   if (withinGroup) return Math.max(.38, .66 - pressure * .018);
   const groupsSpawned = S.spawnCount / groupSize;
   const restEvery = S.wave < 5 ? 3 : 4;
   if (groupsSpawned > 0 && groupsSpawned % restEvery === 0) {
-    return 2.6 + ((S.wave * 37 + groupsSpawned * 17) % 3);
+    return (2.6 + ((S.wave * 37 + groupsSpawned * 17) % 3)) * (arch.spawnMult || 1);
   }
-  return Math.max(.82, 1.55 - pressure * .04);
+  return Math.max(.82, 1.55 - pressure * .04) * (arch.spawnMult || 1);
 }
 
 // ── Damage / kill helpers ─────────────────────────────────────────
@@ -12806,6 +12959,7 @@ function makeSnapshot() {
   return {
     version:S.version, levelId:S.levelId, speed:S.speed, started:S.started, paused:S.paused, gameOver:S.gameOver,
     lives:S.lives, gold:S.gold, wave:S.wave, score:S.score, phase:S.phase, waveActive:S.waveActive,
+    waveArchetype:S.waveArchetype, waveArchetypeLabel:S.waveArchetypeLabel,
     mods: { ...S.mods },
     selected:S.selected, hero:S.hero, engineer:S.engineer, towers:S.towers, barriers:S.barriers, barrels:S.barrels,
     enemies:S.enemies, shots:S.shots, heroShots:S.heroShots, enemyShots:S.enemyShots, parts:S.parts, texts:S.texts,
@@ -12819,6 +12973,9 @@ function applySnapshot(st) {
   if (st.levelId) applyLevel(st.levelId, { silent: true });
   Object.assign(S, st);
   S.mods = { gold: 1.14, dmg: 1, overclockUntil: 0, frenzyUntil: 0, hasteUntil: 0, coinPurseUntil: 0, lastStandUntil: 0, riftShieldUntil: 0, ...(S.mods || {}) };
+  S.waveArchetype = S.waveArchetype || 'recovery';
+  S.waveArchetypeLabel = S.waveArchetypeLabel || 'Recovery';
+  S.waveArchetypeData = WAVE_ARCHETYPE_RULES[S.waveArchetype] || pickWaveArchetype(S.wave || 1);
   S.net = net;
   S.towers = (S.towers || []).map(t => towerHasDurability(t) ? t : ({ ...t, hp: undefined, max: undefined }));
   S.firePatches = (S.firePatches || []).map(({ t, ...patch }) => ({ ...patch }));
