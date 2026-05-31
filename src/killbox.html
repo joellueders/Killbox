@@ -14361,7 +14361,16 @@ const toggleMenu = () => {
   setTimeout(resize, 260);
 };
 if ($('menuToggle')) $('menuToggle').onclick = toggleMenu;
-$('devToggle').onclick = () => { S.devToolsOpen = !S.devToolsOpen; ui(); };
+$('devToggle').onclick = () => {
+  S.devToolsOpen = !S.devToolsOpen;
+  if (S.devToolsOpen) {
+    S.paused = true;
+    S.devUnlimitedGold = true;
+    S.devInvincible = true;
+    syncDevGold();
+  }
+  ui();
+};
 $('devGoldToggle').onclick = () => { S.devUnlimitedGold = !S.devUnlimitedGold; if (S.devUnlimitedGold) syncDevGold(); ui(); toast(`Infinite Gold ${S.devUnlimitedGold ? 'ON' : 'OFF'}`); };
 $('devInvToggle').onclick = () => { S.devInvincible = !S.devInvincible; ui(); toast(`God Mode ${S.devInvincible ? 'ON' : 'OFF'}`); };
 $('devInfoToggle').onclick = () => { S.devShowInfo = !S.devShowInfo; ui(); toast(`Debug Overlay ${S.devShowInfo ? 'ON' : 'OFF'}`); };
