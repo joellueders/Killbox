@@ -1328,45 +1328,7 @@ textarea {
   align-items: flex-end;
 }
 
-/* ── Toast ───────────────────────────────────────────────────────── */
-.toast { position: fixed; left: 18px; bottom: 18px; display: flex; flex-direction: column; gap: 6px; pointer-events: none; z-index: 7; align-items: flex-start; max-width: min(38vw, 360px); }
-.msg   { background: linear-gradient(180deg, #30383dee, #100d0dee); border: 1px solid #b18445; border-radius: 6px; padding: 8px 12px; animation: fade 4s forwards; box-shadow: 0 4px 0 #090604, 0 10px 24px #0007; color: #fff0c7; }
-.msg.threat {
-  border-color: #f0c96b;
-  background: linear-gradient(180deg, rgba(44, 28, 10, .98), rgba(14, 10, 6, .98));
-  box-shadow: 0 0 0 1px rgba(240, 201, 107, .32) inset, 0 0 22px rgba(0, 0, 0, .45);
-  border-radius: 16px;
-  padding: 10px 12px 9px;
-  min-width: 250px;
-  max-width: 420px;
-  animation-duration: 5.8s;
-}
-.msg.threat b,
-.msg.threat .threatName,
-.msg.threat .threatDesc { display: block; }
-.msg.threat .threatTag {
-  color: #ffd57b;
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-}
-.msg.threat .threatName {
-  margin-top: 2px;
-  color: #fff3c9;
-  font-size: 17px;
-  font-weight: 900;
-  line-height: 1.04;
-  letter-spacing: .03em;
-}
-.msg.threat .threatDesc {
-  margin-top: 4px;
-  color: #f2dec0;
-  font-size: 13px;
-  line-height: 1.14;
-  font-weight: 700;
-}
-@keyframes fade { 0%, 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(8px); } }
+/* Popup notifications removed. */
 
 /* ── Overlays ────────────────────────────────────────────────────── */
 .overlay { position: fixed; inset: 0; display: grid; place-items: center; background: #0009; z-index: 10; }
@@ -2650,8 +2612,6 @@ kbd {
 
 
 <!-- ── Toast container ────────────────────── -->
-<div id="toast" class="toast"></div>
-<div id="threatToast" class="toast threatToast"></div>
 
 <!-- ── Overlays ────────────────────────────── -->
 <div id="start" class="overlay">
@@ -3808,7 +3768,6 @@ const S = {
   weapon: 'blunderbuss', loadout: [],
   towers: [], barriers: [], barrels: [], enemies: [], shots: [], heroShots: [], enemyShots: [], parts: [], texts: [], oilPatches: [], firePatches: [], healthOrbs: [], effects: [], bloodDecals: [], bloodDecalCursor: 0, bloodLayerDirty: false, debrisDecals: [], debrisDecalCursor: 0, debrisLayerDirty: false, liveGibs: [], battlefieldScars: [], deathClusters: [], queue: [],
   seenEnemyThreats: {},
-  threatPopupQueue: [],
   timer: 0, spawnCount: 0,
   waveCountdown: 0, waveCountdownStart: 15,
   waveActive: false, // Combat lifecycle gate: true only while enemies are active / queued.
@@ -4648,7 +4607,6 @@ function resetRunForLevelSwitch(levelId) {
   S.gold = S.devUnlimitedGold ? 9999 : 180;
   S.waveStats = null;
   S.seenEnemyThreats = {};
-  S.threatPopupQueue = [];
   S.bossActive = false;
   S.bossSpawned = false;
   S.bossIntro = 0;
@@ -5028,62 +4986,10 @@ rebuildPath();
 
 // ── Toast notifications ───────────────────────────────────────────
 function toast(msg) {
-  const host = $('toast');
-  if (!host) return;
-  const existing = [...host.children].find(n => n.textContent === msg);
-  if (existing) {
-    clearTimeout(existing._toastTimer);
-    existing.remove();
-  }
-  while (host.children.length >= 3) {
-    const oldest = host.firstElementChild;
-    if (!oldest) break;
-    clearTimeout(oldest._toastTimer);
-    oldest.remove();
-  }
-  const d = document.createElement('div');
-  d.className   = 'msg';
-  d.textContent = msg;
-  host.appendChild(d);
-  d._toastTimer = setTimeout(() => d.remove(), 4100);
+  return;
 }
 function threatToast(type) {
-  const host = $('threatToast');
-  if (!host) return;
-  const info = {
-    grunt:   ['GRUNT',   'Basic fodder'],
-    runner:  ['RUNNER',  'Fast leak'],
-    slinger: ['SLINGER', 'Ranged harasser'],
-    brute:   ['BRUTE',   'Heavy frontline'],
-    ogre:    ['OGRE',    'Boss brute'],
-    hunter:  ['HUNTER',  'Targets your defenses'],
-    bomber:  ['BOMBER',  'Explodes in crowds'],
-    shield:  ['SHIELD',  'Stun it first — towers barely scratch it'],
-    healer:  ['HEALER',  'Hero kill only — towers can\'t finish it'],
-    siege:   ['SIEGE',   'Breaks barricades'],
-    warden:  ['WARDEN',  'Blocks frontal fire'],
-    sapper:  ['SAPPER',  'Dismantles choke pieces'],
-    phase:   ['PHASE',   'Phases through blockers'],
-    splitter:['SPLITTER','Breaks into runners'],
-    hexcaller:['HEX CALLER','Buffs nearby enemies'],
-  }[type] || [String(type || '').toUpperCase(), 'New threat'];
-  S.threatPopupQueue = S.threatPopupQueue || [];
-  const key = `${info[0]}|${info[1]}`;
-  if (S.threatPopupQueue.some(item => item && item.key === key)) return;
-  S.threatPopupQueue.push({ key, info });
-  const pump = () => {
-    let visibleThreats = [...host.children].filter(n => n.classList && n.classList.contains('threat')).length;
-    while (visibleThreats < 2 && S.threatPopupQueue.length) {
-      const next = S.threatPopupQueue.shift();
-      const d = document.createElement('div');
-      d.className = 'msg threat';
-      d.innerHTML = `<span class="threatTag">⚠ NEW THREAT</span><span class="threatName">${next.info[0]}</span><span class="threatDesc">${next.info[1]}</span>`;
-      host.appendChild(d);
-      visibleThreats++;
-      d._toastTimer = setTimeout(() => { d.remove(); pump(); }, 5800);
-    }
-  };
-  pump();
+  return;
 }
 
 // ── Screen shake ──────────────────────────────────────────────────
