@@ -2588,6 +2588,7 @@ kbd {
       </div>
       <div class="devRow">
         <button id="devSpawnBoss">Spawn Boss</button>
+        <button id="devKillBoss">Kill Boss</button>
         <button id="devClearEnemies">Clear Enemies</button>
       </div>
       <div class="devRow">
@@ -4583,6 +4584,14 @@ function devSpawnSlimeKing() {
   }
   spawnSlimeKing();
   toast('Slime King spawned.');
+  ui();
+}
+function devKillSlimeKing() {
+  const boss = S.enemies.find(e => e && !e.dead && e.type === 'slimeking');
+  if (!boss) return toast('No Slime King active.');
+  boss.hp = 1;
+  kill(boss, null, false);
+  toast('Slime King killed.');
   ui();
 }
 function devKillHero() {
@@ -14014,6 +14023,7 @@ $('devLoadArena').onclick = () => {
 };
 $('startArenaSelect').onchange = e => { LOADOUT_STATE.arenaId = e.target.value || 'field'; updateLoadoutSummary(); };
 $('devSpawnBoss').onclick = () => devSpawnSlimeKing();
+$('devKillBoss').onclick = () => devKillSlimeKing();
 $('devClearEnemies').onclick = () => devClearEnemies();
 $('devTriggerPowerup').onclick = () => forcePowerupDebug($('devPowerupSelect')?.value);
 $('devTriggerMutagen').onclick = () => {
