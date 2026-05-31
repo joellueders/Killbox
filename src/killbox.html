@@ -3805,7 +3805,7 @@ const S = {
   devToolsOpen: false, devUnlimitedGold: false, devInvincible: false, devShowInfo: false,
   devArenaChoice: 'field',
   weapon: 'blunderbuss', loadout: [],
-  towers: [], barriers: [], barrels: [], enemies: [], shots: [], heroShots: [], enemyShots: [], parts: [], texts: [], oilPatches: [], firePatches: [], healthOrbs: [], effects: [], queue: [],
+  towers: [], barriers: [], barrels: [], enemies: [], shots: [], heroShots: [], enemyShots: [], parts: [], texts: [], oilPatches: [], firePatches: [], healthOrbs: [], effects: [], bloodDecals: [], bloodDecalCursor: 0, bloodLayerDirty: false, queue: [],
   seenEnemyThreats: {},
   threatPopupQueue: [],
   timer: 0, spawnCount: 0,
@@ -4067,6 +4067,7 @@ function clearWorldForDebugWarp() {
   S.enemyShots = [];
   S.parts = [];
   S.texts = [];
+  clearBloodDecals();
   S.oilPatches = [];
   S.firePatches = [];
   S.healthOrbs = [];
@@ -4649,6 +4650,7 @@ function resetRunForLevelSwitch(levelId) {
   S.enemyShots = [];
   S.parts = [];
   S.texts = [];
+  clearBloodDecals();
   S.oilPatches = [];
   S.firePatches = [];
   S.healthOrbs = [];
@@ -8003,10 +8005,10 @@ function enemyDeathFeedback(e, tower, byHero) {
   const cue = profiles[e.type];
   if (!cue) return;
   if (cue.sfx) playSfx(cue.sfx);
-  burst(e.x, e.y - 4, cue.burst, e.type === 'slimeking' ? 18 : 9, 'spark', e.type === 'slimeking' ? 220 : 120);
+  spawnBloodSplats(e.x, e.y, e);
   shockwave(e.x, e.y, cue.shock, e.type === 'slimeking' ? 150 : Math.max(38, e.rad * 1.6), e.type === 'slimeking' ? .45 : .22);
   if (cue.fx && cue.fx !== 'shatter') impactFx(e.x, e.y, cue.fx);
-  if (cue.fx === 'shatter' || e.freeze > 0 || e.chill > 0) burst(e.x, e.y, '#e9fbff', 8, 'spark', 140);
+  if (cue.fx === 'shatter' || e.freeze > 0 || e.chill > 0) shockwave(e.x, e.y, '#e9fbff', 38, .2);
   floatText(cue.text, e.x - Math.min(48, cue.text.length * 2.4), e.y - 42, e.type === 'slimeking' ? '#ffe09c33' : '#ffe56b');
   if (e.type === 'bomber') shake(7, .18);
   if (e.type === 'ogre') shake(5, .12);
@@ -8110,8 +8112,7 @@ function kill(e, tower, byHero = false) {
   } else {
     dropRandomPowerup(e, byHero);
   }
-  boom(e.x, e.y, e.type === 'slimeking' ? '#4fa34f33' : '#b78a4a',
-       e.type === 'slimeking' ? 52 : 14);
+  if (e.type === 'slimeking') boom(e.x, e.y, '#4fa34f33', 52);
   // Note: ui() for gold/score updates is handled by the step loop epilogue, not per-kill
 }
 
@@ -10978,6 +10979,154 @@ function impactFx(x, y, type = 'arrow') {
   burst(x, y, '#f7d38a', 8, 'spark', 140); burst(x, y, '#8a6a43', 5, 'debris', 100);
 }
 
+const BLOOD_DECAL_MAX = 8000;
+const BLOOD_PALETTE = ['#2a0205', '#3c0508', '#52070b', '#6a0a0f', '#821014'];
+let bloodLayerCanvas = null;
+let bloodLayerCtx = null;
+
+function ensureBloodLayer() {
+  const bw = Math.ceil(Math.max(W || 0, OX + COLS * G + 90));
+  const bh = Math.ceil(Math.max(H || 0, OY + ROWS * G + 90));
+  if (!bloodLayerCanvas || bloodLayerCanvas.width !== bw || bloodLayerCanvas.height !== bh) {
+    bloodLayerCanvas = document.createElement('canvas');
+    bloodLayerCanvas.width = bw;
+    bloodLayerCanvas.height = bh;
+    bloodLayerCtx = bloodLayerCanvas.getContext('2d', { alpha: true });
+    if (S.bloodDecals && S.bloodDecals.length) S.bloodLayerDirty = true;
+  }
+  return bloodLayerCtx;
+}
+
+function clearBloodDecals() {
+  S.bloodDecals = [];
+  S.bloodDecalCursor = 0;
+  S.bloodLayerDirty = false;
+  const bctx = ensureBloodLayer();
+  bctx.clearRect(0, 0, bloodLayerCanvas.width, bloodLayerCanvas.height);
+}
+
+function drawBloodDecalShape(bctx, d) {
+  bctx.save();
+  bctx.translate(d.x, d.y);
+  bctx.rotate(d.rot);
+  bctx.scale(d.scale, d.scale * d.squash);
+  bctx.globalAlpha = d.alpha;
+  bctx.fillStyle = d.c;
+  bctx.beginPath();
+  const lobes = d.lobes || 9;
+  for (let i = 0; i < lobes; i++) {
+    const a = (i / lobes) * Math.PI * 2;
+    const rr = d.r * (0.58 + d.seed[i % d.seed.length] * 0.58);
+    const x = Math.cos(a) * rr;
+    const y = Math.sin(a) * rr;
+    if (i === 0) bctx.moveTo(x, y);
+    else bctx.quadraticCurveTo(Math.cos(a - .32) * d.r * .45, Math.sin(a - .32) * d.r * .45, x, y);
+  }
+  bctx.closePath();
+  bctx.fill();
+
+  bctx.globalAlpha = d.alpha * .62;
+  const drips = Math.min(4, d.drips || 0);
+  for (let i = 0; i < drips; i++) {
+    const a = d.rot + i * 1.7;
+    const dx = Math.cos(a) * d.r * (.45 + d.seed[(i + 2) % d.seed.length] * .7);
+    const dy = Math.sin(a) * d.r * (.45 + d.seed[(i + 3) % d.seed.length] * .7);
+    bctx.beginPath();
+    bctx.ellipse(dx, dy, d.r * (.12 + d.seed[i] * .12), d.r * (.08 + d.seed[i + 1] * .1), a, 0, 7);
+    bctx.fill();
+  }
+  bctx.restore();
+}
+
+function rebuildBloodLayer() {
+  const bctx = ensureBloodLayer();
+  bctx.clearRect(0, 0, bloodLayerCanvas.width, bloodLayerCanvas.height);
+  for (const d of S.bloodDecals) drawBloodDecalShape(bctx, d);
+  S.bloodLayerDirty = false;
+}
+
+function addBloodDecal(d) {
+  if (S.bloodDecals.length < BLOOD_DECAL_MAX) {
+    S.bloodDecals.push(d);
+    drawBloodDecalShape(ensureBloodLayer(), d);
+    return;
+  }
+  S.bloodDecals[S.bloodDecalCursor] = d;
+  S.bloodDecalCursor = (S.bloodDecalCursor + 1) % BLOOD_DECAL_MAX;
+  S.bloodLayerDirty = true;
+}
+
+function spawnBloodSplats(x, y, e) {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+  const rad = e?.rad || 12;
+  const large = isLargeEnemy(e);
+  const boss = e?.type === 'slimeking';
+  const count = boss
+    ? 14 + Math.floor(Math.random() * 9)
+    : large
+      ? 5 + Math.floor(Math.random() * 6)
+      : 1 + Math.floor(Math.random() * 4);
+  const base = boss
+    ? Math.max(36, rad * 1.35)
+    : large
+      ? Math.max(20, Math.min(54, rad * 1.18))
+      : Math.max(8, Math.min(30, rad * .86));
+  if (boss) {
+    addBloodDecal({
+      x, y,
+      r: base * 2.35,
+      rot: Math.random() * Math.PI * 2,
+      scale: 1,
+      squash: .72,
+      alpha: .42,
+      c: '#2a0205',
+      lobes: 15,
+      drips: 4,
+      seed: Array.from({ length: 8 }, () => Math.random()),
+    });
+    addBloodDecal({
+      x: x + 8, y: y - 10,
+      r: base * 1.45,
+      rot: Math.random() * Math.PI * 2,
+      scale: 1,
+      squash: .95,
+      alpha: .34,
+      c: '#52070b',
+      lobes: 13,
+      drips: 4,
+      seed: Array.from({ length: 8 }, () => Math.random()),
+    });
+  }
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const spread = Math.random() * Math.max(8, base * (boss ? 2.25 : large ? 1.65 : 1.1));
+    const scale = (boss ? 1.1 : large ? .85 : .65) + Math.random() * (boss ? 1.45 : large ? 1.15 : .9);
+    addBloodDecal({
+      x: x + Math.cos(a) * spread,
+      y: y + Math.sin(a) * spread,
+      r: base * (.7 + Math.random() * (boss ? 1.4 : large ? 1.05 : .8)),
+      rot: Math.random() * Math.PI * 2,
+      scale,
+      squash: .55 + Math.random() * .45,
+      alpha: (boss ? .38 : .46) + Math.random() * .22,
+      c: BLOOD_PALETTE[Math.floor(Math.random() * BLOOD_PALETTE.length)],
+      lobes: 7 + Math.floor(Math.random() * 6),
+      drips: 1 + Math.floor(Math.random() * 4),
+      seed: Array.from({ length: 8 }, () => Math.random()),
+    });
+  }
+}
+
+function drawBloodDecals() {
+  if (!S.bloodDecals || !S.bloodDecals.length) return;
+  ensureBloodLayer();
+  if (S.bloodLayerDirty) rebuildBloodLayer();
+  ctx.save();
+  ctx.globalAlpha = .9;
+  ctx.drawImage(bloodLayerCanvas, 0, 0);
+  ctx.restore();
+}
+
 function destroyStructure(x, y, label = 'tower') {
   burst(x, y, label === 'barrier' ? '#9b6b37' : '#77706a', label === 'barrier' ? 26 : 30, 'debris', 210);
   burst(x, y, '#3a2514', 10, 'smoke', 85);
@@ -11227,6 +11376,7 @@ function draw(t) {
   ctx.save();
   ctx.translate(-CAMERA.x, -CAMERA.y);
   drawMap(t);
+  drawBloodDecals();
   if (S.hero.lastStandBeaconActive) {
     const gx = cx(GOAL.c) + 30, gy = cy(GOAL.r);
     ctx.save();
@@ -13249,7 +13399,7 @@ function loadPass() {
     S.slimeKingAppearances = o.slimeKingAppearances || 0;
     if (S.aiEngineerOwned) { S.engineer.active = true; S.engineer.hp = S.engineer.max; }
     S.enemies = []; S.shots = []; S.heroShots = []; S.enemyShots = [];
-    S.parts = []; S.texts = []; S.oilPatches = []; S.firePatches = []; S.healthOrbs = [];
+    S.parts = []; S.texts = []; clearBloodDecals(); S.oilPatches = []; S.firePatches = []; S.healthOrbs = [];
     S.queue = []; S.waveActive = false; S.phase = 'build';
     S.started = true; S.gameOver = false;
     S.waveCountdown = getWaveCountdownDuration((S.wave || 0) + 1);
