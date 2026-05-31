@@ -7692,8 +7692,6 @@ function startWave() {
   S.timer = .35;
   makeWaveSnapshot();
 
-  const summary = Object.entries(p).filter(([k, v]) => v > 0 && !k.startsWith('__')).map(([k, v]) => `${k} ×${v}`).join(', ');
-  toast(`${theme === 'probe' ? 'Probe' : theme === 'pressure' ? 'Pressure' : 'Climax'} wave ${S.wave}: ` + summary);
   ui();
 }
 
