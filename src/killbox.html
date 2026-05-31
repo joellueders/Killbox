@@ -3806,7 +3806,7 @@ const S = {
   devToolsOpen: false, devUnlimitedGold: false, devInvincible: false, devShowInfo: false,
   devArenaChoice: 'field',
   weapon: 'blunderbuss', loadout: [],
-  towers: [], barriers: [], barrels: [], enemies: [], shots: [], heroShots: [], enemyShots: [], parts: [], texts: [], oilPatches: [], firePatches: [], healthOrbs: [], effects: [], bloodDecals: [], bloodDecalCursor: 0, bloodLayerDirty: false, debrisDecals: [], debrisDecalCursor: 0, debrisLayerDirty: false, liveGibs: [], queue: [],
+  towers: [], barriers: [], barrels: [], enemies: [], shots: [], heroShots: [], enemyShots: [], parts: [], texts: [], oilPatches: [], firePatches: [], healthOrbs: [], effects: [], bloodDecals: [], bloodDecalCursor: 0, bloodLayerDirty: false, debrisDecals: [], debrisDecalCursor: 0, debrisLayerDirty: false, liveGibs: [], battlefieldScars: [], deathClusters: [], queue: [],
   seenEnemyThreats: {},
   threatPopupQueue: [],
   timer: 0, spawnCount: 0,
@@ -4070,6 +4070,7 @@ function clearWorldForDebugWarp() {
   S.texts = [];
   clearBloodDecals();
   clearGibDebris();
+  clearBattlefieldScars();
   S.oilPatches = [];
   S.firePatches = [];
   S.healthOrbs = [];
@@ -4666,6 +4667,7 @@ function resetRunForLevelSwitch(levelId) {
   S.texts = [];
   clearBloodDecals();
   clearGibDebris();
+  clearBattlefieldScars();
   S.oilPatches = [];
   S.firePatches = [];
   S.healthOrbs = [];
@@ -8096,6 +8098,7 @@ function kill(e, tower, byHero = false) {
   if (byHero) updateComboOnKill(e, tower, byHero, g, baseScore);
   if (byHero) heroThreatKillFeedback(e);
   enemyDeathFeedback(e, tower, byHero);
+  registerDeathScar(e);
   if (e.type === 'splitter') {
     const causedByPrecision = tower ? ['archer', 'ballista'].includes(tower.type) : byHero && ['ranger', 'crossbow'].includes(S.hero.weapon);
     if (causedByPrecision && Array.isArray(e.path) && e.path.length) {
@@ -8210,6 +8213,8 @@ function heroStep(dt) {
   if (S.mods.hasteUntil > now) spd *= 1.5;
   spd *= (h.trinketMoveMult || 1) * (h.trinketMoveActiveMult || 1);
   if ((h.slimeDebuffUntil || 0) > now) spd *= .62;
+  const slimeScar = scarAt(h.x, h.y, 'slime');
+  if (slimeScar) spd *= slimeScar.heroSlow || .62;
   if (S.activeWaveMutagen === 'floorIsTrampolines') {
     h.bouncePhase = (h.bouncePhase || 0) + dt * 14;
     h.bounceAmp = Math.min(1, (h.bounceAmp || 0) + dt * 1.8);
@@ -11030,6 +11035,18 @@ function drawBloodDecalShape(bctx, d) {
     drawSlimePuddleShape(bctx, d);
     return;
   }
+  if (d.scar === 'bone') {
+    drawBoneDecalShape(bctx, d);
+    return;
+  }
+  if (d.scar === 'burn') {
+    drawBurnDecalShape(bctx, d);
+    return;
+  }
+  if (d.scar === 'corruption') {
+    drawCorruptionDecalShape(bctx, d);
+    return;
+  }
   bctx.save();
   bctx.translate(d.x, d.y);
   bctx.rotate(d.rot);
@@ -11078,6 +11095,11 @@ function addBloodDecal(d) {
   S.bloodDecals[S.bloodDecalCursor] = d;
   S.bloodDecalCursor = (S.bloodDecalCursor + 1) % BLOOD_DECAL_MAX;
   S.bloodLayerDirty = true;
+}
+
+function clearBattlefieldScars() {
+  S.battlefieldScars = [];
+  S.deathClusters = [];
 }
 
 function spawnBloodSplats(x, y, e) {
@@ -11191,6 +11213,10 @@ function maybeWoundedTrail(e, oldX, oldY, dt) {
   });
 }
 
+function scarAt(x, y, type = null) {
+  return (S.battlefieldScars || []).find(s => (!type || s.type === type) && dist(x, y, s.x, s.y) <= s.r);
+}
+
 function drawBloodDecals() {
   if (!S.bloodDecals || !S.bloodDecals.length) return;
   ensureBloodLayer();
@@ -11242,6 +11268,103 @@ function drawSlimePuddleShape(bctx, d) {
   bctx.restore();
 }
 
+function drawBoneDecalShape(bctx, d) {
+  bctx.save();
+  bctx.translate(d.x, d.y);
+  bctx.rotate(d.rot || 0);
+  bctx.globalAlpha = d.alpha ?? .82;
+  bctx.strokeStyle = '#21160f';
+  bctx.lineWidth = 1.5;
+  for (let i = 0; i < (d.count || 8); i++) {
+    const a = (d.seed[i % d.seed.length] || .5) * Math.PI * 2;
+    const rr = d.r * (.15 + (d.seed[(i + 2) % d.seed.length] || .5) * .72);
+    const x = Math.cos(a) * rr;
+    const y = Math.sin(a) * rr;
+    const len = d.r * (.12 + (d.seed[(i + 3) % d.seed.length] || .5) * .22);
+    bctx.save();
+    bctx.translate(x, y);
+    bctx.rotate(a + Math.PI / 2);
+    bctx.fillStyle = i % 4 === 0 ? '#d8cfb5' : '#bda77f';
+    if (i % 5 === 0) {
+      bctx.beginPath();
+      bctx.arc(0, 0, len * .7, 0, 7);
+      bctx.fill();
+      bctx.stroke();
+      bctx.fillStyle = '#15100c';
+      bctx.beginPath();
+      bctx.arc(-len * .2, -len * .08, 1.2, 0, 7);
+      bctx.arc(len * .2, -len * .08, 1.2, 0, 7);
+      bctx.fill();
+    } else if (i % 3 === 0) {
+      bctx.beginPath();
+      bctx.moveTo(0, -len);
+      bctx.lineTo(len * .35, len * .85);
+      bctx.lineTo(-len * .25, len * .5);
+      bctx.closePath();
+      bctx.fill();
+      bctx.stroke();
+    } else {
+      bctx.fillRect(-len * .16, -len, len * .32, len * 2);
+      bctx.beginPath();
+      bctx.arc(0, -len, len * .22, 0, 7);
+      bctx.arc(0, len, len * .22, 0, 7);
+      bctx.fill();
+      bctx.stroke();
+    }
+    bctx.restore();
+  }
+  bctx.restore();
+}
+
+function drawBurnDecalShape(bctx, d) {
+  bctx.save();
+  bctx.translate(d.x, d.y);
+  bctx.rotate(d.rot || 0);
+  bctx.scale(d.scale || 1, (d.scale || 1) * (d.squash || .72));
+  const grad = bctx.createRadialGradient(0, 0, d.r * .12, 0, 0, d.r);
+  grad.addColorStop(0, 'rgba(64,32,14,.72)');
+  grad.addColorStop(.55, 'rgba(22,15,12,.64)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  bctx.globalAlpha = d.alpha ?? .72;
+  bctx.fillStyle = grad;
+  bctx.beginPath();
+  bctx.ellipse(0, 0, d.r, d.r * .72, 0, 0, 7);
+  bctx.fill();
+  bctx.globalAlpha = .35;
+  bctx.fillStyle = '#ff7f2a';
+  for (let i = 0; i < 4; i++) {
+    bctx.beginPath();
+    bctx.arc((d.seed[i] - .5) * d.r * 1.2, (d.seed[i + 2] - .5) * d.r, 1.5 + d.seed[i + 3] * 2.2, 0, 7);
+    bctx.fill();
+  }
+  bctx.restore();
+}
+
+function drawCorruptionDecalShape(bctx, d) {
+  bctx.save();
+  bctx.translate(d.x, d.y);
+  bctx.rotate(d.rot || 0);
+  bctx.globalAlpha = d.alpha ?? .7;
+  bctx.strokeStyle = '#150716';
+  bctx.lineWidth = Math.max(2, d.r * .045);
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2 + (d.seed[i % d.seed.length] - .5) * .5;
+    bctx.beginPath();
+    bctx.moveTo(0, 0);
+    bctx.quadraticCurveTo(Math.cos(a + .45) * d.r * .35, Math.sin(a + .45) * d.r * .35, Math.cos(a) * d.r, Math.sin(a) * d.r);
+    bctx.stroke();
+  }
+  bctx.fillStyle = '#2b0a35';
+  bctx.beginPath();
+  bctx.arc(0, 0, d.r * .42, 0, 7);
+  bctx.fill();
+  bctx.fillStyle = '#d8a7ff';
+  bctx.beginPath();
+  bctx.arc(d.r * .08, -d.r * .05, d.r * .12, 0, 7);
+  bctx.fill();
+  bctx.restore();
+}
+
 function addSlimePuddle(d) {
   addBloodDecal({
     ...d,
@@ -11252,9 +11375,22 @@ function addSlimePuddle(d) {
   });
 }
 
+function addBattlefieldScar(scar) {
+  S.battlefieldScars = S.battlefieldScars || [];
+  if (S.battlefieldScars.length > 80) S.battlefieldScars.shift();
+  S.battlefieldScars.push({ pulse: Math.random() * 10, ...scar });
+}
+
 function spawnSlimeKingDeathMess(x, y, e) {
   const rad = e?.rad || 32;
   const base = Math.max(46, rad * 1.55);
+  addBattlefieldScar({
+    type: 'slime',
+    x, y,
+    r: base * 2.05,
+    heal: 4.2 + S.wave * .08,
+    heroSlow: .62,
+  });
   for (let i = 0; i < 5; i++) {
     const a = Math.random() * Math.PI * 2;
     const spread = i ? Math.random() * base * 1.3 : 0;
@@ -11274,6 +11410,69 @@ function spawnSlimeKingDeathMess(x, y, e) {
   shockwave(x, y, '#b8ff4f', 190, .55);
   burst(x, y, '#7bdf5b', 42, 'goo', 260);
   burst(x, y, '#d9ff63', 20, 'bubble', 150);
+}
+
+function createBoneField(x, y, weight = 1) {
+  const r = 44 + Math.min(36, weight * 3);
+  addBattlefieldScar({ type: 'bone', x, y, r });
+  addBloodDecal({
+    scar: 'bone',
+    x, y,
+    r,
+    rot: Math.random() * Math.PI * 2,
+    alpha: .72,
+    count: 9 + Math.floor(Math.random() * 8),
+    seed: Array.from({ length: 8 }, () => Math.random()),
+  });
+}
+
+function createBurningGround(x, y, r = 54) {
+  addBattlefieldScar({ type: 'burn', x, y, r, dps: 2.4 + S.wave * .04 });
+  addBloodDecal({
+    scar: 'burn',
+    x, y,
+    r,
+    rot: Math.random() * Math.PI * 2,
+    scale: .9 + Math.random() * .45,
+    squash: .58 + Math.random() * .24,
+    alpha: .64,
+    seed: Array.from({ length: 8 }, () => Math.random()),
+  });
+}
+
+function createCorruptionPatch(x, y) {
+  const r = 42 + Math.random() * 26;
+  addBattlefieldScar({ type: 'corruption', x, y, r, tick: 0 });
+  addBloodDecal({
+    scar: 'corruption',
+    x, y,
+    r,
+    rot: Math.random() * Math.PI * 2,
+    alpha: .62,
+    seed: Array.from({ length: 8 }, () => Math.random()),
+  });
+}
+
+function registerDeathScar(e) {
+  if (!e || e.type === 'slimeking' || !Number.isFinite(e.x) || !Number.isFinite(e.y)) return;
+  if (e.type === 'bomber' && Math.random() < .34) createBurningGround(e.x, e.y, 46 + Math.random() * 28);
+  if (Math.random() < .006 && S.wave >= 8) createCorruptionPatch(e.x, e.y);
+
+  const weight = isLargeEnemy(e) ? 3 : e.type === 'bomber' || e.type === 'sapper' ? 2 : 1;
+  S.deathClusters = S.deathClusters || [];
+  let cluster = S.deathClusters.find(c => dist(c.x, c.y, e.x, e.y) < 76);
+  if (!cluster) {
+    cluster = { x: e.x, y: e.y, n: 0, scarred: false };
+    S.deathClusters.push(cluster);
+    if (S.deathClusters.length > 48) S.deathClusters.shift();
+  }
+  cluster.x = cluster.x * .86 + e.x * .14;
+  cluster.y = cluster.y * .86 + e.y * .14;
+  cluster.n += weight;
+  if (!cluster.scarred && cluster.n >= 14) {
+    cluster.scarred = true;
+    createBoneField(cluster.x, cluster.y, cluster.n);
+  }
 }
 
 const GIB_DEBRIS_MAX = 900;
@@ -11541,6 +11740,71 @@ function cleanParticles(dt) {
   S.texts = S.texts.filter(t => t.life > 0);
 }
 
+function scarDamageEnemy(e, amt) {
+  if (!e || e.dead || amt <= 0) return;
+  e.scarDamage = (e.scarDamage || 0) + amt;
+  if (e.scarDamage < 1) return;
+  const applied = Math.floor(e.scarDamage);
+  e.scarDamage -= applied;
+  e.hp -= applied;
+  e.hitPulse = Math.max(e.hitPulse || 0, .35);
+  if (S.waveStats) {
+    S.waveStats.damageBySource = S.waveStats.damageBySource || {};
+    S.waveStats.damageBySource.scars = (S.waveStats.damageBySource.scars || 0) + applied;
+  }
+  if (e.hp <= 0) kill(e, null, false);
+}
+
+function applyBattlefieldScars(dt) {
+  const scars = S.battlefieldScars || [];
+  if (!scars.length) return;
+  for (const s of scars) {
+    s.pulse = (s.pulse || 0) + dt;
+    if (s.type === 'slime') {
+      for (const e of S.enemies) {
+        if (!e || e.dead || dist(e.x, e.y, s.x, s.y) > s.r) continue;
+        const mult = e.type === 'slimeking' ? 2.5 : e.slime ? 1.8 : 1;
+        e.hp = Math.min(e.max || e.hp, e.hp + (s.heal || 4) * mult * dt);
+        if (Math.random() < dt * .7) boom(e.x, e.y, '#7bdf5b33', 1);
+      }
+      continue;
+    }
+    if (s.type === 'burn') {
+      for (const e of S.enemies) {
+        if (!e || e.dead || dist(e.x, e.y, s.x, s.y) > s.r) continue;
+        scarDamageEnemy(e, (s.dps || 2.2) * dt);
+      }
+      if (dist(S.hero.x, S.hero.y, s.x, s.y) <= s.r && !S.devInvincible) {
+        S.hero.burnScarTick = Math.max(0, (S.hero.burnScarTick || 0) - dt);
+        if (S.hero.burnScarTick <= 0) {
+          S.hero.burnScarTick = .55;
+          hurtHero(1 + Math.floor(S.wave * .06), 'burning ground');
+        }
+      }
+      if (Math.random() < dt * .7) burst(s.x + (Math.random() - .5) * s.r, s.y + (Math.random() - .5) * s.r, '#ff7f2a', 1, 'ember', 22);
+      continue;
+    }
+    if (s.type === 'corruption') {
+      s.tick = Math.max(0, (s.tick || 0) - dt);
+      if (s.tick > 0) continue;
+      s.tick = .75 + Math.random() * .65;
+      const targets = S.enemies.filter(e => e && !e.dead && dist(e.x, e.y, s.x, s.y) <= s.r);
+      for (const e of targets) {
+        if (Math.random() < .5) {
+          e.slow = Math.max(e.slow || 0, .3);
+          e.chill = Math.max(e.chill || 0, .5);
+        } else {
+          e.hexWard = Math.max(e.hexWard || 0, .7);
+        }
+      }
+      if (dist(S.hero.x, S.hero.y, s.x, s.y) <= s.r && Math.random() < .5) {
+        S.hero.slimeDebuffUntil = Math.max(S.hero.slimeDebuffUntil || 0, performance.now() / 1000 + .7);
+      }
+      shockwave(s.x, s.y, '#7b2fb0', Math.min(70, s.r), .18);
+    }
+  }
+}
+
 function drawPickupPopup(q) {
   const title = q.title || q.s || '';
   const body = q.body || '';
@@ -11681,6 +11945,7 @@ function step(dt) {
   });
   S.firePatches = S.firePatches.filter(f => f.life > 0);
 
+  applyBattlefieldScars(dt);
   cleanParticles(dt);
   updateGibs(dt);
   updateLowHealthWarning(dt);
@@ -13777,7 +14042,7 @@ function loadPass() {
     S.slimeKingAppearances = o.slimeKingAppearances || 0;
     if (S.aiEngineerOwned) { S.engineer.active = true; S.engineer.hp = S.engineer.max; }
     S.enemies = []; S.shots = []; S.heroShots = []; S.enemyShots = [];
-    S.parts = []; S.texts = []; clearBloodDecals(); clearGibDebris(); S.oilPatches = []; S.firePatches = []; S.healthOrbs = [];
+    S.parts = []; S.texts = []; clearBloodDecals(); clearGibDebris(); clearBattlefieldScars(); S.oilPatches = []; S.firePatches = []; S.healthOrbs = [];
     S.queue = []; S.waveActive = false; S.phase = 'build';
     S.started = true; S.gameOver = false;
     S.waveCountdown = getWaveCountdownDuration((S.wave || 0) + 1);
