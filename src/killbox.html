@@ -4986,9 +4986,11 @@ rebuildPath();
 
 // ── Toast notifications ───────────────────────────────────────────
 function toast(msg) {
+  console.log('[toast suppressed]', msg);
   return;
 }
 function threatToast(type) {
+  console.log('[threatToast suppressed]', type);
   return;
 }
 
@@ -11629,17 +11631,8 @@ function floatText(s, x, y, c) {
 }
 
 function showPickupPopup(title, body, x, y, c = '#fff4d0') {
-  S.texts.push({
-    popup: true,
-    title,
-    body,
-    x,
-    y,
-    c,
-    life: 1.4,
-    w: Math.max(220, Math.min(360, 12 * Math.max(title.length, body.length * 0.7))),
-    h: body ? 54 : 34,
-  });
+  console.log('[pickup popup]', { title, body, x, y, c });
+  return;
 }
 
 function announceWave(text, kind = 'normal', duration = 1) {
@@ -11730,40 +11723,8 @@ function applyBattlefieldScars(dt) {
 }
 
 function drawPickupPopup(q) {
-  const title = q.title || q.s || '';
-  const body = q.body || '';
-  const lines = body ? [title, body] : [title];
-  const padX = 14;
-  const padY = 10;
-  const lineGap = body ? 16 : 0;
-  const w = q.w || 280;
-  const h = q.h || (body ? 56 : 34);
-  ctx.save();
-  ctx.globalAlpha = Math.max(0, Math.min(1, q.life));
-  ctx.fillStyle = 'rgba(18, 10, 8, .82)';
-  ctx.strokeStyle = '#f1d6aa';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.roundRect(q.x - w / 2, q.y - h / 2, w, h, 10);
-  ctx.fill();
-  ctx.stroke();
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.shadowColor = 'rgba(0,0,0,.75)';
-  ctx.shadowBlur = 0;
-  ctx.lineJoin = 'round';
-  ctx.lineWidth = 4;
-  ctx.font = 'bold 14px Georgia';
-  ctx.strokeStyle = '#000000';
-  ctx.fillStyle = q.c || '#fff4d0';
-  ctx.strokeText(lines[0], q.x, q.y + (body ? -7 : 0));
-  ctx.fillText(lines[0], q.x, q.y + (body ? -7 : 0));
-  if (body) {
-    ctx.font = 'bold 11px Georgia';
-    ctx.strokeText(lines[1], q.x, q.y + 10);
-    ctx.fillText(lines[1], q.x, q.y + 10);
-  }
-  ctx.restore();
+  console.log('[draw pickup popup]', { title: q.title || q.s, body: q.body, x: q.x, y: q.y, life: q.life });
+  return;
 }
 
 function updateLowHealthWarning(dt) {
