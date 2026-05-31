@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Killbox 7.6.1-github-pages-publishing</title>
+<title>Killbox 7.8.0-battlefield-scars</title>
 <style>
 /* ── Design tokens ─────────────────────────────────────────────── */
 :root {
@@ -2281,7 +2281,7 @@ kbd {
   font-size: 12px; line-height: 1.5;
 }
 
-/* ── Killbox 7.3.9-loadout-hotbar-layout ───────────────────── */
+/* ── Killbox 7.8.0-battlefield-scars ───────────────────── */
 /* Changelog: tightened loadout/hotbar card layout and replaced duplicate icon fallbacks. */
 #hireEngineer, #mpBox { display: none !important; }
 .debugHidden { display: none !important; }
@@ -2642,7 +2642,7 @@ kbd {
       <kbd>U</kbd> upgrade &nbsp;
       <kbd>1</kbd>–<kbd>8</kbd> build
     </p>
-    <div class="sidebarFooter">Killbox 7.6.1-github-pages-publishing. Still rude.</div>
+    <div class="sidebarFooter">Killbox 7.8.0-battlefield-scars. Still rude.</div>
   </div>
 </div>
 
@@ -3782,7 +3782,7 @@ function miniTrinketIcon(k) {
   return iconImg(iconPath('trinket', k) || fallbackIcon('trinket', k) || 'assets/icons/trinkets/flask.png', k);
 }
 const S = {
-  version: '7.6.1', speed: 1,
+  version: '7.8.0', speed: 1,
   started: false,
   paused: false, // Manual pause only; do not reuse this for upgradeChoice or wave gating.
   gameOver: false, restarts: 2, waveSnapshot: null,
@@ -7980,13 +7980,15 @@ function updateComboOnKill(e, tower, byHero, baseGold, baseScore) {
       baseGold += comboBonusGold;
       if (S.waveStats) S.waveStats.goldEarned += comboBonusGold;
       if (S.runStats) S.runStats.goldEarned += comboBonusGold;
-      floatText('+' + comboBonusGold + 'g', e.x + 4, e.y - 16, '#ffd77d');
+      if (S.combo >= 3) floatText('+' + comboBonusGold + 'g', e.x + 4, e.y - 16, '#ffd77d');
     }
     if (comboBonusScore > 0) S.score += comboBonusScore;
-    const comboLabel = S.combo >= 4 ? `${S.combo}x COMBO` : `${S.combo} HIT`;
-    floatText(comboLabel, e.x - 18, e.y - 30, S.combo >= 8 ? '#ffcf6a' : '#8edcff');
-    if (S.waveStats) S.waveStats.comboMax = Math.max(S.waveStats.comboMax || 0, S.comboMax || 0);
     if (S.combo >= 3) {
+      const comboLabel = S.combo >= 5 ? `${S.combo}x COMBO` : `${S.combo} HIT`;
+      floatText(comboLabel, e.x - 18, e.y - 30, S.combo >= 8 ? '#ffcf6a' : '#8edcff');
+    }
+    if (S.waveStats) S.waveStats.comboMax = Math.max(S.waveStats.comboMax || 0, S.comboMax || 0);
+    if (S.combo >= 5) {
       S.comboBanner = `${S.combo}x COMBO +${Math.floor((mult - 1) * 100)}%`;
       S.comboBannerKind = S.combo >= 8 ? 'boss' : 'danger';
       S.comboBannerTime = 0.8;
@@ -8002,9 +8004,9 @@ function updateComboOnKill(e, tower, byHero, baseGold, baseScore) {
 
 function enemyDeathFeedback(e, tower, byHero) {
   const profiles = {
-    runner:   { fx: 'dust',  burst: '#cfe8ff', shock: '#8edcff', text: 'SNAP!',  sfx: 'enemyDeath' },
-    slinger:  { fx: 'arrow', burst: '#d8d0c8', shock: '#cfe8ff', text: 'DROP!',  sfx: 'enemyDeath' },
-    brute:    { fx: 'thunk',  burst: '#8a6a43', shock: '#d0a35d', text: 'THUD!',  sfx: 'enemyDeath' },
+    runner:   { fx: 'dust',  burst: '#cfe8ff', shock: '#8edcff', sfx: 'enemyDeath' },
+    slinger:  { fx: 'arrow', burst: '#d8d0c8', shock: '#cfe8ff', sfx: 'enemyDeath' },
+    brute:    { fx: 'thunk',  burst: '#8a6a43', shock: '#d0a35d', sfx: 'enemyDeath' },
     ogre:     { fx: 'explosion', burst: '#b78a4a', shock: '#ffcf6a', text: 'CRUNCH!', sfx: 'enemyDeath' },
     hunter:   { fx: 'lightning', burst: '#b8a8ff', shock: '#7ac7ff', text: 'HUNTER DOWN', sfx: 'enemyDeath' },
     bomber:   { fx: 'explosion', burst: '#ffcf6a', shock: '#ff8a2a', text: 'BOOM!', sfx: 'enemyDeath' },
@@ -8030,7 +8032,10 @@ function enemyDeathFeedback(e, tower, byHero) {
   shockwave(e.x, e.y, cue.shock, e.type === 'slimeking' ? 150 : Math.max(38, e.rad * 1.6), e.type === 'slimeking' ? .45 : .22);
   if (cue.fx && cue.fx !== 'shatter') impactFx(e.x, e.y, cue.fx);
   if (cue.fx === 'shatter' || e.freeze > 0 || e.chill > 0) shockwave(e.x, e.y, '#e9fbff', 38, .2);
-  floatText(cue.text, e.x - Math.min(48, cue.text.length * 2.4), e.y - 42, e.type === 'slimeking' ? '#ffe09c33' : '#ffe56b');
+  const heroThreatAlreadyCalledOut = byHero && hasHeroThreatCue(e);
+  if (cue.text && !heroThreatAlreadyCalledOut) {
+    floatText(cue.text, e.x - Math.min(48, cue.text.length * 2.4), e.y - 42, e.type === 'slimeking' ? '#ffe09c33' : '#ffe56b');
+  }
   if (e.type === 'bomber') shake(7, .18);
   if (e.type === 'ogre') shake(5, .12);
 }
@@ -8055,7 +8060,6 @@ function heroThreatKillFeedback(e) {
     bomber: { text: 'GOOD CATCH', c: '#ffd07a', fx: '#ff9b32', sfx: true },
     siege: { text: 'THREAT DOWN', c: '#f0c96b', fx: '#d7c8ff', sfx: true },
     healer: { text: 'SAVED', c: '#b9d84f', fx: '#8bcf5a', sfx: false },
-    runner: { text: 'LEAK CLOSED', c: '#cfe8ff', fx: '#8edcff', sfx: false },
     warden: { text: 'SHIELD OPEN', c: '#8edcff', fx: '#d7f1ff', sfx: false },
     sapper: { text: 'BUSTER DOWN', c: '#ffd07a', fx: '#ffb15b', sfx: true },
     phase: { text: 'PHASE BROKE', c: '#d7c8ff', fx: '#b37cff', sfx: false },
@@ -8068,6 +8072,11 @@ function heroThreatKillFeedback(e) {
   shockwave(e.x, e.y, cue.fx, Math.max(40, e.rad * 1.4), .24);
   burst(e.x, e.y - 4, cue.fx, 10, 'spark', 180);
   if (cue.sfx) playSfx('threatDown');
+}
+
+function hasHeroThreatCue(e) {
+  if (!e || !e.type) return false;
+  return ['hunter', 'bomber', 'siege', 'healer', 'warden', 'sapper', 'phase', 'splitter', 'hexcaller'].includes(e.type);
 }
 
 function kill(e, tower, byHero = false) {
@@ -8117,7 +8126,7 @@ function kill(e, tower, byHero = false) {
       shockwave(e.x, e.y, '#8edcff', 52, .16);
     }
   }
-  if (g > 0) floatText('+' + g + 'g', e.x, e.y, '#ffe09c33');
+  if (g >= 50 || e.type === 'slimeking') floatText('+' + g + 'g', e.x, e.y, '#ffe09c33');
   if (e.type === 'slimeking') {
     S.bossActive = false;
     S.bossDeathPause = Math.max(S.bossDeathPause || 0, 3);
