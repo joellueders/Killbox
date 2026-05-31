@@ -8157,6 +8157,13 @@ function hurtHero(dmg, cause = 'enemy shot') {
   S.hero.inv  = .45;
   playSfx('hurt');
   boom(S.hero.x, S.hero.y, '#c9674333', 4);
+  if (cause === 'burning ground') {
+    const now = performance.now() / 1000;
+    S.hero.fireFeedbackUntil = Math.max(S.hero.fireFeedbackUntil || 0, now + .42);
+    floatText(`ON FIRE -${dmg}`, S.hero.x - 34, S.hero.y - 30, '#ffb15b');
+    burst(S.hero.x, S.hero.y, '#ff7f2a', 7, 'ember', 80);
+    shockwave(S.hero.x, S.hero.y, '#ff8a2a', 42, .18);
+  }
   shake(5, .2);
   if (S.hero.hp <= 0) {
     S.hero.hp = 0;
@@ -13211,6 +13218,23 @@ function drawHero(t) {
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.arc(h.x, h.y, 22 + Math.sin(t * 6) * 1.2, 0, 7);
+    ctx.stroke();
+    ctx.restore();
+  }
+  if ((h.fireFeedbackUntil || 0) > now) {
+    const p = Math.max(0, Math.min(1, (h.fireFeedbackUntil - now) / .42));
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.globalAlpha = .32 + p * .45;
+    ctx.fillStyle = '#ff5a1f';
+    ctx.beginPath();
+    ctx.arc(h.x, h.y, 25 + (1 - p) * 10 + Math.sin(t * 18) * 1.5, 0, 7);
+    ctx.fill();
+    ctx.globalAlpha = .72 * p;
+    ctx.strokeStyle = '#ffd27a';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(h.x, h.y, 19 + (1 - p) * 14, 0, 7);
     ctx.stroke();
     ctx.restore();
   }
