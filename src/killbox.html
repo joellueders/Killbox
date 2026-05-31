@@ -2383,6 +2383,11 @@ kbd {
     <span class="hudLabel">COMBO</span>
     <span id="hudCombo" class="hudValue">x1</span>
   </div>
+  <div class="hudSep">|</div>
+  <div class="hudStat">
+    <span class="hudLabel">SCORE</span>
+    <span id="hudScore" class="hudValue">0</span>
+  </div>
   <div id="weaponHudBoxTop" class="heroAbilityHud"><span id="weaponChargeHudTop"></span></div>
 </div>
 <!-- ── Build Hotbar ─────────────────────── -->
@@ -2622,10 +2627,11 @@ kbd {
   <div class="card">
     <h1>Between Waves</h1>
     <p id="mutationSubtitle">Choose a mutation or spend gold in the war chest.</p>
-    <div class="mutationTabs">
+  <div class="mutationTabs">
       <button class="mutationTab active" id="tabMutations" onclick="switchMutationTab('mutations')">⚗ Mutations</button>
       <button class="mutationTab" id="tabShop" onclick="switchMutationTab('shop')">🛒 War Chest</button>
     </div>
+    <div id="mutationWaveSummary" class="waveSummary mutationWaveSummary"></div>
     <div class="mutationTabPanel active" id="panelMutations">
       <div id="mutationChoices" class="pickerGrid"></div>
     </div>
@@ -4932,6 +4938,7 @@ function ui() {
   $('wave').textContent  = S.wave;
   if ($('hudWave')) $('hudWave').textContent = S.wave;
   if ($('score')) $('score').textContent = S.score;
+  if ($('hudScore')) $('hudScore').textContent = Math.floor(S.score);
   if ($('hudCombo')) $('hudCombo').textContent = S.combo > 0 ? `x${S.combo}` : `x1`;
   S.speed = normalizeSpeedValue(S.speed);
   const speedText = S.speed + 'x';
@@ -7252,7 +7259,7 @@ function hit(e, amt, tower, byHero = false) {
 
 function comboMultiplier(streak = S.combo) {
   if (!streak) return 1;
-  return 1 + Math.min(12, streak) * 0.06;
+  return 1 + Math.min(12, streak) * 0.08;
 }
 
 function updateComboOnKill(e, tower, byHero, baseGold, baseScore) {
@@ -7263,7 +7270,7 @@ function updateComboOnKill(e, tower, byHero, baseGold, baseScore) {
     S.comboTimer = S.comboHitWindow;
     S.comboMax = Math.max(S.comboMax || 0, S.combo);
     const mult = comboMultiplier();
-    const comboBonusGold = Math.max(0, Math.floor(baseGold * (mult - 1) * 0.45));
+    const comboBonusGold = Math.max(0, Math.floor(baseGold * (mult - 1)));
     const comboBonusScore = Math.floor(baseScore * (mult - 1));
     if (comboBonusGold > 0) {
       S.gold += comboBonusGold;
@@ -7277,7 +7284,7 @@ function updateComboOnKill(e, tower, byHero, baseGold, baseScore) {
     floatText(comboLabel, e.x - 18, e.y - 30, S.combo >= 8 ? '#ffcf6a' : '#8edcff');
     if (S.waveStats) S.waveStats.comboMax = Math.max(S.waveStats.comboMax || 0, S.comboMax || 0);
     if (S.combo >= 3) {
-      S.waveBanner = `${S.combo}x COMBO`;
+      S.waveBanner = `${S.combo}x COMBO +${Math.floor((mult - 1) * 100)}%`;
       S.waveBannerKind = S.combo >= 8 ? 'boss' : 'danger';
       S.waveBannerTime = 0.7;
       const b = $('waveBanner');
@@ -9408,7 +9415,7 @@ function renderWaveSummary(bonus, interest) {
   const totalKills = (s.heroKills || 0) + (s.towerKills || 0) + (s.otherKills || 0);
   const goldEarned = (s.goldEarned || 0) + bonus + interest;
   const hpText = `${Math.max(0, Math.floor(S.hero.hp))}/${S.hero.max}`;
-  $('clearStats').innerHTML = `
+  const summaryHtml = `
     <div><small>Total kills</small><b>${totalKills}</b></div>
     <div><small>Hero kills</small><b>${s.heroKills || 0}</b></div>
     <div><small>Tower kills</small><b>${s.towerKills || 0}</b></div>
@@ -9420,6 +9427,8 @@ function renderWaveSummary(bonus, interest) {
     <div><small>Hero HP</small><b>${hpText}</b></div>
     <div><small>Current gold</small><b>${Math.floor(S.gold)}g</b></div>
   `;
+  if ($('clearStats')) $('clearStats').innerHTML = summaryHtml;
+  if ($('mutationWaveSummary')) $('mutationWaveSummary').innerHTML = summaryHtml;
 }
 
 function runSummaryHtml() {
