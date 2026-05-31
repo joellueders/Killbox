@@ -3812,7 +3812,7 @@ const S = {
   timer: 0, spawnCount: 0,
   waveCountdown: 0, waveCountdownStart: 15,
   waveActive: false, // Combat lifecycle gate: true only while enemies are active / queued.
-  bossActive: false, bossSpawned: false, bossIntro: 0, bossAppearance: 0, clearFlash: 0, path: [], shakeTime: 0, shakeAmt: 0,
+  bossActive: false, bossSpawned: false, bossIntro: 0, bossAppearance: 0, bossDeathPause: 0, clearFlash: 0, path: [], shakeTime: 0, shakeAmt: 0,
   slimeKingAppearances: 0,
   paths: [], levelId: 'field', levelLabel: 'Field',
   cornerSkulls: [],
@@ -4078,6 +4078,7 @@ function clearWorldForDebugWarp() {
   S.bossActive = false;
   S.bossSpawned = false;
   S.bossIntro = 0;
+  S.bossDeathPause = 0;
   S.bossAppearance = 0;
   S.spawningActors = [];
   S.activeWaveMutagen = null;
@@ -4553,6 +4554,7 @@ function setDevWave(next) {
   S.bossActive = false;
   S.bossSpawned = false;
   S.bossIntro = 0;
+  S.bossDeathPause = 0;
   if ($('testWave')) $('testWave').value = w;
   if ($('devWaveValue')) $('devWaveValue').value = w;
   $('preview').dataset.previewKey = '';
@@ -4572,6 +4574,7 @@ function devClearEnemies() {
   S.bossActive = false;
   S.bossSpawned = false;
   S.bossIntro = 0;
+  S.bossDeathPause = 0;
   ui();
   toast('Enemies cleared.');
 }
@@ -4648,6 +4651,7 @@ function resetRunForLevelSwitch(levelId) {
   S.bossActive = false;
   S.bossSpawned = false;
   S.bossIntro = 0;
+  S.bossDeathPause = 0;
   S.bossAppearance = 0;
   S.slimeKingAppearances = 0;
   S.clearFlash = 0;
@@ -6122,6 +6126,7 @@ function finishWave() {
   }
   S.waveActive = false;
   S.phase      = 'build';
+  S.bossDeathPause = 0;
   S.waveCountdown = getWaveCountdownDuration(S.wave + 1);
   S.paused = false;
   S.hero.hp    = Math.min(S.hero.max, S.hero.hp + 25);
@@ -8114,6 +8119,7 @@ function kill(e, tower, byHero = false) {
   if (g > 0) floatText('+' + g + 'g', e.x, e.y, '#ffe09c33');
   if (e.type === 'slimeking') {
     S.bossActive = false;
+    S.bossDeathPause = Math.max(S.bossDeathPause || 0, 3);
     clearSlimeTrail();
     hideBossWarning();
     dropHealthOrb(e.x, e.y, 999, true);
@@ -11663,6 +11669,10 @@ function step(dt) {
   // This wave-end gate owns the between-wave upgrade flow and must show the modal before any new wave starts.
   // Harvest complete check
   if (S.waveActive && !S.queue.length && !S.enemies.length) {
+    if ((S.bossDeathPause || 0) > 0) {
+      S.bossDeathPause = Math.max(0, S.bossDeathPause - dt);
+      return;
+    }
     finishWave();
     return; // ui() already called above for wave-clear
   }
