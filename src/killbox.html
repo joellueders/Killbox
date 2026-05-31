@@ -2187,6 +2187,21 @@ textarea {
 .enemyIcon.bomber::before { box-shadow: 0 0 8px #c44; }
 .enemyIcon.healer::after { box-shadow: 0 0 8px #b9d84f; }
 .enemyIcon.slimeking::before { filter: drop-shadow(0 1px 0 #5a3b00); }
+.enemyIcon.warden { background: linear-gradient(180deg, #6d8ea5 0%, #375365 100%); border-radius: 38% 38% 44% 44%; box-shadow: 0 0 0 3px #a9dff7; }
+.enemyIcon.warden::before { left: 4px; top: 4px; width: 24px; height: 22px; background: #d7f1ff; clip-path: polygon(50% 0,95% 12%,88% 78%,50% 100%,12% 78%,5% 12%); opacity: .9; }
+.enemyIcon.warden::after { left: 10px; top: 8px; width: 10px; height: 12px; border-left: 3px solid #2f4f74; border-right: 3px solid #2f4f74; border-bottom: 3px solid #2f4f74; border-radius: 2px 2px 7px 7px; }
+.enemyIcon.sapper { background: linear-gradient(180deg, #9b622e 0%, #5d3817 100%); border-radius: 34%; box-shadow: 0 0 0 3px #d59a58; }
+.enemyIcon.sapper::before { left: 6px; top: 7px; width: 18px; height: 18px; background: #2b1a10; border-radius: 50%; border: 2px solid #f5c57a; box-shadow: inset -3px -3px 0 #0005; }
+.enemyIcon.sapper::after { right: -8px; bottom: -2px; width: 16px; height: 8px; background: #d59a58; clip-path: polygon(0 50%,100% 0,78% 100%); }
+.enemyIcon.phase { background: linear-gradient(180deg, #8f7cc4 0%, #4f4478 100%); border-radius: 40%; box-shadow: 0 0 0 3px #d7c8ff; opacity: .92; }
+.enemyIcon.phase::before { left: 6px; top: 5px; width: 15px; height: 18px; background: #f0d8ff; clip-path: polygon(50% 0,100% 28%,80% 100%,20% 100%,0 28%); opacity: .95; }
+.enemyIcon.phase::after { left: 16px; top: 6px; width: 6px; height: 18px; background: linear-gradient(180deg, #f0d8ff 0%, #b37cff 100%); box-shadow: 0 0 12px #b37cff; }
+.enemyIcon.splitter { background: linear-gradient(180deg, #5c85b6 0%, #304f78 100%); border-radius: 42%; box-shadow: 0 0 0 3px #cfe8ff; }
+.enemyIcon.splitter::before { left: 5px; top: 5px; width: 21px; height: 17px; background: #e7f4ff; clip-path: polygon(50% 0,100% 20%,82% 100%,18% 100%,0 20%); }
+.enemyIcon.splitter::after { right: -8px; top: 4px; width: 12px; height: 12px; background: #8edcff; border-radius: 50%; box-shadow: -10px 12px 0 -2px #8edcff; }
+.enemyIcon.hexcaller { background: linear-gradient(180deg, #8f4cb4 0%, #5e2a79 100%); border-radius: 38%; box-shadow: 0 0 0 3px #f0d8ff; }
+.enemyIcon.hexcaller::before { left: 6px; top: 4px; width: 18px; height: 20px; background: #f0d8ff; clip-path: polygon(50% 0,100% 18%,88% 82%,50% 100%,12% 82%,0 18%); }
+.enemyIcon.hexcaller::after { left: 12px; top: 8px; width: 6px; height: 14px; background: #b37cff; box-shadow: 0 0 10px #d8a7ff; }
 
 /* ── Misc ────────────────────────────────────────────────────────── */
 kbd {
@@ -4902,6 +4917,13 @@ const ENEMY_SPRITE_FILES = {
   siege: 'assets/enemies/ram-beast.svg',
   slimeking: 'assets/enemies/slime-king.svg',
 };
+const ENEMY_ARCHETYPE_LABELS = {
+  warden: 'Aegis Warden',
+  sapper: 'Sapper Imp',
+  phase: 'Phase Skulk',
+  splitter: 'Splitter',
+  hexcaller: 'Hex Caller',
+};
 const ENEMY_SPRITES = {};
 let enemySpritesReady = false;
 
@@ -4963,6 +4985,11 @@ function threatToast(type) {
     shield:  ['SHIELD',  'Stun it first — towers barely scratch it'],
     healer:  ['HEALER',  'Hero kill only — towers can\'t finish it'],
     siege:   ['SIEGE',   'Breaks barricades'],
+    warden:  ['WARDEN',  'Blocks frontal fire'],
+    sapper:  ['SAPPER',  'Dismantles choke pieces'],
+    phase:   ['PHASE',   'Phases through blockers'],
+    splitter:['SPLITTER','Breaks into runners'],
+    hexcaller:['HEX CALLER','Buffs nearby enemies'],
   }[type] || [String(type || '').toUpperCase(), 'New threat'];
   S.threatPopupQueue = S.threatPopupQueue || [];
   const key = `${info[0]}|${info[1]}`;
@@ -5474,6 +5501,11 @@ function renderCodices() {
       ['bomber', 'Powder Lunatic', 'Cluster punishment.', 'Crowded lanes are its love language.'],
       ['shield', 'Shield Bearer', 'Frontline blocker.', 'Soaks hero fire and keeps the line ugly.'],
       ['healer', 'Plague Monk', 'Support nuisance.', 'Keeps idiots alive longer than they deserve.'],
+      ['warden', 'Aegis Warden', 'Frontal fire denial.', 'Forces flanks, splash, or hero commitment.'],
+      ['sapper', 'Sapper Imp', 'Defense breaker.', 'Targets barriers and choke pieces first.'],
+      ['phase', 'Phase Skulk', 'Control breaker.', 'Ignores the first control effect and slips through.'],
+      ['splitter', 'Splitter', 'Burst punishment.', 'Precision kills can turn into two more problems.'],
+      ['hexcaller', 'Hex Caller', 'Support anchor.', 'Buffs nearby enemies and weakens control.'],
       ['siege', 'Ram Beast', 'Defense breaker.', 'Cracks barriers and bullies reroutes.'],
       ['slimeking', 'Slime King', 'Boss every 3 waves.', 'Floods the lane and brings rude friends.'],
     ];
@@ -7016,7 +7048,8 @@ function previewWave(w) {
   const rng = makeWaveRng(w * 1000003 + 7);
   const n = waveSize(w);
   const p = { grunt: 0, runner: 0, slinger: 0, brute: 0, ogre: 0,
-               hunter: 0, bomber: 0, shield: 0, healer: 0, siege: 0 };
+               hunter: 0, bomber: 0, shield: 0, healer: 0, siege: 0,
+               warden: 0, sapper: 0, phase: 0, splitter: 0, hexcaller: 0 };
 
   // Special roles scale with wave
   // pressure layering to require hero intervention
@@ -7027,6 +7060,11 @@ function previewWave(w) {
   p.siege   = w >= 7  ? Math.max(1, Math.round(n * .03))  : 0;
   p.brute   = w >= 4  ? Math.max(1, Math.round(n * .065)) : 0;
   p.ogre    = w >= 8  ? Math.max(1, Math.round(n * .03))  : 0;
+  p.warden  = w >= 5  ? Math.max(1, Math.round(n * .04))  : 0;
+  p.sapper  = w >= 5  ? Math.max(1, Math.round(n * .035)) : 0;
+  p.hexcaller = w >= 6 ? Math.max(1, Math.round(n * .03))  : 0;
+  p.splitter = w >= 7  ? Math.max(1, Math.round(n * .028)) : 0;
+  p.phase   = w >= 8  ? Math.max(1, Math.round(n * .026)) : 0;
   if (w >= 7 && p.runner < 2) p.runner = 2;
 
   // Fill remainder with grunts / runners / slingers (deterministic via seeded rng)
@@ -7044,6 +7082,11 @@ function previewWave(w) {
     if (p.hunter && p.runner === 0) p.runner = 1;
     if (p.bomber && p.shield === 0) p.shield = 1;
     if (p.siege && p.grunt === 0) p.grunt = 1;
+    if (p.warden && p.slinger === 0) p.slinger = 1;
+    if (p.sapper && p.grunt === 0) p.grunt = 1;
+    if (p.hexcaller && p.runner === 0) p.runner = 1;
+    if (p.splitter && p.brute === 0) p.brute = 1;
+    if (p.phase && p.runner === 0) p.runner = 1;
   }
   p.__theme = waveTheme(w);
   return p;
@@ -7116,9 +7159,9 @@ function startWave() {
   const tiers = {
     probe:   ['grunt', 'runner', 'slinger'],
     // pressure layering to require hero intervention
-    pressure: ['grunt', 'runner', 'shield', 'brute', 'healer', 'slinger'],
+    pressure: ['grunt', 'runner', 'warden', 'sapper', 'shield', 'brute', 'hexcaller', 'healer', 'slinger'],
     // pressure layering to require hero intervention
-    climax:   ['grunt', 'runner', 'shield', 'brute', 'healer', 'slinger', 'hunter', 'bomber', 'siege', 'ogre'],
+    climax:   ['grunt', 'runner', 'warden', 'sapper', 'shield', 'brute', 'hexcaller', 'healer', 'slinger', 'splitter', 'phase', 'hunter', 'bomber', 'siege', 'ogre'],
   }[theme] || ['grunt', 'runner', 'slinger'];
   const grouped = tiers.flatMap(type => S.queue.filter(x => x === type));
   const leftovers = S.queue.filter(x => !tiers.includes(x));
@@ -7160,6 +7203,11 @@ function spawn(type) {
     case 'shield':   hp *= 1.3; val = 13;    rad = 15; spd *= .76; break;
     case 'healer':   hp *= .68; val = 20;    rad = 12; spd *= .86; healCool = .5; range = 255; shoot = 0.9 + Math.random() * .5; break;
     case 'siege':    hp *= 4.4; val = 30;    rad = 20; spd *= .48; break;
+    case 'warden':   hp *= 1.9; val = 18;    rad = 17; spd *= .70; break;
+    case 'sapper':   hp *= .92; val = 16;    rad = 13; spd *= 1.18; range = 120; shoot = 0.95 + Math.random() * .45; break;
+    case 'phase':    hp *= 1.05; val = 20;   rad = 12; spd *= 1.16; break;
+    case 'splitter': hp *= 1.3; val = 24;    rad = 14; spd *= .98; break;
+    case 'hexcaller':hp *= .9;  val = 22;    rad = 13; spd *= .84; range = 0; shoot = 0; healCool = .65; break;
     case 'slimeking':hp *= 9.5; val = 150;   rad = 32; spd *= .34; range = 330; shoot = .4; break;
   }
 
@@ -7191,6 +7239,13 @@ function spawn(type) {
     wildX: 0, wildY: 0, wildBlend: .3, wildProgress: 1.0,
     navStuck: 0, navLastLog: 0,
     slimeDrop: .8,  // only used by slimeking
+    guardFacing: 0,
+    guardHold: 0,
+    hexWard: 0,
+    phaseCharge: type === 'phase' ? 1 : 0,
+    phaseActive: 0,
+    phaseCd: type === 'phase' ? (1.8 + Math.random() * 1.2) : 0,
+    sapCd: 0,
   });
   if (isLargeEnemy(S.enemies[S.enemies.length - 1])) {
     console.log('[enemy-nav] large enemy spawned', {
@@ -7220,6 +7275,11 @@ function spawnEnemyAt(type, x, y, path, node = 0) {
     case 'shield':   hp *= 1.3; val = 13;    rad = 15; spd *= .76; break;
     case 'healer':   hp *= .68; val = 20;    rad = 12; spd *= .86; healCool = .5; range = 255; shoot = 0.9 + Math.random() * .5; break;
     case 'siege':    hp *= 4.4; val = 30;    rad = 20; spd *= .48; break;
+    case 'warden':   hp *= 1.9; val = 18;    rad = 17; spd *= .70; break;
+    case 'sapper':   hp *= .92; val = 16;    rad = 13; spd *= 1.18; range = 120; shoot = 0.95 + Math.random() * .45; break;
+    case 'phase':    hp *= 1.05; val = 20;   rad = 12; spd *= 1.16; break;
+    case 'splitter': hp *= 1.3; val = 24;    rad = 14; spd *= .98; break;
+    case 'hexcaller':hp *= .9;  val = 22;    rad = 13; spd *= .84; range = 0; shoot = 0; healCool = .65; break;
     case 'slimeking':hp *= 9.5; val = 150;   rad = 32; spd *= .34; range = 330; shoot = .4; break;
   }
 
@@ -7240,6 +7300,13 @@ function spawnEnemyAt(type, x, y, path, node = 0) {
     wildX: 0, wildY: 0, wildBlend: .3, wildProgress: 1.0,
     navStuck: 0, navLastLog: 0,
     slimeDrop: .8,
+    guardFacing: 0,
+    guardHold: 0,
+    hexWard: 0,
+    phaseCharge: type === 'phase' ? 1 : 0,
+    phaseActive: 0,
+    phaseCd: type === 'phase' ? (1.8 + Math.random() * 1.2) : 0,
+    sapCd: 0,
   };
   S.enemies.push(ent);
   callMutagenHook('onEnemySpawn', ent);
@@ -7262,12 +7329,36 @@ function nextSpawnDelay() {
 // ── Damage / kill helpers ─────────────────────────────────────────
 function hit(e, amt, tower, byHero = false) {
   if (e.dead) return;
+  const sourceX = tower ? tower.x : byHero ? S.hero.x : e.x;
+  const sourceY = tower ? tower.y : byHero ? S.hero.y : e.y;
+  const sourceAngle = Math.atan2(sourceY - e.y, sourceX - e.x);
   // Shield bearers resist hero arrows (non-tower hits)
   if (e.type === 'shield' && !tower) amt *= .45;
   // Healers are nearly immune to tower fire — the hero must hunt them down
   if (e.type === 'healer' && tower) amt *= .08;
   // Shield bearers resist tower fire until they are stunned by the hero
   if (e.type === 'shield' && tower && !(e.stun > 0)) amt *= .12;
+  if (e.type === 'warden') {
+    const facing = Number.isFinite(e.guardFacing) ? e.guardFacing : sourceAngle;
+    const diff = Math.abs(Math.atan2(Math.sin(sourceAngle - facing), Math.cos(sourceAngle - facing)));
+    const frontBlocked = diff < 1.08;
+    if (frontBlocked && (tower || byHero)) {
+      amt *= 0.35;
+      e.guardHold = Math.max(e.guardHold || 0, .95);
+      e.guardFacing = sourceAngle;
+      e.guardFlash = .28;
+      if (tower || byHero) floatText('BLOCKED', e.x - 24, e.y - 22, '#8edcff');
+    } else {
+      e.guardHold = Math.max(e.guardHold || 0, .6);
+      e.guardFacing = sourceAngle;
+    }
+  }
+  if (e.type === 'hexcaller' && (e.hexWard || 0) > 0 && (tower || byHero)) {
+    amt *= tower ? .72 : .85;
+  }
+  if (e.type === 'splitter' && (tower || byHero) && (tower ? ['archer', 'ballista'].includes(tower.type) : ['ranger', 'crossbow'].includes(S.hero.weapon))) {
+    e.splitSource = tower ? `tower:${tower.type}` : `weapon:${S.hero.weapon}`;
+  }
   // Hero damage multiplier (from shop blessings, etc.)
   if (byHero && (S.hero.damageMult || 1) !== 1) amt *= (S.hero.damageMult || 1);
   if (byHero && S.activeWaveMutagen === 'oopsAllCrits') {
@@ -7371,6 +7462,11 @@ function enemyDeathFeedback(e, tower, byHero) {
     healer:   { fx: 'heal', burst: '#b9d84f', shock: '#9bd34f', text: 'MEND LOST', sfx: 'enemyDeath' },
     shield:   { fx: 'shatter', burst: '#cfe8ff', shock: '#8edcff', text: 'SHIELD BROKEN', sfx: 'enemyDeath' },
     siege:    { fx: 'thunk', burst: '#d0a35d', shock: '#f0c96b', text: 'SIEGE STOPPED', sfx: 'enemyDeath' },
+    warden:   { fx: 'shatter', burst: '#8edcff', shock: '#d7f1ff', text: 'WARD SHATTER', sfx: 'enemyDeath' },
+    sapper:   { fx: 'explosion', burst: '#ffb15b', shock: '#ffd27a', text: 'SAPPED', sfx: 'enemyDeath' },
+    phase:    { fx: 'dust', burst: '#d7c8ff', shock: '#f0d8ff', text: 'PHASE LOST', sfx: 'enemyDeath' },
+    splitter: { fx: 'dust', burst: '#d5e7ff', shock: '#8edcff', text: 'SPLIT APART', sfx: 'enemyDeath' },
+    hexcaller:{ fx: 'shatter', burst: '#d8a7ff', shock: '#b37cff', text: 'HEX BROKEN', sfx: 'enemyDeath' },
     slimeking:{ fx: 'slime', burst: '#46b83b', shock: '#5fd45a', text: 'THE CROWN FALLS', sfx: 'bossDeath' },
   };
   const cue = profiles[e.type];
@@ -7406,6 +7502,11 @@ function heroThreatKillFeedback(e) {
     siege: { text: 'THREAT DOWN', c: '#f0c96b', fx: '#d7c8ff', sfx: true },
     healer: { text: 'SAVED', c: '#b9d84f', fx: '#8bcf5a', sfx: false },
     runner: { text: 'LEAK CLOSED', c: '#cfe8ff', fx: '#8edcff', sfx: false },
+    warden: { text: 'SHIELD OPEN', c: '#8edcff', fx: '#d7f1ff', sfx: false },
+    sapper: { text: 'BUSTER DOWN', c: '#ffd07a', fx: '#ffb15b', sfx: true },
+    phase: { text: 'PHASE BROKE', c: '#d7c8ff', fx: '#b37cff', sfx: false },
+    splitter: { text: 'PINNED', c: '#cfe8ff', fx: '#8edcff', sfx: false },
+    hexcaller: { text: 'WARD DOWN', c: '#f0d8ff', fx: '#b37cff', sfx: true },
   };
   const cue = cues[e.type];
   if (!cue) return;
@@ -7443,6 +7544,24 @@ function kill(e, tower, byHero = false) {
   if (byHero) updateComboOnKill(e, tower, byHero, g, baseScore);
   if (byHero) heroThreatKillFeedback(e);
   enemyDeathFeedback(e, tower, byHero);
+  if (e.type === 'splitter') {
+    const causedByPrecision = tower ? ['archer', 'ballista'].includes(tower.type) : byHero && ['ranger', 'crossbow'].includes(S.hero.weapon);
+    if (causedByPrecision && Array.isArray(e.path) && e.path.length) {
+      const node = Math.max(0, Math.min((e.node || 0), e.path.length - 1));
+      const childHp = Math.max(8, Math.floor((e.max || e.hp || 1) * 0.38));
+      for (let i = 0; i < 2; i++) {
+        const child = spawnEnemyAt('runner', e.x + (i ? 10 : -10), e.y + (i ? 10 : -10), e.path, node);
+        child.hp = child.max = childHp;
+        child.spd *= 1.08;
+        child.rad = Math.max(8, Math.floor((e.rad || 12) * .72));
+        child.val = Math.max(2, Math.floor((e.val || 8) * .28));
+        child.off = (child.off || 0) + (i ? 14 : -14);
+      }
+      floatText('SPLIT!', e.x - 18, e.y - 42, '#8edcff');
+      burst(e.x, e.y, '#d5e7ff', 12, 'spark', 120);
+      shockwave(e.x, e.y, '#8edcff', 52, .16);
+    }
+  }
   if (g > 0) floatText('+' + g + 'g', e.x, e.y, '#ffe09c33');
   if (e.type === 'slimeking') {
     S.bossActive = false;
@@ -9521,6 +9640,17 @@ function enemyStep(e, dt) {
   if (e.springResist <= 0) e.springChain = Math.max(0, (e.springChain || 0) - dt * 1.2);
   e.freeze = Math.max(0, (e.freeze || 0) - dt);
   e.chill = Math.max(0, (e.chill || 0) - dt * 0.6);
+  e.hexWard = Math.max(0, (e.hexWard || 0) - dt);
+  if (e.hexWard > 0) {
+    e.slow = Math.max(0, (e.slow || 0) - dt * .65);
+    e.freeze = Math.max(0, (e.freeze || 0) - dt * .55);
+    e.chill = Math.max(0, (e.chill || 0) - dt * .35);
+    e.stun = Math.max(0, (e.stun || 0) - dt * .08);
+  }
+  e.guardHold = Math.max(0, (e.guardHold || 0) - dt);
+  e.phaseActive = Math.max(0, (e.phaseActive || 0) - dt);
+  e.phaseCd = Math.max(0, (e.phaseCd || 0) - dt);
+  e.sapCd = Math.max(0, (e.sapCd || 0) - dt);
   if (S.activeWaveMutagen === 'floorIsTrampolines') {
     e.air = Math.max(e.air || 0, .08);
     if (Math.random() < .04) {
@@ -9536,6 +9666,29 @@ function enemyStep(e, dt) {
   if (e.poison > 0) { e.poison -= dt; hit(e, e.poisonD * dt, null); }
   if (e.dead) return;
 
+  if (e.type === 'phase' && e.phaseCd <= 0 && (e.phaseActive || 0) <= 0) {
+    e.phaseActive = 1.1;
+    e.phaseCd = 5.5 + Math.random() * 1.5;
+    floatText('PHASE', e.x - 18, e.y - 20, '#d7c8ff');
+    shockwave(e.x, e.y, '#d7c8ff', 42, .16);
+    burst(e.x, e.y, '#f2e7ff', 4, 'spark', 60);
+  }
+
+  if (e.type === 'phase' && (e.phaseCharge || 0) > 0) {
+    const controlPressure = (e.stun || 0) > 0 || (e.freeze || 0) > 0 || (e.chill || 0) > 0 || (e.slow || 0) > .88;
+    if (controlPressure && (e.phaseActive || 0) <= 0) {
+      e.phaseCharge = 0;
+      e.phaseActive = 1.15;
+      e.stun = 0;
+      e.freeze = 0;
+      e.chill = 0;
+      e.slow = 0;
+      floatText('PHASE', e.x - 18, e.y - 20, '#d7c8ff');
+      shockwave(e.x, e.y, '#d7c8ff', 46, .18);
+      burst(e.x, e.y, '#f2e7ff', 6, 'spark', 84);
+    }
+  }
+
   if (e.stun > 0) {
     e.stun -= dt;
     e.x += (e.kx || 0) * dt;
@@ -9548,6 +9701,10 @@ function enemyStep(e, dt) {
 
   // Type-specific AI
   if (e.type === 'healer')    healerPulse(e, dt);
+  if (e.type === 'hexcaller') { hexCallerPulse(e, dt); }
+  if (e.type === 'sapper')    { sapperStep(e, dt); return; }
+  if (e.type === 'phase')     { phaseSkulkStep(e, dt); return; }
+  if (e.type === 'warden')    { aegisWardenStep(e, dt); return; }
   if (e.type === 'slimeking') { slimeKingStep(e, dt); return; }
   if (e.dead) return;
   if (e.type === 'siege')     { siegeStep(e, dt);   return; }
@@ -9663,6 +9820,107 @@ function healerPulse(e, dt) {
       boom(o.x, o.y, '#eee4b2', 4);
     }
   }
+}
+
+// Hex Caller: wards nearby enemies against slows and damage spikes.
+function hexCallerPulse(e, dt) {
+  e.healCool -= dt;
+  if (e.healCool > 0) return;
+  e.healCool = 1.15;
+  for (const o of S.enemies) {
+    if (o === e || o.dead) continue;
+    if (dist(e.x, e.y, o.x, o.y) > 110) continue;
+    o.hexWard = Math.max(o.hexWard || 0, 1.75);
+    o.slow = Math.max(0, (o.slow || 0) - .18);
+    o.freeze = Math.max(0, (o.freeze || 0) - .35);
+    o.chill = Math.max(0, (o.chill || 0) - .35);
+    o.stun = Math.max(0, (o.stun || 0) - .05);
+    if (Math.random() < .45) floatText('HEX', o.x - 14, o.y - 20, '#d8a7ff');
+  }
+  boom(e.x, e.y, '#b37cff33', 6);
+  shockwave(e.x, e.y, '#d8a7ff', 44, .16);
+}
+
+function attackStructureLikeImp(e, target, dt, kind = 'sapper') {
+  if (!target || target.dead) return false;
+  const td = dist(e.x, e.y, target.x, target.y) || 1;
+  const ax = (e.x - target.x) / td;
+  const ay = (e.y - target.y) / td;
+  e.x = target.x + ax * (e.rad + 26);
+  e.y = target.y + ay * (e.rad + 26);
+  e.slow = Math.max(e.slow, .45);
+  const dmg = kind === 'sapper' ? 30 : 18;
+  target.hp = Math.max(0, (target.hp || 0) - dt * dmg);
+  if (target.hp <= 0) {
+    if (S.barrels.includes(target)) {
+      explodeBarrel(target);
+    } else {
+      target.dead = true;
+      destroyStructure(target.x, target.y, TOWERS[target.type]?.trap ? 'barrier' : 'tower');
+    }
+    return true;
+  }
+  return false;
+}
+
+function sapperTarget() {
+  const candidates = [];
+  for (const b of S.barriers) if (!b.dead) candidates.push({ o: b, p: 0 });
+  for (const b of S.barrels) if (!b.dead) candidates.push({ o: b, p: 1 });
+  for (const t of S.towers) {
+    if (t.dead) continue;
+    if (TOWERS[t.type].trap || towerHasDurability(t)) candidates.push({ o: t, p: TOWERS[t.type].trap ? 2 : 3 });
+  }
+  candidates.sort((a, b) => a.p - b.p || 0);
+  const bestPriority = candidates[0]?.p;
+  const samePriority = candidates.filter(c => c.p === bestPriority);
+  samePriority.sort((a, b) => dist(a.o.x, a.o.y, S.hero.x, S.hero.y) - dist(b.o.x, b.o.y, S.hero.x, S.hero.y));
+  return samePriority[0]?.o || null;
+}
+
+function sapperStep(e, dt) {
+  const target = sapperTarget();
+  if (!target) {
+    followPath(e, dt, 1.08);
+    return;
+  }
+  const td = dist(e.x, e.y, target.x, target.y);
+  if (td < e.rad + 22) {
+    if (attackStructureLikeImp(e, target, dt, 'sapper')) {
+      boom(target.x, target.y, '#c98a49', 12);
+      burst(target.x, target.y, '#f0c96b', 8, 'debris', 80);
+      floatText('SAPPED', target.x - 20, target.y - 22, '#ffd27a');
+      shake(4, .12);
+    } else {
+      e.sapCd = Math.max(e.sapCd || 0, .5);
+    }
+    return;
+  }
+  const speed = e.phaseActive > 0 ? 1.24 : 1.08;
+  const aim = Math.atan2(target.y - e.y, target.x - e.x);
+  e.guardFacing = aim;
+  e.x += Math.cos(aim) * e.spd * G * dt * speed;
+  e.y += Math.sin(aim) * e.spd * G * dt * speed;
+}
+
+function phaseSkulkStep(e, dt) {
+  const slowFactor = e.phaseActive > 0 ? 1.24 : 1.08;
+  if (e.phaseActive > 0) {
+    e.stun = 0;
+    e.freeze = 0;
+    e.chill = 0;
+    e.slow = 0;
+  }
+  followPath(e, dt, slowFactor);
+}
+
+function aegisWardenStep(e, dt) {
+  if (!Number.isFinite(e.guardFacing)) e.guardFacing = 0;
+  if ((e.guardHold || 0) <= 0) {
+    const next = enemyPath(e)[e.node + 1];
+    if (next) e.guardFacing = Math.atan2(next.y - e.y, next.x - e.x);
+  }
+  followPath(e, dt, 0.96);
 }
 
 // Siege ram: hunts barriers
@@ -9803,6 +10061,7 @@ function attackBarrier(e, b, dt) {
 
 // Push enemies away from solid objects (barriers and on-road towers)
 function handleCollisions(e, dt) {
+  if ((e.phaseActive || 0) > 0) return;
   const navRad = enemyNavRadius(e);
   const squeezeActive = isLargeEnemy(e) && (e.squeezeUntil || 0) > performance.now() / 1000;
   for (const b of S.barriers) {
@@ -9983,6 +10242,7 @@ function followPath(e, dt, slow) {
 
   // Move
   const l = dist(e.x, e.y, tx, ty) || 1;
+  if (e.type === 'warden' && (e.guardHold || 0) <= 0) e.guardFacing = Math.atan2(ty - e.y, tx - e.x);
   e.x += (tx - e.x) / l * e.spd * G * dt * slow + rx * dt * .4;
   e.y += (ty - e.y) / l * e.spd * G * dt * slow + ry * dt * .4;
 
@@ -11800,6 +12060,7 @@ function drawEnemy(e) {
   else if (e.type === 'slinger') { rot = Math.sin(tNow * 7 + eSeed * .08) * .06; }
   else if (e.type === 'bomber') { rot = Math.sin(tNow * 15 + eSeed * .12) * .09; }
   else if (e.type === 'healer') { bobY = Math.sin(tNow * 4 + eSeed * .09) * 2.8; }
+  else if (e.type === 'warden' || e.type === 'sapper' || e.type === 'phase' || e.type === 'splitter' || e.type === 'hexcaller') { bobY = Math.sin(tNow * 6 + eSeed * .09) * 1.3; rot = Math.sin(tNow * 4 + eSeed * .05) * .03; }
   else if (e.type === 'slimeking') { sx = 1 + Math.sin(tNow * 7 + eSeed * .04) * .09; sy = 1 / sx; bobY = Math.sin(tNow * 5 + eSeed * .04) * 1.2; }
   ctx.translate(e.x, e.y - airLift + bobY);
   if (rot) ctx.rotate(rot);
@@ -11825,7 +12086,12 @@ function drawEnemy(e) {
     e.type === 'runner'    ? '#a87932' :
     e.type === 'slinger'   ? '#5d7344' :
     e.type === 'brute'     ? '#7a382a' :
-    e.type === 'ogre'      ? '#4e3628' : '#6d3f2a';
+    e.type === 'ogre'      ? '#4e3628' :
+    e.type === 'warden'    ? '#4a6d84' :
+    e.type === 'sapper'    ? '#7a4a1e' :
+    e.type === 'phase'     ? '#6d5c92' :
+    e.type === 'splitter'  ? '#4b6a8f' :
+    e.type === 'hexcaller' ? '#6c3f7f' : '#6d3f2a';
   if ((e.freeze || 0) > 0) base = '#8edcff';
 
   ctx.strokeStyle = '#1e1008'; ctx.lineWidth = 2;
@@ -11967,6 +12233,11 @@ function drawEnemyBody(e, base, blink) {
   if (e.type === 'bomber') return drawPowderLunatic(e, base, blink);
   if (e.type === 'shield') return drawShieldBearer(e, base);
   if (e.type === 'healer') return drawPlagueMonk(e, base);
+  if (e.type === 'warden') return drawAegisWarden(e, base);
+  if (e.type === 'sapper') return drawSapperImp(e, base);
+  if (e.type === 'phase') return drawPhaseSkulk(e, base);
+  if (e.type === 'splitter') return drawSplitter(e, base);
+  if (e.type === 'hexcaller') return drawHexCaller(e, base);
   return drawRaiderGrunt(e, base);
 }
 
@@ -11983,6 +12254,11 @@ function drawSaboteur(e, base) { drawHumanoidBase(e, '#241717', '#7f9f44'); ctx.
 function drawPowderLunatic(e, base, blink) { drawHumanoidBase(e, '#d0872e', '#a77a2e'); ctx.fillStyle='#8b4424'; ctx.beginPath(); ctx.arc(0,e.rad*.55,e.rad*.55,0,7); ctx.fill(); ctx.strokeStyle=blink?'#ffcf3d':'#c01818'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(0,0,e.rad+7,0,7); ctx.stroke(); }
 function drawShieldBearer(e, base) { drawHumanoidBase(e, '#2f4f74', '#8ea4b8'); ctx.fillStyle='#9fc0c8'; ctx.fillRect(-4,-14,14,30); ctx.fillStyle='#4c627f'; ctx.fillRect(8,-16,12,34); }
 function drawPlagueMonk(e, base) { drawHumanoidBase(e, '#5f8f45', '#a6b768'); ctx.fillStyle='#6f8d3b'; ctx.fillRect(-2,-18,4,20); ctx.fillRect(-10,-10,20,4); ctx.strokeStyle='#6f8d3b'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0,0,e.rad+7,0,7); ctx.stroke(); }
+function drawAegisWarden(e, base) { drawHumanoidBase(e, '#4a6d84', '#d7f1ff'); ctx.fillStyle='#a9dff7'; ctx.beginPath(); ctx.moveTo(-12,-14); ctx.lineTo(0,-26); ctx.lineTo(12,-14); ctx.lineTo(8,18); ctx.lineTo(-8,18); ctx.closePath(); ctx.fill(); ctx.strokeStyle='#2f4f74'; ctx.lineWidth=3; ctx.stroke(); ctx.strokeStyle='#d7f1ff'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(-18,-2); ctx.lineTo(18,-2); ctx.stroke(); }
+function drawSapperImp(e, base) { drawHumanoidBase(e, '#7a4a1e', '#b87f4b'); ctx.fillStyle='#3c2417'; ctx.beginPath(); ctx.arc(0, -8, 10, 0, 7); ctx.fill(); ctx.fillStyle='#f5c57a'; ctx.fillRect(9, 0, 10, 8); ctx.strokeStyle='#d59a58'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(10, 8); ctx.lineTo(22, 14); ctx.stroke(); }
+function drawPhaseSkulk(e, base) { ctx.save(); ctx.globalAlpha = .82; drawHumanoidBase(e, '#6d5c92', '#f0d8ff'); ctx.restore(); ctx.globalAlpha = .65; ctx.strokeStyle='#d7c8ff'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0, 0, e.rad + 4, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; ctx.fillStyle='#b37cff'; ctx.beginPath(); ctx.moveTo(-8,-16); ctx.lineTo(0,-28); ctx.lineTo(8,-16); ctx.lineTo(3,-4); ctx.lineTo(-3,-4); ctx.closePath(); ctx.fill(); }
+function drawSplitter(e, base) { drawHumanoidBase(e, '#4b6a8f', '#e7f4ff'); ctx.fillStyle='#8edcff'; ctx.beginPath(); ctx.arc(0, -10, 7, 0, 7); ctx.fill(); ctx.strokeStyle='#cfe8ff'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(-15,-3); ctx.lineTo(-24,-18); ctx.moveTo(15,-3); ctx.lineTo(24,-18); ctx.stroke(); }
+function drawHexCaller(e, base) { drawHumanoidBase(e, '#6c3f7f', '#f0d8ff'); ctx.fillStyle='#b37cff'; ctx.beginPath(); ctx.arc(0, -12, 9, 0, 7); ctx.fill(); ctx.strokeStyle='#d8a7ff'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0, 0, e.rad + 8, 0, 7); ctx.stroke(); ctx.globalAlpha = .7; ctx.fillStyle='#f0d8ff'; ctx.beginPath(); ctx.arc(0, 0, 5, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
 function drawRamBeast(e, base) { ctx.fillStyle = '#3b2a20'; ctx.fillRect(-e.rad, -e.rad * .55, e.rad * 2, e.rad * 1.2); ctx.strokeRect(-e.rad, -e.rad * .55, e.rad * 2, e.rad * 1.2); ctx.fillStyle='#77706a'; ctx.fillRect(-e.rad*.75,-4,e.rad*1.5,10); ctx.fillStyle='#5a4633'; ctx.fillRect(e.rad*.2,-e.rad*.3,e.rad*.7,e.rad*.6); }
 function drawSlimeKing(e, base) {
   const appearance = e.appearance || 1;
