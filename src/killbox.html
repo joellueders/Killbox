@@ -416,6 +416,10 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
   display: grid;
   gap: 8px;
 }
+.panel .synergyList {
+  display: grid;
+  gap: 8px;
+}
 .panel .enemyCard, .panel .towerCard {
   display: grid;
   grid-template-columns: 34px 1fr;
@@ -464,6 +468,42 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: .06em;
+}
+.panel .synergyHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+  color: #f0c96b;
+  font-size: 12px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.panel .synergyHeader span { color: #b8e6ff; font-size: 11px; letter-spacing: .04em; }
+.panel .synergyCard {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  align-items: center;
+  gap: 10px;
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: linear-gradient(180deg, rgba(26, 20, 15, .95), rgba(15, 11, 8, .98));
+  border: 1px solid rgba(143, 100, 52, .65);
+}
+.panel .synergyCard .synergyIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), 0 0 14px rgba(0,0,0,.25);
+}
+.panel .synergyCard .synergyText { display: grid; gap: 2px; }
+.panel .synergyCard .synergyText b { font-size: 12px; }
+.panel .synergyCard .synergyText span { font-size: 12px; color: #cfbb96; line-height: 1.2; }
+.panel .synergyEmpty {
+  padding: 8px 10px;
+  color: #cfbb96;
+  font-size: 12px;
 }
 .panel .enemyCard .enemyText b, .panel .towerCard .enemyText b { font-size: 12px; }
 .panel .enemyCard .enemyText span, .panel .towerCard .enemyText span { font-size: 12px; color: #cfbb96; line-height: 1.2; }
@@ -2397,6 +2437,12 @@ kbd {
   color: #fff5cf;
   text-shadow: 0 1px 0 #110b06;
 }
+.hudWaveArchetype {
+  font-size: 11px;
+  letter-spacing: .04em;
+  color: #f0c96b;
+  white-space: nowrap;
+}
 .hudStat span, .hudSpeedWrap span { font-weight: 900; }
 .hudSep { opacity: .55; padding: 0 1px; }
 .hudSpeedWrap { gap: 4px; }
@@ -2438,7 +2484,10 @@ kbd {
   <div class="hudSep">|</div>
   <div class="hudStat"><span class="hudLabel">GOLD</span><span id="hudGold" class="hudValue">180</span></div>
   <div class="hudSep">|</div>
-  <div class="hudStat"><span class="hudLabel">WAVE</span><span id="hudWave" class="hudValue">0</span></div>
+  <div class="hudStat">
+    <span class="hudLabel">WAVE</span>
+    <span class="hudValue"><span id="hudWave">0</span> <small id="hudWaveArchetype" class="hudWaveArchetype">• --</small></span>
+  </div>
   <div class="hudSep">|</div>
   <div class="hudSpeedWrap">
     <span>SPEED</span>
@@ -2566,6 +2615,10 @@ kbd {
     <details class="codex" id="powerupCodex">
       <summary>Powerup Codex <span class="codexPill">pickup effects</span></summary>
       <div class="codexBody"><div class="powerupList" id="powerupList"></div></div>
+    </details>
+    <details class="codex" id="synergyCodex">
+      <summary>Synergy Codex <span class="codexPill">discoveries</span></summary>
+      <div class="codexBody"><div class="synergyList" id="synergyList"></div></div>
     </details>
     <h2 class="debugHidden">Test Tools</h2>
     <div class="testControls debugHidden">
@@ -3745,6 +3798,8 @@ const S = {
   comboBanner: '',
   comboBannerKind: '',
   comboBannerTime: 0,
+  synergyStats: loadSynergyStats(),
+  synergyLog: [],
   runStats: { heroKills: 0, towerKills: 0, otherKills: 0, leaked: 0, powerups: 0, goldEarned: 0, bonusGold: 0, interestGold: 0, wavesCleared: 0 },
   selected: null, sel: null, menuOpen: false, aiEngineerOwned: false, placeDir: 1,
   devToolsOpen: false, devUnlimitedGold: false, devInvincible: false, devShowInfo: false,
@@ -5031,6 +5086,7 @@ function ui() {
   if ($('hudGold')) $('hudGold').textContent = Math.floor(S.gold);
   $('wave').textContent  = displayWave;
   if ($('hudWave')) $('hudWave').textContent = displayWave;
+  if ($('hudWaveArchetype')) $('hudWaveArchetype').textContent = displayWave > 0 ? `• ${displayArch.label || 'Swarm'}` : '• --';
   if ($('waveArchetypeLabel')) $('waveArchetypeLabel').textContent = displayWave > 0 ? `• ${displayArch.label || 'Swarm'}` : '• --';
   if ($('score')) $('score').textContent = S.score;
   if ($('hudScore')) $('hudScore').textContent = Math.floor(S.score);
@@ -5542,6 +5598,10 @@ function renderCodices() {
         powerupList.appendChild(row);
       });
     powerupList.dataset.done = 1;
+  }
+  const synergyList = $('synergyList');
+  if (synergyList) {
+    syncSynergyCodex();
   }
 }
 
@@ -6798,6 +6858,7 @@ function makeWaveSnapshot() {
     cornerGhosts: (S.cornerGhosts || []).map(deepCopyEntity),
     pendingWaveMutagen: S.pendingWaveMutagen || null,
     activeWaveMutagen: S.activeWaveMutagen || null,
+    synergyStats: Object.assign({}, S.synergyStats || {}),
     waveStats: S.waveStats ? Object.assign({}, S.waveStats) : null,
     runStats: Object.assign({}, S.runStats),
     bossActive: S.bossActive, bossSpawned: S.bossSpawned, bossAppearance: S.bossAppearance || 0, slimeKingAppearances: S.slimeKingAppearances || 0,
@@ -6836,6 +6897,7 @@ function restoreWaveSnapshot() {
   if (!S.cornerSkulls.length) resetCornerSkulls();
   S.waveStats = o.waveStats ? Object.assign({}, o.waveStats) : null;
   S.runStats = o.runStats ? Object.assign({}, o.runStats) : S.runStats;
+  S.synergyStats = { ...blankSynergyStats(), ...(o.synergyStats || {}) };
   S.bossActive = !!o.bossActive; S.bossSpawned = !!o.bossSpawned; S.bossIntro = 0;
   S.bossAppearance = o.bossAppearance || 0;
   S.slimeKingAppearances = o.slimeKingAppearances || 0;
@@ -7174,6 +7236,296 @@ function getWaveCountdownDuration(wave) {
   return Math.max(12, 32 - ((w - 2) * 2));
 }
 
+const SYNERGY_TOTAL_TARGET = 20;
+const SYNERGY_STORAGE_KEY = 'killbox.synergyStats.v1';
+const SYNERGY_DEFS = {
+  meatGrinder: {
+    label: 'MEAT GRINDER',
+    desc: 'Push Wall + Spike Floor',
+    c: '#ff6f61',
+    fx: '#ff9d7d',
+  },
+  shatter: {
+    label: 'SHATTER',
+    desc: 'Frozen target + heavy hit',
+    c: '#b8f0ff',
+    fx: '#e7fbff',
+  },
+  pinball: {
+    label: 'PINBALL',
+    desc: 'Repeated push bounce',
+    c: '#ffd86a',
+    fx: '#ffeaa3',
+  },
+  firingRange: {
+    label: 'FIRING RANGE',
+    desc: 'Barracks + Repeater',
+    c: '#8fd6ff',
+    fx: '#dff4ff',
+  },
+  overcharged: {
+    label: 'OVERCHARGED',
+    desc: 'Lightning through frozen groups',
+    c: '#b8a8ff',
+    fx: '#d7c8ff',
+  },
+  trafficJam: {
+    label: 'TRAFFIC JAM',
+    desc: 'Barracks + Push Wall',
+    c: '#f0c96b',
+    fx: '#f6e7cf',
+  },
+  neighborhood: {
+    label: 'THERE GOES THE NEIGHBORHOOD',
+    desc: 'Big boom into a packed crowd',
+    c: '#ffb15b',
+    fx: '#ffd27a',
+  },
+};
+
+function blankSynergyStats() {
+  return Object.fromEntries(Object.keys(SYNERGY_DEFS).map(k => [k, 0]));
+}
+
+function loadSynergyStats() {
+  const base = blankSynergyStats();
+  try {
+    const raw = localStorage.getItem(SYNERGY_STORAGE_KEY);
+    if (!raw) return base;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') return { ...base, ...parsed };
+  } catch (err) {}
+  return base;
+}
+
+function saveSynergyStats() {
+  try {
+    localStorage.setItem(SYNERGY_STORAGE_KEY, JSON.stringify(S.synergyStats || blankSynergyStats()));
+  } catch (err) {}
+}
+
+function synergyDiscoveryCount() {
+  return Object.values(S.synergyStats || {}).filter(v => v > 0).length;
+}
+
+function syncSynergyCodex() {
+  const el = $('synergyList');
+  if (!el) return;
+  const discovered = Object.entries(S.synergyStats || {})
+    .filter(([, n]) => n > 0)
+    .sort((a, b) => b[1] - a[1]);
+  const total = SYNERGY_TOTAL_TARGET;
+  const count = synergyDiscoveryCount();
+  el.innerHTML = `
+    <div class="synergyHeader">
+      <b>Synergies Discovered</b>
+      <span>${count} / ${total}</span>
+    </div>
+    ${discovered.length ? discovered.map(([k, n]) => {
+      const def = SYNERGY_DEFS[k];
+      return `<div class="synergyCard">
+        <div class="synergyIcon" style="background:${def?.fx || '#fff'}"></div>
+        <div class="synergyText">
+          <b>${def?.label || k}</b>
+          <span>${def?.desc || 'Unexpected interaction'}</span>
+          <span class="rarity">x${n}</span>
+        </div>
+      </div>`;
+    }).join('') : '<div class="synergyEmpty">No collisions found yet. Push harder.</div>'}
+  `;
+}
+
+function logSynergy(key, x, y, extra = {}) {
+  const def = SYNERGY_DEFS[key];
+  if (!def) return false;
+  S.synergyStats = S.synergyStats || blankSynergyStats();
+  S.synergyStats[key] = (S.synergyStats[key] || 0) + 1;
+  saveSynergyStats();
+  if (!S.synergyLog) S.synergyLog = [];
+  S.synergyLog.unshift({ key, t: performance.now() / 1000, ...extra });
+  if (S.synergyLog.length > 8) S.synergyLog.length = 8;
+  floatText(def.label, x, y, def.c);
+  if (extra.toast !== false) {
+    const msg = extra.msg ? `${def.label}: ${extra.msg}` : def.label;
+    toast(msg);
+  }
+  console.log('[synergy]', key, extra);
+  syncSynergyCodex();
+  return true;
+}
+
+function findBarracksNear(x, y, radius = 150) {
+  return S.towers.some(t => t.type === 'barracks' && !t.dead && dist(x, y, t.x, t.y) <= radius);
+}
+
+function countEnemiesNear(x, y, radius = 52, exclude = null) {
+  let c = 0;
+  for (const e of S.enemies) {
+    if (!e || e.dead || e === exclude) continue;
+    if (dist(x, y, e.x, e.y) <= radius) c++;
+  }
+  return c;
+}
+
+function markPushSynergy(e, sourceType, strength = 1, sourceX = e.x, sourceY = e.y) {
+  if (!e || e.dead) return;
+  const now = performance.now() / 1000;
+  const fresh = now - (e.synergyLastPush || 0) <= 1.1;
+  e.synergyPushes = fresh ? Math.min(6, (e.synergyPushes || 0) + 1) : 1;
+  e.synergyLastPush = now;
+  e.synergyLastPushSource = sourceType;
+  e.synergyPushStrength = strength;
+  e.synergyPushX = sourceX;
+  e.synergyPushY = sourceY;
+  e.synergyPackedUntil = Math.max(e.synergyPackedUntil || 0, now + .8);
+}
+
+function recentPushSynergy(e) {
+  const now = performance.now() / 1000;
+  return !!e && !e.dead && ((e.synergyLastPush || 0) > 0 && now - e.synergyLastPush <= 1.1);
+}
+
+function maybePinball(e, x, y) {
+  const pushes = e?.synergyPushes || 0;
+  if (!e || e.dead || pushes < 3) return false;
+  const now = performance.now() / 1000;
+  if ((e.synergyPinballUntil || 0) > now) return false;
+  e.synergyPinballUntil = now + 2.2;
+  e.synergyPushes = 0;
+  e.stun = Math.max(e.stun || 0, .34);
+  e.air = Math.max(e.air || 0, .12);
+  const nx = e.synergyPushX || e.x;
+  const ny = e.synergyPushY || e.y;
+  const around = S.enemies.filter(o => o && !o.dead && o !== e && dist(e.x, e.y, o.x, o.y) < 56).slice(0, 3);
+  for (const o of around) {
+    const a = Math.atan2(o.y - e.y, o.x - e.x);
+    o.kx = (o.kx || 0) + Math.cos(a) * 82;
+    o.ky = (o.ky || 0) + Math.sin(a) * 82;
+    o.stun = Math.max(o.stun || 0, .1);
+  }
+  logSynergy('pinball', x ?? e.x, y ?? e.y, { msg: `${pushes} hits`, toast: false });
+  burst(e.x, e.y, SYNERGY_DEFS.pinball.fx, 18, 'spark', 160);
+  shockwave(e.x, e.y, SYNERGY_DEFS.pinball.fx, 66, .22);
+  return true;
+}
+
+function maybeTrafficJam(e, x, y) {
+  if (!e || e.dead) return false;
+  const now = performance.now() / 1000;
+  if ((e.trafficJamUntil || 0) > now) return false;
+  const nearBarracks = findBarracksNear(e.x, e.y, 160) || (e.barracksEngagedUntil || 0) > now;
+  if (!nearBarracks) return false;
+  const crowd = countEnemiesNear(e.x, e.y, 46);
+  if (crowd < 2) return false;
+  e.trafficJamUntil = now + 1.6;
+  e.packedUntil = Math.max(e.packedUntil || 0, now + 1.5);
+  for (const o of S.enemies) {
+    if (!o || o.dead) continue;
+    if (dist(e.x, e.y, o.x, o.y) <= 46) o.packedUntil = Math.max(o.packedUntil || 0, now + 1.25);
+  }
+  logSynergy('trafficJam', x ?? e.x, y ?? e.y, { msg: `${crowd + 1} crowded`, toast: false });
+  burst(e.x, e.y, SYNERGY_DEFS.trafficJam.fx, 16, 'debris', 160);
+  shockwave(e.x, e.y, SYNERGY_DEFS.trafficJam.fx, 56, .2);
+  return true;
+}
+
+function maybeMeatGrinder(e, x, y, bonusDmg = 0) {
+  if (!e || e.dead || !recentPushSynergy(e)) return false;
+  const now = performance.now() / 1000;
+  if ((e.meatGrinderUntil || 0) > now) return false;
+  e.meatGrinderUntil = now + 1.0;
+  e.synergyPushes = 0;
+  const dmg = Math.max(12, bonusDmg || 0);
+  e.hp -= dmg;
+  burst(e.x, e.y, '#ff4f4f', 24, 'blood', 180);
+  burst(e.x, e.y, '#ffd8d4', 8, 'spark', 100);
+  shockwave(e.x, e.y, SYNERGY_DEFS.meatGrinder.fx, 54, .18);
+  logSynergy('meatGrinder', x ?? e.x, y ?? e.y, { msg: `+${Math.floor(dmg)}`, toast: false });
+  return true;
+}
+
+function maybeShatter(e, x, y, dmg, tower, byHero) {
+  if (!e || e.dead) return false;
+  const frozen = (e.freeze || 0) > 0 || (e.chill || 0) >= 3;
+  const strong = dmg >= Math.max(28, (e.max || 0) * .09);
+  if (!frozen || !strong) return false;
+  const now = performance.now() / 1000;
+  if ((e.shatterUntil || 0) > now) return false;
+  e.shatterUntil = now + 1.2;
+  e.chill = Math.max(0, (e.chill || 0) - 2);
+  burst(e.x, e.y, '#e9fbff', 18, 'spark', 180);
+  burst(e.x, e.y, '#b8f0ff', 8, 'bubble', 90);
+  shockwave(e.x, e.y, SYNERGY_DEFS.shatter.fx, 72, .26);
+  for (const o of S.enemies) {
+    if (!o || o.dead || o === e) continue;
+    if (dist(e.x, e.y, o.x, o.y) < 82) {
+      o.slow = Math.max(o.slow || 0, .35);
+      o.chill = Math.max(o.chill || 0, 1.2);
+    }
+  }
+  logSynergy('shatter', x ?? e.x, y ?? e.y, { msg: 'ice burst', toast: false });
+  if (tower || byHero) floatText('SHATTER', e.x - 24, e.y - 44, SYNERGY_DEFS.shatter.c);
+  return true;
+}
+
+function maybeOvercharged(e, x, y, tower, byHero) {
+  if (!e || e.dead) return false;
+  const lightning = tower?.type === 'spire' || (byHero && S.hero.weapon === 'storm');
+  if (!lightning) return false;
+  const frozen = (e.freeze || 0) > 0 || (e.chill || 0) > 0 || (e.packedUntil || 0) > performance.now() / 1000;
+  if (!frozen) return false;
+  const now = performance.now() / 1000;
+  if ((e.overchargedUntil || 0) > now) return false;
+  e.overchargedUntil = now + 1.2;
+  const near = S.enemies.filter(o => o && !o.dead && o !== e && dist(e.x, e.y, o.x, o.y) <= 96).slice(0, 3);
+  burst(e.x, e.y, SYNERGY_DEFS.overcharged.fx, 22, 'spark', 220);
+  shockwave(e.x, e.y, SYNERGY_DEFS.overcharged.fx, 72, .24);
+  for (const o of near) {
+    o.chill = Math.max(o.chill || 0, 1.2);
+    o.slow = Math.max(o.slow || 0, .28);
+    hit(o, Math.max(8, Math.floor((e.max || 24) * .06)), tower, byHero);
+    S.parts.push({ kind: 'bolt', x: e.x, y: e.y, x2: o.x, y2: o.y, life: .16, c: '#b8a8ff', w: 4 });
+  }
+  logSynergy('overcharged', x ?? e.x, y ?? e.y, { msg: `${near.length + 1} arcs`, toast: false });
+  return true;
+}
+
+function maybeFiringRange(e, x, y, tower, byHero) {
+  if (!e || e.dead || !byHero) return false;
+  const weapon = S.hero.weapon;
+  if (!['ranger', 'crossbow'].includes(weapon)) return false;
+  const now = performance.now() / 1000;
+  if ((e.barracksEngagedUntil || 0) <= now) return false;
+  if ((e.firingRangeUntil || 0) > now) return false;
+  e.firingRangeUntil = now + 1.0;
+  const near = S.enemies.filter(o => o && !o.dead && o !== e && dist(e.x, e.y, o.x, o.y) < 140).sort((a, b) => dist(e.x, e.y, a.x, a.y) - dist(e.x, e.y, b.x, b.y))[0];
+  if (near) {
+    S.parts.push({ kind: 'bolt', x: e.x, y: e.y, x2: near.x, y2: near.y, life: .16, c: '#8fd6ff', w: 3 });
+    hit(near, Math.max(8, Math.floor((e.max || 40) * .05)), null, true);
+  }
+  logSynergy('firingRange', x ?? e.x, y ?? e.y, { msg: 'target locked', toast: false });
+  burst(e.x, e.y, SYNERGY_DEFS.firingRange.fx, 8, 'spark', 110);
+  return true;
+}
+
+function maybeNeighborhood(e, x, y, tower, byHero, blastRadius = 0) {
+  const now = performance.now() / 1000;
+  if (!e || e.dead || (e.neighborhoodUntil || 0) > now) return false;
+  const crowd = countEnemiesNear(e.x, e.y, blastRadius || 64);
+  if (crowd < 3) return false;
+  e.neighborhoodUntil = now + 1.4;
+  const hitList = S.enemies.filter(o => o && !o.dead && dist(e.x, e.y, o.x, o.y) <= (blastRadius || 64));
+  for (const o of hitList) {
+    o.kx = (o.kx || 0) + Math.cos(Math.atan2(o.y - e.y, o.x - e.x)) * 52;
+    o.ky = (o.ky || 0) + Math.sin(Math.atan2(o.y - e.y, o.x - e.x)) * 52;
+    o.stun = Math.max(o.stun || 0, .08);
+  }
+  burst(e.x, e.y, SYNERGY_DEFS.neighborhood.fx, 22, 'debris', 200);
+  shockwave(e.x, e.y, SYNERGY_DEFS.neighborhood.fx, 88, .28);
+  logSynergy('neighborhood', x ?? e.x, y ?? e.y, { msg: `${crowd} packed`, toast: false });
+  return true;
+}
+
 // Returns counts of each enemy type for wave w
 function previewWave(w) {
   const rng = makeWaveRng(w * 1000003 + 7);
@@ -7485,6 +7837,7 @@ function hit(e, amt, tower, byHero = false) {
   const sourceX = tower ? tower.x : byHero ? S.hero.x : e.x;
   const sourceY = tower ? tower.y : byHero ? S.hero.y : e.y;
   const sourceAngle = Math.atan2(sourceY - e.y, sourceX - e.x);
+  const frozenBefore = (e.freeze || 0) > 0 || (e.chill || 0) >= 3;
   // Shield bearers resist hero arrows (non-tower hits)
   if (e.type === 'shield' && !tower) amt *= .45;
   // Healers are nearly immune to tower fire — the hero must hunt them down
@@ -7560,6 +7913,29 @@ function hit(e, amt, tower, byHero = false) {
         : 'arrow';
       impactFx(e.x, e.y, fx);
     }
+  }
+  if (tower) {
+    const now = performance.now() / 1000;
+    if (tower.type === 'barracks') {
+      e.barracksEngagedUntil = Math.max(e.barracksEngagedUntil || 0, now + 1.15);
+    }
+    if (tower.type === 'spikes' && recentPushSynergy(e)) {
+      maybeMeatGrinder(e, sourceX, sourceY, applied * 0.45 + 10);
+    }
+    if (['tar', 'spring', 'mace'].includes(tower.type)) {
+      markPushSynergy(e, tower.type, applied, sourceX, sourceY);
+      maybePinball(e, sourceX, sourceY);
+      if (findBarracksNear(e.x, e.y, 160)) maybeTrafficJam(e, sourceX, sourceY);
+    }
+    maybeShatter(e, sourceX, sourceY, frozenBefore ? Math.max(applied, 28) : applied, tower, false);
+    maybeOvercharged(e, sourceX, sourceY, tower, false);
+    if (tower.type === 'cannon' && countEnemiesNear(e.x, e.y, 80, e) >= 3) {
+      maybeNeighborhood(e, sourceX, sourceY, tower, false, 78);
+    }
+  } else if (byHero) {
+    maybeShatter(e, sourceX, sourceY, applied, null, true);
+    maybeOvercharged(e, sourceX, sourceY, null, true);
+    maybeFiringRange(e, sourceX, sourceY, null, true);
   }
   if (e.hp <= 0) kill(e, tower, byHero);
 }
@@ -7769,10 +8145,18 @@ function explodeBarrel(b) {
   boom(b.x, b.y, '#f08a2533', 35);
   impactFx(b.x, b.y, 'explosion');
   shake(10, .45);
+  let victims = 0;
   for (const e of S.enemies) {
     const d = dist(b.x, b.y, e.x, e.y);
-    if (d < 150) hit(e, 230 * (1 - d / 170) + 40, null);
+    if (d < 150) {
+      victims++;
+      hit(e, 230 * (1 - d / 170) + 40, null);
+      e.kx = (e.kx || 0) + Math.cos(Math.atan2(e.y - b.y, e.x - b.x)) * (150 - d) * .9;
+      e.ky = (e.ky || 0) + Math.sin(Math.atan2(e.y - b.y, e.x - b.x)) * (150 - d) * .9;
+      e.stun = Math.max(e.stun || 0, .14);
+    }
   }
+  if (victims >= 3) maybeNeighborhood({ x: b.x, y: b.y, dead: false }, b.x, b.y, null, false, 82);
   if (dist(b.x, b.y, S.hero.x, S.hero.y) < 120) hurtHero(18, 'barrel');
   floatText('BOOM!', b.x - 22, b.y - 22, '#ffcf3d');
 }
@@ -8035,6 +8419,7 @@ function towerTick(t, dt) {
         hit(e, d.d * dmgMult * spikeDmgMult, t);
         e.stun = Math.max(e.stun || 0, .22);
         e.kx = nx * 130; e.ky = ny * 130;
+        if (findBarracksNear(e.x, e.y, 160)) maybeTrafficJam(e, t.x, t.y);
         t.anim = .32; trig = true;
         continue;
       }
@@ -8058,6 +8443,9 @@ function towerTick(t, dt) {
           e.springResist = .85;
         }
         hit(e, d.d * dmgMult * (d.triggerTrap ? spikeDmgMult : 1), t);
+        markPushSynergy(e, t.type, p, t.x, t.y);
+        maybePinball(e, t.x, t.y);
+        if (findBarracksNear(e.x, e.y, 160)) maybeTrafficJam(e, t.x, t.y);
         trig = true;
       } else if (distE <= d.r) {
         hit(e, d.d * dmgMult, t);
@@ -8083,6 +8471,7 @@ function towerTick(t, dt) {
   if (t.type === 'barracks') {
     e.slow = Math.max(e.slow, d.slow || .25);
     hit(e, d.d * (1 + .25 * (t.level - 1)) * S.mods.dmg, t);
+    e.barracksEngagedUntil = Math.max(e.barracksEngagedUntil || 0, performance.now() / 1000 + 1.15);
     boom(e.x, e.y, d.fill, 3);
     return;
   }
@@ -12788,6 +13177,7 @@ function saveObj() {
     br: S.barrels.map(b  => ({ c: b.c, r: b.r })),
     m:  S.mods,
     ae: S.aiEngineerOwned ? 1 : 0,
+    sy: S.synergyStats || blankSynergyStats(),
     bossAppearance: S.bossAppearance || 0,
     slimeKingAppearances: S.slimeKingAppearances || 0,
     pendingWaveMutagen: S.pendingWaveMutagen || null,
@@ -12973,6 +13363,7 @@ function applySnapshot(st) {
   if (st.levelId) applyLevel(st.levelId, { silent: true });
   Object.assign(S, st);
   S.mods = { gold: 1.14, dmg: 1, overclockUntil: 0, frenzyUntil: 0, hasteUntil: 0, coinPurseUntil: 0, lastStandUntil: 0, riftShieldUntil: 0, ...(S.mods || {}) };
+  S.synergyStats = { ...blankSynergyStats(), ...(S.synergyStats || {}) };
   S.waveArchetype = S.waveArchetype || 'recovery';
   S.waveArchetypeLabel = S.waveArchetypeLabel || 'Recovery';
   S.waveArchetypeData = WAVE_ARCHETYPE_RULES[S.waveArchetype] || pickWaveArchetype(S.wave || 1);
