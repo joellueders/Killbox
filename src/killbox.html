@@ -2378,6 +2378,11 @@ kbd {
     <span>SPEED</span>
     <button id="hudSpeedBtn" class="hudSpeedBtn" title="Change game speed" aria-label="Change game speed">1x ▾</button>
   </div>
+  <div class="hudSep">|</div>
+  <div class="hudStat">
+    <span class="hudLabel">COMBO</span>
+    <span id="hudCombo" class="hudValue">x1</span>
+  </div>
   <div id="weaponHudBoxTop" class="heroAbilityHud"><span id="weaponChargeHudTop"></span></div>
 </div>
 <!-- ── Build Hotbar ─────────────────────── -->
@@ -3657,6 +3662,10 @@ const S = {
   phase: 'build', // Broad mode: build phase vs combat phase.
   waveStats: null,
   balanceLog: [],
+  combo: 0,
+  comboTimer: 0,
+  comboMax: 0,
+  comboHitWindow: 2.2,
   runStats: { heroKills: 0, towerKills: 0, otherKills: 0, leaked: 0, powerups: 0, goldEarned: 0, bonusGold: 0, interestGold: 0, wavesCleared: 0 },
   selected: null, sel: null, menuOpen: false, aiEngineerOwned: false, placeDir: 1,
   devToolsOpen: false, devUnlimitedGold: false, devInvincible: false, devShowInfo: false,
@@ -4923,6 +4932,7 @@ function ui() {
   $('wave').textContent  = S.wave;
   if ($('hudWave')) $('hudWave').textContent = S.wave;
   if ($('score')) $('score').textContent = S.score;
+  if ($('hudCombo')) $('hudCombo').textContent = S.combo > 0 ? `x${S.combo}` : `x1`;
   S.speed = normalizeSpeedValue(S.speed);
   const speedText = S.speed + 'x';
   if ($('hudSpeedBtn')) $('hudSpeedBtn').textContent = speedText + ' ▾';
@@ -5942,9 +5952,12 @@ function finishWave() {
   // Interest on unspent gold: slightly reduced to keep late-game cash from drifting too high.
   const interest = S.gold > ECONOMY_TUNING.interestThreshold ? Math.floor((S.gold - ECONOMY_TUNING.interestThreshold) * ECONOMY_TUNING.interestRate) : 0;
   S.gold += bonus + interest;
+  S.combo = 0;
+  S.comboTimer = 0;
   if (S.waveStats) {
     S.waveStats.bonusGold = bonus;
     S.waveStats.interestGold = interest;
+    S.waveStats.comboMax = Math.max(S.waveStats.comboMax || 0, S.comboMax || 0);
   }
   if (S.runStats) {
     S.runStats.bonusGold += bonus;
@@ -6995,9 +7008,13 @@ function startWave() {
     interestGold: 0,
     upgradesSelected: [],
     damageBySource: {},
+    comboMax: 0,
   };
   S.phase      = 'combat';
   S.waveActive = true;
+  S.combo = 0;
+  S.comboTimer = 0;
+  S.comboMax = 0;
   if (S.pendingWaveMutagen) {
     const mut = MULTIVERSE_MUTAGENS[S.pendingWaveMutagen];
     if (mut) {
@@ -7233,6 +7250,74 @@ function hit(e, amt, tower, byHero = false) {
   if (e.hp <= 0) kill(e, tower, byHero);
 }
 
+function comboMultiplier(streak = S.combo) {
+  if (!streak) return 1;
+  return 1 + Math.min(12, streak) * 0.06;
+}
+
+function updateComboOnKill(e, tower, byHero, baseGold, baseScore) {
+  const now = performance.now() / 1000;
+  if (S.waveActive && S.phase === 'combat') {
+    const withinWindow = S.comboTimer > 0;
+    S.combo = withinWindow ? Math.min(99, S.combo + 1) : 1;
+    S.comboTimer = S.comboHitWindow;
+    S.comboMax = Math.max(S.comboMax || 0, S.combo);
+    const mult = comboMultiplier();
+    const comboBonusGold = Math.max(0, Math.floor(baseGold * (mult - 1) * 0.45));
+    const comboBonusScore = Math.floor(baseScore * (mult - 1));
+    if (comboBonusGold > 0) {
+      S.gold += comboBonusGold;
+      baseGold += comboBonusGold;
+      if (S.waveStats) S.waveStats.goldEarned += comboBonusGold;
+      if (S.runStats) S.runStats.goldEarned += comboBonusGold;
+      floatText('+' + comboBonusGold + 'g', e.x + 4, e.y - 16, '#ffd77d');
+    }
+    if (comboBonusScore > 0) S.score += comboBonusScore;
+    const comboLabel = S.combo >= 4 ? `${S.combo}x COMBO` : `${S.combo} HIT`;
+    floatText(comboLabel, e.x - 18, e.y - 30, S.combo >= 8 ? '#ffcf6a' : '#8edcff');
+    if (S.waveStats) S.waveStats.comboMax = Math.max(S.waveStats.comboMax || 0, S.comboMax || 0);
+    if (S.combo >= 3) {
+      S.waveBanner = `${S.combo}x COMBO`;
+      S.waveBannerKind = S.combo >= 8 ? 'boss' : 'danger';
+      S.waveBannerTime = 0.7;
+      const b = $('waveBanner');
+      if (b) {
+        b.textContent = S.waveBanner;
+        b.className = `waveBanner show ${S.combo >= 8 ? 'boss' : 'danger'}`;
+      }
+    }
+  } else {
+    S.combo = 0;
+    S.comboTimer = 0;
+  }
+  return { gold: baseGold, score: baseScore };
+}
+
+function enemyDeathFeedback(e, tower, byHero) {
+  const profiles = {
+    runner:   { fx: 'dust',  burst: '#cfe8ff', shock: '#8edcff', text: 'SNAP!',  sfx: 'enemyDeath' },
+    slinger:  { fx: 'arrow', burst: '#d8d0c8', shock: '#cfe8ff', text: 'DROP!',  sfx: 'enemyDeath' },
+    brute:    { fx: 'thunk',  burst: '#8a6a43', shock: '#d0a35d', text: 'THUD!',  sfx: 'enemyDeath' },
+    ogre:     { fx: 'explosion', burst: '#b78a4a', shock: '#ffcf6a', text: 'CRUNCH!', sfx: 'enemyDeath' },
+    hunter:   { fx: 'lightning', burst: '#b8a8ff', shock: '#7ac7ff', text: 'HUNTER DOWN', sfx: 'enemyDeath' },
+    bomber:   { fx: 'explosion', burst: '#ffcf6a', shock: '#ff8a2a', text: 'BOOM!', sfx: 'enemyDeath' },
+    healer:   { fx: 'heal', burst: '#b9d84f', shock: '#9bd34f', text: 'MEND LOST', sfx: 'enemyDeath' },
+    shield:   { fx: 'shatter', burst: '#cfe8ff', shock: '#8edcff', text: 'SHIELD BROKEN', sfx: 'enemyDeath' },
+    siege:    { fx: 'thunk', burst: '#d0a35d', shock: '#f0c96b', text: 'SIEGE STOPPED', sfx: 'enemyDeath' },
+    slimeking:{ fx: 'slime', burst: '#46b83b', shock: '#5fd45a', text: 'THE CROWN FALLS', sfx: 'bossDeath' },
+  };
+  const cue = profiles[e.type];
+  if (!cue) return;
+  if (cue.sfx) playSfx(cue.sfx);
+  burst(e.x, e.y - 4, cue.burst, e.type === 'slimeking' ? 18 : 9, 'spark', e.type === 'slimeking' ? 220 : 120);
+  shockwave(e.x, e.y, cue.shock, e.type === 'slimeking' ? 150 : Math.max(38, e.rad * 1.6), e.type === 'slimeking' ? .45 : .22);
+  if (cue.fx && cue.fx !== 'shatter') impactFx(e.x, e.y, cue.fx);
+  if (cue.fx === 'shatter' || e.freeze > 0 || e.chill > 0) burst(e.x, e.y, '#e9fbff', 8, 'spark', 140);
+  floatText(cue.text, e.x - Math.min(48, cue.text.length * 2.4), e.y - 42, e.type === 'slimeking' ? '#ffe09c33' : '#ffe56b');
+  if (e.type === 'bomber') shake(7, .18);
+  if (e.type === 'ogre') shake(5, .12);
+}
+
 function logCoinTrinketGold(amount, source) {
   const active = (S.mods.coinPurseUntil || 0) > (performance.now() / 1000);
   console.log('[trinket] gold payout', {
@@ -7269,12 +7354,14 @@ function kill(e, tower, byHero = false) {
   const g = Math.floor(e.val * ECONOMY_TUNING.killBountyMultiplier * S.mods.gold * (S.hero.goldMult || 1) * (S.hero.trinketGoldActiveMult || 1) * (byHero ? ECONOMY_TUNING.heroKillBountyBonus : 1));
   logCoinTrinketGold(g, byHero ? 'hero kill' : tower ? 'tower kill' : 'other kill');
   S.gold  += g;
-  S.score += 50 + S.wave * 8 + (byHero ? 25 : 0);
+  const baseScore = 50 + S.wave * 8 + (byHero ? 25 : 0);
+  S.score += baseScore;
   if (S.waveStats) {
     if (byHero) S.waveStats.heroKills++;
     else if (tower) S.waveStats.towerKills++;
     else S.waveStats.otherKills++;
     S.waveStats.goldEarned += g;
+    S.waveStats.comboMax = Math.max(S.waveStats.comboMax || 0, S.comboMax || 0);
   }
   if (S.runStats) {
     if (byHero) S.runStats.heroKills++;
@@ -7286,10 +7373,11 @@ function kill(e, tower, byHero = false) {
     tower.kills = (tower.kills || 0) + 1;
     if (S.sel === tower) showSelected();
   }
+  updateComboOnKill(e, tower, byHero, g, baseScore);
   if (byHero) heroThreatKillFeedback(e);
+  enemyDeathFeedback(e, tower, byHero);
   if (g > 0) floatText('+' + g + 'g', e.x, e.y, '#ffe09c33');
   if (e.type === 'slimeking') {
-    playSfx('enemyDeath');
     S.bossActive = false;
     clearSlimeTrail();
     hideBossWarning();
@@ -7303,11 +7391,7 @@ function kill(e, tower, byHero = false) {
     shake(10, .45);
     ui(); // Boss kill is a milestone — refresh UI immediately
   } else {
-    playSfx('enemyDeath');
     dropRandomPowerup(e, byHero);
-    burst(e.x, e.y - 4, e.freeze > 0 || e.chill > 0 ? '#dff4ff' : '#f7d38a', 6, 'spark', 90);
-    burst(e.x, e.y - 2, '#8a6a43', 4, 'debris', 58);
-    shockwave(e.x, e.y, e.freeze > 0 || e.chill > 0 ? '#9fdfff' : '#ffcf6a', e.rad * 1.7, .18);
   }
   boom(e.x, e.y, e.type === 'slimeking' ? '#4fa34f33' : '#b78a4a',
        e.type === 'slimeking' ? 52 : 14);
@@ -9328,6 +9412,7 @@ function renderWaveSummary(bonus, interest) {
     <div><small>Total kills</small><b>${totalKills}</b></div>
     <div><small>Hero kills</small><b>${s.heroKills || 0}</b></div>
     <div><small>Tower kills</small><b>${s.towerKills || 0}</b></div>
+    <div><small>Best combo</small><b>x${s.comboMax || 0}</b></div>
     <div><small>Powerups</small><b>${s.powerups || 0}</b></div>
     <div><small>Gold earned</small><b>+${Math.floor(goldEarned)}g</b></div>
     <div><small>Score gained</small><b>+${scoreGain}</b></div>
@@ -9346,6 +9431,7 @@ function runSummaryHtml() {
       <div><small>Total kills</small><b>${totalKills}</b></div>
       <div><small>Hero kills</small><b>${s.heroKills || 0}</b></div>
       <div><small>Tower kills</small><b>${s.towerKills || 0}</b></div>
+      <div><small>Best combo</small><b>x${s.comboMax || 0}</b></div>
       <div><small>Powerups</small><b>${s.powerups || 0}</b></div>
       <div><small>Gold earned</small><b>+${Math.floor(goldEarned)}g</b></div>
       <div><small>Lives lost</small><b>${s.leaked || 0}</b></div>
@@ -10203,6 +10289,13 @@ function step(dt) {
 
   cleanParticles(dt);
   updateLowHealthWarning(dt);
+  if (S.comboTimer > 0) {
+    S.comboTimer = Math.max(0, S.comboTimer - dt);
+    if (S.comboTimer <= 0) {
+      if (S.combo >= 3) toast(`Combo ended at x${S.combo}`);
+      S.combo = 0;
+    }
+  }
 
   if (S.waveBannerTime > 0) {
     S.waveBannerTime = Math.max(0, S.waveBannerTime - dt);
