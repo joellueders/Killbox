@@ -12065,6 +12065,7 @@ function draw(t) {
       ctx.strokeStyle = '#b8ff7a';
       ctx.lineWidth   = 3;
       ctx.beginPath(); ctx.arc(f.x, f.y, f.r * (.88 + Math.sin(t * 8 + f.x) * .04), 0, 7); ctx.stroke();
+      ctx.globalAlpha = 1;
       continue;
     }
     ctx.globalAlpha = a * .34;
