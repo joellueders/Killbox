@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <defs>
+    <linearGradient id="mist" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cdb8ff"/>
+      <stop offset="1" stop-color="#4f4478"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="49" cy="82" rx="24" ry="7" fill="#120b08" opacity=".25"/>
+  <path d="M30 35c2-19 20-31 34-18 10 10 10 31-3 58l-13 13-15-13c-8-17-9-30-3-40z" fill="url(#mist)" stroke="#1e1008" stroke-width="4" stroke-linejoin="round" opacity=".9"/>
+  <path d="M48 10l18 27-11 38H41L30 37z" fill="#f0d8ff" opacity=".9" stroke="#1e1008" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M57 18c-15 20-17 41-4 63" fill="none" stroke="#b37cff" stroke-width="7" stroke-linecap="round"/>
+  <path d="M25 47c-9 4-13 10-14 19M71 41c10 1 17 6 20 16" fill="none" stroke="#d7c8ff" stroke-width="4" stroke-linecap="round" opacity=".75"/>
+  <circle cx="42" cy="39" r="3" fill="#2a1738"/>
+  <circle cx="54" cy="39" r="3" fill="#2a1738"/>
+</svg>
