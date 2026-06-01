@@ -4810,28 +4810,36 @@ const MUTAGEN_VISUALS = {
   humanTeslaCoil: { label: 'TESLA COIL', icon: '⚡', color: '#dff7ff' },
   cowardiceField: { label: 'FEAR FIELD', icon: '!', color: '#f0c96b' },
   bulletFountain: { label: 'BULLET FOUNTAIN', icon: '✶', color: '#d8a4ff' },
-  mirrorUniverse: { label: 'MIRROR WORLD', icon: '◇', color: '#c9a2ff' },
+  mirrorUniverse: { label: 'MIRROR STAR', icon: '★', color: '#ff7be8' },
   kittenApocalypse: { label: 'KITTENS', icon: '🐾', color: '#ffffff' },
-  biblicallyAccurate: { label: 'EYES ABOVE', icon: '✦', color: '#fff8c8' },
+  biblicallyAccurate: { label: 'BE NOT AFRAID', icon: '✝', color: '#d0a35d' },
   machineUprising: { label: 'MACHINES AWAKE', icon: '⚙', color: '#8edcff' },
-  floorIsTrampolines: { label: 'TRAMPOLINE FLOOR', icon: '⌁', color: '#b9d84f' },
   bees: { label: 'BEES', icon: '🐝', color: '#ffe56b' },
   giantism: { label: 'GIANTISM', icon: '⬆', color: '#ffcf6a' },
   tinyPlanet: { label: 'TINY PLANET', icon: '·', color: '#9fe8ff' },
   deleteButton: { label: 'DELETE BUTTON', icon: '⌫', color: '#b37cff' },
-  thunderdome: { label: 'THUNDERDOME', icon: '⚡', color: '#fff34d' },
   walkingArsenal: { label: 'WALKING ARSENAL', icon: '✚', color: '#ffd56a' },
-  oopsAllCrits: { label: 'ALL CRITS', icon: '!', color: '#ffe56b' },
+  oopsAllCrits: { label: 'HEADSHOTS', icon: '!', color: '#ffe56b' },
   friendlyFire: { label: 'FRIENDLY FIRE', icon: '↯', color: '#ff9b32' },
   threeMinutesInHeaven: { label: 'ANGEL', icon: '✦', color: '#fff8c8' },
 };
 
+const REMOVED_MULTIVERSE_MUTAGENS = new Set(['floorIsTrampolines', 'thunderdome']);
+
+function validMutagenId(id) {
+  return !!id && !!MULTIVERSE_MUTAGENS[id] && !REMOVED_MULTIVERSE_MUTAGENS.has(id);
+}
+
+function sanitizeMutagenId(id) {
+  return validMutagenId(id) ? id : null;
+}
 
 function updateTempEffects(dt) {
   const now = performance.now() / 1000;
   if (S.activeWaveMutagen) {
-    const mut = MULTIVERSE_MUTAGENS[S.activeWaveMutagen];
+    const mut = activeMultiverseMutagen();
     if (mut && typeof mut.update === 'function') mut.update(dt);
+    else if (!mut) S.activeWaveMutagen = null;
   }
   for (const fx of S.effects) {
     fx.t -= dt;
@@ -6170,6 +6178,7 @@ window.forceUpgradeRewardScreen = function forceUpgradeRewardScreen() {
 };
 
 window.forceMultiverseMutagen = function forceMultiverseMutagen(id) {
+  id = sanitizeMutagenId(id);
   const mut = MULTIVERSE_MUTAGENS[id];
   if (!mut) {
     console.warn('[debug] unknown multiverse mutagen', id);
@@ -7089,8 +7098,8 @@ function makeWaveSnapshot() {
     healthOrbs: S.healthOrbs.map(deepCopyEntity),
     cornerSkulls: (S.cornerSkulls || []).map(deepCopyEntity),
     cornerGhosts: (S.cornerGhosts || []).map(deepCopyEntity),
-    pendingWaveMutagen: S.pendingWaveMutagen || null,
-    activeWaveMutagen: S.activeWaveMutagen || null,
+    pendingWaveMutagen: sanitizeMutagenId(S.pendingWaveMutagen),
+    activeWaveMutagen: sanitizeMutagenId(S.activeWaveMutagen),
     quartermaster: JSON.parse(JSON.stringify(S.quartermaster || { active: false, inventory: [], lastWave: -99, bought: {} })),
     quartermasterUpgrades: Object.assign({}, S.quartermasterUpgrades || {}),
     buildPhaseDuration: S.buildPhaseDuration || 0,
@@ -7111,8 +7120,8 @@ function restoreWaveSnapshot() {
   S.selected = null;
   S.mutationPending = false;
   S.pendingUpgrade = false;
-  S.pendingWaveMutagen = o.pendingWaveMutagen || null;
-  S.activeWaveMutagen = o.activeWaveMutagen || null;
+  S.pendingWaveMutagen = sanitizeMutagenId(o.pendingWaveMutagen);
+  S.activeWaveMutagen = sanitizeMutagenId(o.activeWaveMutagen);
   S.quartermaster = { active: false, inventory: [], lastWave: -99, bought: {}, ...(o.quartermaster || {}) };
   S.quartermasterUpgrades = { fieldRepairs: 0, coffeeRations: 0, emergencyReserve: false, logistics: 0, betterMaps: false, expandedToolbelt: false, insurance: false, ...(o.quartermasterUpgrades || {}) };
   S.buildPhaseDuration = o.buildPhaseDuration || 0;
@@ -7862,6 +7871,9 @@ function startWave() {
   S.combo = 0;
   S.comboTimer = 0;
   S.comboMax = 0;
+  S.pendingWaveMutagen = sanitizeMutagenId(S.pendingWaveMutagen);
+  S.activeWaveMutagen = sanitizeMutagenId(S.activeWaveMutagen);
+  S.lastWaveMutagen = sanitizeMutagenId(S.lastWaveMutagen);
   if (S.pendingWaveMutagen) {
     const mut = MULTIVERSE_MUTAGENS[S.pendingWaveMutagen];
     if (mut) {
@@ -8110,8 +8122,11 @@ function hit(e, amt, tower, byHero = false) {
   // Hero damage multiplier (from shop blessings, etc.)
   if (byHero && (S.hero.damageMult || 1) !== 1) amt *= (S.hero.damageMult || 1);
   if (byHero && S.activeWaveMutagen === 'oopsAllCrits') {
-    amt *= 2.1;
-    floatText('CRIT!', e.x, e.y - 18, '#ffe56b');
+    const bossLike = e.type === 'slimeking';
+    amt = bossLike ? Math.max(amt, Math.max(1, e.hp * .85)) : Math.max(amt, e.hp);
+    floatText(bossLike ? 'HEADSHOT 85%' : 'HEADSHOT!', e.x - 18, e.y - 22, '#ffe56b');
+    S.parts.push({ kind: 'shockwave', x: e.x, y: e.y, r: 8, maxR: bossLike ? 72 : 48, life: .18, maxLife: .18, c: '#ffe56b' });
+    S.parts.push({ kind: 'bolt', x: S.hero.x, y: S.hero.y, x2: e.x, y2: e.y, life: .12, maxLife: .12, c: '#ffe56b', w: 4 });
   }
   const applied = Math.max(1, amt);
   e.hp   -= applied;
@@ -8463,12 +8478,7 @@ function heroStep(dt) {
   if ((h.slimeDebuffUntil || 0) > now) spd *= .62;
   const slimeScar = scarAt(h.x, h.y, 'slime');
   if (slimeScar) spd *= slimeScar.heroSlow || .62;
-  if (S.activeWaveMutagen === 'floorIsTrampolines') {
-    h.bouncePhase = (h.bouncePhase || 0) + dt * 14;
-    h.bounceAmp = Math.min(1, (h.bounceAmp || 0) + dt * 1.8);
-  } else {
-    h.bounceAmp = Math.max(0, (h.bounceAmp || 0) - dt * 2.5);
-  }
+  h.bounceAmp = Math.max(0, (h.bounceAmp || 0) - dt * 2.5);
 
   // Off-road slow
   const hc = cellAt(h.x, h.y);
@@ -8483,10 +8493,6 @@ function heroStep(dt) {
   const ny = clamp(h.y + my, OY + 16, OY + ROWS * G - 16);
   if (mx && tryMove(nx, h.y)) h.x = nx;
   if (my && tryMove(h.x, ny)) h.y = ny;
-  if (S.activeWaveMutagen === 'floorIsTrampolines' && Math.random() < .03) {
-    h.bounceAmp = Math.min(1, (h.bounceAmp || 0) + .18);
-  }
-
   const inSlime = S.firePatches.some(f => f.slime && dist(h.x, h.y, f.x, f.y) < f.r + 14);
   const inPermanentSlime = scarAt(h.x, h.y, 'slime');
   if (inPermanentSlime) h.slimeScarVisualUntil = Math.max(h.slimeScarVisualUntil || 0, now + .35);
@@ -8527,24 +8533,6 @@ function shootHero() {
   const before = S.heroShots.length;
   if (w.primaryFire) w.primaryFire(h, a);
   callMutagenHook('onHeroFire', h, a, before);
-  if (S.activeWaveMutagen === 'mirrorUniverse') {
-    const spawned = S.heroShots.slice(before);
-    const angles = Array.from({ length: 10 }, (_, i) => a + i * (Math.PI * 2 / 10));
-    const source = spawned[0];
-    if (source) {
-      S.heroShots.length = before;
-      for (const ang of angles) {
-        const sp = Math.hypot(source.vx || 1, source.vy || 0) || 720;
-        S.heroShots.push({
-          ...source,
-          x: h.x, y: h.y,
-          vx: Math.cos(ang) * sp,
-          vy: Math.sin(ang) * sp,
-          mirrorUniverseShot: true,
-        });
-      }
-    }
-  }
   if (S.activeWaveMutagen === 'mirrorShot') {
     const spawned = S.heroShots.slice(before);
     for (const s of spawned) {
@@ -9465,16 +9453,56 @@ const MULTIVERSE_MUTAGENS = {
   mirrorUniverse: {
     id: 'mirrorUniverse',
     name: 'Mirror Universe',
-    description: 'Reality fires back.',
+    description: 'A mirrored pink star hunts from the sky.',
     rarity: 'multiverse',
     apply() {
       console.log('[multiverse] apply', 'mirrorUniverse');
       S.activeMutagenState = S.activeMutagenState || {};
-      S.activeMutagenState.mirrorUniverse = true;
+      const bx = OX + COLS * G / 2;
+      const by = OY + 54;
+      S.activeMutagenState.mirrorUniverse = {
+        x: clamp(CAMERA.x + (W || COLS * G) / 2, OX + 28, OX + COLS * G - 28) || bx,
+        y: clamp(CAMERA.y + 78, OY + 28, OY + ROWS * G - 28) || by,
+        pulse: 0,
+        hitCd: 0,
+      };
     },
     remove() {
       console.log('[multiverse] remove', 'mirrorUniverse');
       if (S.activeMutagenState) delete S.activeMutagenState.mirrorUniverse;
+    },
+    update(dt) {
+      const state = S.activeMutagenState && S.activeMutagenState.mirrorUniverse;
+      if (!state || !S.hero) return;
+      const dx = (keys.d ? 1 : 0) - (keys.a ? 1 : 0);
+      const dy = (keys.s ? 1 : 0) - (keys.w ? 1 : 0);
+      const l = Math.hypot(dx, dy) || 1;
+      const sprinting = !!(keys.Shift || keys.ShiftLeft || keys.ShiftRight || keys.shift);
+      const spd = (sprinting ? 392 : 270) * dt;
+      if (dx || dy) {
+        state.x -= dx / l * spd;
+        state.y -= dy / l * spd;
+      }
+      state.x = clamp(state.x, OX + 28, OX + COLS * G - 28);
+      state.y = clamp(state.y, OY + 28, OY + ROWS * G - 28);
+      state.pulse = (state.pulse || 0) + dt * 5;
+      state.hitCd = Math.max(0, (state.hitCd || 0) - dt);
+      const radius = 58 + Math.sin(state.pulse) * 9;
+      let hitAny = false;
+      if (state.hitCd <= 0) {
+        state.hitCd = .2;
+        for (const e of S.enemies) {
+          if (!e || e.dead) continue;
+          const d = dist(state.x, state.y, e.x, e.y);
+          if (d > radius + (e.rad || 12)) continue;
+          hitAny = true;
+          S.parts.push({ kind: 'bolt', x: state.x, y: state.y, x2: e.x, y2: e.y, life: .15, maxLife: .15, c: '#ff7be8', w: 5 });
+          hit(e, 18 + S.wave * .65, null, false);
+        }
+      }
+      if (hitAny || Math.random() < dt * 3) {
+        S.parts.push({ kind: 'shockwave', x: state.x, y: state.y, r: 8, maxR: radius, life: .18, maxLife: .18, c: '#ff7be8' });
+      }
     },
   },
   kittenApocalypse: {
@@ -9537,46 +9565,45 @@ const MULTIVERSE_MUTAGENS = {
   },
   biblicallyAccurate: {
     id: 'biblicallyAccurate',
-    name: 'Biblically Accurate',
-    description: 'BE NOT AFRAID.',
+    name: 'Be Not Afraid',
+    description: 'A giant cross calls down lightning.',
     rarity: 'multiverse',
     apply() {
       console.log('[multiverse] apply', 'biblicallyAccurate');
       S.activeMutagenState = S.activeMutagenState || {};
-      S.activeMutagenState.eyes = { cd: 0, eyes: [] };
-      for (let i = 0; i < 5; i++) {
-        S.activeMutagenState.eyes.eyes.push({
-          x: S.hero.x + Math.cos(i * (Math.PI * 2 / 5)) * 160,
-          y: S.hero.y + Math.sin(i * (Math.PI * 2 / 5)) * 110,
-          r: 18 + Math.random() * 8,
-          phase: Math.random() * Math.PI * 2,
-        });
-      }
+      S.activeMutagenState.cross = {
+        x: clamp(S.hero.x, OX + 70, OX + COLS * G - 70),
+        y: clamp(S.hero.y - 150, OY + 54, OY + ROWS * G - 90),
+        cd: .18,
+        warm: .18,
+        pulse: 0,
+      };
     },
     remove() {
       console.log('[multiverse] remove', 'biblicallyAccurate');
-      if (S.activeMutagenState) delete S.activeMutagenState.eyes;
+      if (S.activeMutagenState) delete S.activeMutagenState.cross;
     },
     update(dt) {
-      const state = S.activeMutagenState && S.activeMutagenState.eyes;
+      const state = S.activeMutagenState && S.activeMutagenState.cross;
       if (!state) return;
+      state.pulse = (state.pulse || 0) + dt * 4;
+      state.x += (clamp(S.hero.x, OX + 70, OX + COLS * G - 70) - state.x) * Math.min(1, dt * 1.2);
+      state.y += (clamp(S.hero.y - 150, OY + 54, OY + ROWS * G - 90) - state.y) * Math.min(1, dt * 1.2);
       state.cd = Math.max(0, (state.cd || 0) - dt);
-      for (const eye of state.eyes) {
-        eye.phase += dt * 0.8;
-        eye.x += Math.cos(eye.phase) * 10 * dt;
-        eye.y += Math.sin(eye.phase * 1.3) * 8 * dt;
-      }
+      state.warm = Math.max(0, (state.warm || 0) - dt);
       if (state.cd <= 0) {
-        state.cd = .55;
-        const eye = state.eyes[Math.floor(Math.random() * state.eyes.length)];
-        if (!eye) return;
-        const target = S.enemies.filter(e => !e.dead).sort((a, b) => dist(a.x, a.y, eye.x, eye.y) - dist(b.x, b.y, eye.x, eye.y))[0];
+        state.cd = .72;
+        state.warm = .2;
+        const target = S.enemies.filter(e => !e.dead).sort((a, b) => dist(a.x, a.y, state.x, state.y) - dist(b.x, b.y, state.x, state.y))[0];
         if (target) {
-          const a = Math.atan2(target.y - eye.y, target.x - eye.x);
-          S.parts.push({ kind: 'bolt', x: eye.x, y: eye.y, x2: target.x, y2: target.y, life: .15, maxLife: .15, c: '#fff8c8', w: 6 });
-          S.parts.push({ kind: 'bolt', x: eye.x + Math.cos(a) * 8, y: eye.y + Math.sin(a) * 8, x2: target.x, y2: target.y, life: .12, maxLife: .12, c: '#8edcff', w: 3 });
+          const a = Math.atan2(target.y - state.y, target.x - state.x);
+          const sx = state.x + Math.cos(a) * 10;
+          const sy = state.y + Math.sin(a) * 10;
+          S.parts.push({ kind: 'bolt', x: sx, y: sy, x2: target.x, y2: target.y, life: .22, maxLife: .22, c: '#fff7bf', w: 8 });
+          S.parts.push({ kind: 'bolt', x: sx - 8, y: sy + 6, x2: target.x, y2: target.y, life: .16, maxLife: .16, c: '#8edcff', w: 3 });
+          shockwave(state.x, state.y, '#d0a35d', 74, .2);
           hit(target, 48 + S.wave * 1.2, null);
-          floatText('BE NOT AFRAID', eye.x - 36, eye.y - 26, '#fff8c8');
+          floatText('BE NOT AFRAID', state.x - 48, state.y - 60, '#fff8c8');
         }
       }
     },
@@ -9594,32 +9621,6 @@ const MULTIVERSE_MUTAGENS = {
     remove() {
       console.log('[multiverse] remove', 'machineUprising');
       if (S.activeMutagenState) delete S.activeMutagenState.machineUprising;
-    },
-  },
-  floorIsTrampolines: {
-    id: 'floorIsTrampolines',
-    name: 'The Floor Is Trampolines',
-    description: 'Physics has resigned.',
-    rarity: 'multiverse',
-    apply() {
-      console.log('[multiverse] apply', 'floorIsTrampolines');
-      S.activeMutagenState = S.activeMutagenState || {};
-      S.activeMutagenState.floorIsTrampolines = { pulse: 0 };
-    },
-    remove() {
-      console.log('[multiverse] remove', 'floorIsTrampolines');
-      if (S.activeMutagenState) delete S.activeMutagenState.floorIsTrampolines;
-    },
-    update(dt) {
-      const state = S.activeMutagenState && S.activeMutagenState.floorIsTrampolines;
-      if (!state) return;
-      state.pulse = (state.pulse || 0) + dt * 8;
-      if (Math.random() < .015) {
-        for (const e of S.enemies) {
-          if (!e.dead && dist(e.x, e.y, S.hero.x, S.hero.y) < 220) e.slow = Math.max(e.slow || 0, .12);
-        }
-      }
-      if (Math.random() < .02) S.hero.weaponRecoil = Math.max(S.hero.weaponRecoil || 0, .1);
     },
   },
   bees: {
@@ -9734,39 +9735,6 @@ const MULTIVERSE_MUTAGENS = {
       }
     },
   },
-  thunderdome: {
-    id: 'thunderdome',
-    name: 'Thunderdome',
-    description: 'Lightning picks favorites.',
-    rarity: 'multiverse',
-    apply() {
-      console.log('[multiverse] apply', 'thunderdome');
-      S.activeMutagenState = S.activeMutagenState || {};
-      S.activeMutagenState.thunderdome = { cd: 0 };
-    },
-    remove() {
-      console.log('[multiverse] remove', 'thunderdome');
-      if (S.activeMutagenState) delete S.activeMutagenState.thunderdome;
-    },
-    update(dt) {
-      const state = S.activeMutagenState && S.activeMutagenState.thunderdome;
-      if (!state) return;
-      state.cd = Math.max(0, (state.cd || 0) - dt);
-      if (state.cd <= 0) {
-        state.cd = .55;
-        const living = S.enemies.filter(e => !e.dead);
-        if (!living.length) return;
-        const cluster = living.sort((a, b) => dist(a.x, a.y, S.hero.x, S.hero.y) - dist(b.x, b.y, S.hero.x, S.hero.y))[0];
-        const target = cluster || living[Math.floor(Math.random() * living.length)];
-        if (!target) return;
-        S.parts.push({ kind: 'bolt', x: target.x - 40, y: target.y - 120, x2: target.x, y2: target.y, life: .16, maxLife: .16, c: '#fff34d', w: 5 });
-        shockwave(target.x, target.y, '#fff2aa', 72, .18);
-        hit(target, 38 + S.wave * .6, null);
-        const nearby = S.enemies.filter(e => !e.dead && dist(e.x, e.y, target.x, target.y) < 90).slice(0, 3);
-        for (const e of nearby) if (e !== target) hit(e, 18, null);
-      }
-    },
-  },
   walkingArsenal: {
     id: 'walkingArsenal',
     name: 'Walking Arsenal',
@@ -9789,8 +9757,8 @@ const MULTIVERSE_MUTAGENS = {
   },
   oopsAllCrits: {
     id: 'oopsAllCrits',
-    name: 'Oops, All Crits',
-    description: 'Every hit is a disaster.',
+    name: 'Oops All Headshots',
+    description: 'Hero critical hits drop normal enemies instantly.',
     rarity: 'multiverse',
     apply() {
       console.log('[multiverse] apply', 'oopsAllCrits');
@@ -9852,11 +9820,12 @@ const MULTIVERSE_MUTAGENS = {
 };
 
 function multiverseMutagenList() {
-  return Object.values(MULTIVERSE_MUTAGENS);
+  return Object.values(MULTIVERSE_MUTAGENS).filter(m => validMutagenId(m.id));
 }
 
 function activeMultiverseMutagen() {
-  return S.activeWaveMutagen ? MULTIVERSE_MUTAGENS[S.activeWaveMutagen] : null;
+  const id = sanitizeMutagenId(S.activeWaveMutagen);
+  return id ? MULTIVERSE_MUTAGENS[id] : null;
 }
 
 function callMutagenHook(hook, ...args) {
@@ -9869,7 +9838,7 @@ function chooseNextMutagenId(excludeIds = []) {
   const ids = multiverseMutagenList().map(m => m.id);
   if (!ids.length) return null;
   const excluded = new Set(excludeIds.filter(Boolean));
-  const last = S.lastWaveMutagen || S.pendingWaveMutagen || S.activeWaveMutagen;
+  const last = sanitizeMutagenId(S.lastWaveMutagen) || sanitizeMutagenId(S.pendingWaveMutagen) || sanitizeMutagenId(S.activeWaveMutagen);
   if (ids.length === 1) return ids[0];
   const start = Math.abs((S.wave || 0) + (S.waveSeed || 0) + (S.rewardRerollSalt || 0)) % ids.length;
   for (let i = 0; i < ids.length; i++) {
@@ -9903,6 +9872,7 @@ function buildUpgradeChoice(kind, id) {
 }
 
 function buildMutagenChoice(id) {
+  id = sanitizeMutagenId(id);
   const m = MULTIVERSE_MUTAGENS[id];
   if (!m) return null;
   const iconPath = 'assets/icons/powerups/superpower.png';
@@ -10512,15 +10482,7 @@ function enemyStep(e, dt) {
   e.phaseActive = Math.max(0, (e.phaseActive || 0) - dt);
   e.phaseCd = Math.max(0, (e.phaseCd || 0) - dt);
   e.sapCd = Math.max(0, (e.sapCd || 0) - dt);
-  if (S.activeWaveMutagen === 'floorIsTrampolines') {
-    e.air = Math.max(e.air || 0, .08);
-    if (Math.random() < .04) {
-      e.air = Math.max(e.air || 0, .22);
-      e.stun = Math.max(e.stun || 0, .02);
-    }
-  } else {
-    e.air = Math.max(0, (e.air || 0) - dt * 1.3);
-  }
+  e.air = Math.max(0, (e.air || 0) - dt * 1.3);
 
   // DoT effects
   if (e.burn   > 0) { e.burn   -= dt; hit(e, e.burnD   * dt, null); }
@@ -10618,12 +10580,18 @@ function enemyStep(e, dt) {
   }
 
   if (S.activeWaveMutagen === 'friendlyFire') {
+    e.friendlyFireCd = Math.max(0, (e.friendlyFireCd || 0) - dt);
     const peers = S.enemies.filter(o => !o.dead && o !== e && dist(o.x, o.y, e.x, e.y) < 22);
-    if (peers.length && Math.random() < .08) {
+    if (peers.length && e.friendlyFireCd <= 0 && Math.random() < .12) {
+      e.friendlyFireCd = .7 + Math.random() * .35;
       const target = peers[Math.floor(Math.random() * peers.length)];
-      hit(target, 8 + S.wave * .25, null, false);
-      burst(e.x, e.y, '#ff7a7a', 2, 'spark', 40);
-      burst(target.x, target.y, '#ff7a7a', 2, 'spark', 40);
+      const dmg = Math.max(1, target.hp * .5);
+      S.parts.push({ kind: 'bolt', x: e.x, y: e.y, x2: target.x, y2: target.y, life: .18, maxLife: .18, c: '#ff9b32', w: 6 });
+      S.parts.push({ kind: 'shockwave', x: target.x, y: target.y, r: 8, maxR: Math.max(36, (target.rad || 12) * 2.1), life: .2, maxLife: .2, c: '#ff9b32' });
+      floatText('FRIENDLY FIRE', target.x - 42, target.y - 24, '#ffcf6a');
+      hit(target, dmg, null, false);
+      burst(e.x, e.y, '#ff9b32', 4, 'spark', 80);
+      burst(target.x, target.y, '#ffcf6a', 6, 'spark', 120);
     }
   }
 
@@ -12419,6 +12387,7 @@ function draw(t) {
   });
   S.enemyShots.forEach(s => drawArrow(s, s.slime ? '#7cff4f' : '#ff3030', s.slime));
   S.enemies.forEach(drawEnemy);
+  drawMutagenWorldEffects(t);
   drawSpawnIntros(t);
   drawEngineer(t);
   drawHero(t);
@@ -13038,6 +13007,89 @@ function drawActiveMutagenCue(t) {
   if (!vis || !S.hero) return;
   const y = S.hero.y - 58 - Math.sin(t * 4) * 2;
   drawLabeledDisc(S.hero.x, y, vis.icon, vis.label, vis.color, t, { r: 16, iconSize: 12, alpha: .42, pulse: .1 });
+}
+
+function drawStarShape(x, y, outer, inner, fill, stroke, t) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(t * .7);
+  ctx.fillStyle = fill;
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const a = -Math.PI / 2 + i * Math.PI / 5;
+    const r = i % 2 === 0 ? outer : inner;
+    const px = Math.cos(a) * r;
+    const py = Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.shadowColor = fill;
+  ctx.shadowBlur = 18;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawMutagenWorldEffects(t) {
+  if (!S.activeMutagenState) return;
+  const mirror = S.activeMutagenState.mirrorUniverse;
+  if (mirror) {
+    const pulse = .5 + Math.sin((mirror.pulse || 0) + t * 3) * .5;
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.globalAlpha = .2 + pulse * .12;
+    ctx.fillStyle = '#ff7be8';
+    ctx.beginPath();
+    ctx.arc(mirror.x, mirror.y, 58 + pulse * 10, 0, 7);
+    ctx.fill();
+    ctx.globalAlpha = .78;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(mirror.x, mirror.y, 62, 0, 7);
+    ctx.stroke();
+    ctx.restore();
+    drawStarShape(mirror.x, mirror.y, 24 + pulse * 3, 10, '#ff7be8', '#ffd6f8', t);
+  }
+
+  const cross = S.activeMutagenState.cross;
+  if (cross) {
+    const warm = Math.max(0, cross.warm || 0);
+    const pulse = .5 + Math.sin((cross.pulse || 0) + t * 4) * .5;
+    ctx.save();
+    ctx.translate(cross.x, cross.y);
+    ctx.globalAlpha = .96;
+    ctx.shadowColor = warm > 0 ? '#fff7bf' : '#8a5a2f';
+    ctx.shadowBlur = warm > 0 ? 26 : 12;
+    ctx.strokeStyle = '#5a351d';
+    ctx.lineWidth = 18;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(0, -54);
+    ctx.lineTo(0, 58);
+    ctx.moveTo(-42, -18);
+    ctx.lineTo(42, -18);
+    ctx.stroke();
+    ctx.strokeStyle = '#9a6a3a';
+    ctx.lineWidth = 10;
+    ctx.beginPath();
+    ctx.moveTo(0, -50);
+    ctx.lineTo(0, 54);
+    ctx.moveTo(-38, -18);
+    ctx.lineTo(38, -18);
+    ctx.stroke();
+    ctx.globalAlpha = .18 + pulse * .12 + warm;
+    ctx.strokeStyle = '#fff7bf';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(0, 0, 68 + pulse * 6, 0, 7);
+    ctx.stroke();
+    ctx.restore();
+  }
 }
 
 function drawPowerupDebugHud(t) {
@@ -13791,8 +13843,7 @@ function drawHero(t) {
   ctx.restore();
 
   ctx.save();
-  const bounce = (S.activeWaveMutagen === 'floorIsTrampolines' ? (Math.sin((h.bouncePhase || 0)) * 5 * Math.max(.15, h.bounceAmp || 0)) : 0);
-  ctx.translate(h.x - Math.cos(a) * recoil * 10, h.y - Math.sin(a) * recoil * 10 + bounce);
+  ctx.translate(h.x - Math.cos(a) * recoil * 10, h.y - Math.sin(a) * recoil * 10);
   ctx.scale(heroScale, heroScale);
   ctx.rotate(a);
   ctx.globalAlpha = h.inv > 0 && Math.floor(t * 18) % 2 ? .45 : 1;
@@ -14334,15 +14385,6 @@ function drawEnemySprite(e, base) {
     ctx.fill();
     ctx.globalAlpha = 1;
   }
-  if (S.activeWaveMutagen === 'floorIsTrampolines') {
-    ctx.save();
-    ctx.globalAlpha = .38;
-    ctx.fillStyle = '#8edcff';
-    ctx.beginPath();
-    ctx.arc(0, e.rad + 10, e.rad * 1.15, 0, 7);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-  }
   ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = 'source-over';
   ctx.shadowBlur = 0;
@@ -14765,8 +14807,8 @@ function saveObj() {
     sy: S.synergyStats || blankSynergyStats(),
     bossAppearance: S.bossAppearance || 0,
     slimeKingAppearances: S.slimeKingAppearances || 0,
-    pendingWaveMutagen: S.pendingWaveMutagen || null,
-    activeWaveMutagen: S.activeWaveMutagen || null,
+    pendingWaveMutagen: sanitizeMutagenId(S.pendingWaveMutagen),
+    activeWaveMutagen: sanitizeMutagenId(S.activeWaveMutagen),
     quartermaster: S.quartermaster || null,
     quartermasterUpgrades: S.quartermasterUpgrades || null,
     buildPhaseDuration: S.buildPhaseDuration || 0,
@@ -14829,8 +14871,8 @@ function loadPass() {
     S.barrels  = (o.br || []).map(b => ({ ...b, x: cx(b.c), y: cy(b.r), hp: 35, rad: 22 }));
     S.mods     = o.m || { gold: 1.14, dmg: 1 };
     S.aiEngineerOwned = !!o.ae;
-    S.pendingWaveMutagen = o.pendingWaveMutagen || null;
-    S.activeWaveMutagen = o.activeWaveMutagen || null;
+    S.pendingWaveMutagen = sanitizeMutagenId(o.pendingWaveMutagen);
+    S.activeWaveMutagen = sanitizeMutagenId(o.activeWaveMutagen);
     S.quartermaster = { active: false, inventory: [], lastWave: -99, bought: {}, ...(o.quartermaster || {}) };
     S.quartermasterUpgrades = { fieldRepairs: 0, coffeeRations: 0, emergencyReserve: false, logistics: 0, betterMaps: false, expandedToolbelt: false, insurance: false, ...(o.quartermasterUpgrades || {}) };
     S.buildPhaseDuration = o.buildPhaseDuration || 0;
@@ -15168,7 +15210,7 @@ $('devKillBoss').onclick = () => devKillSlimeKing();
 $('devClearEnemies').onclick = () => devClearEnemies();
 $('devTriggerPowerup').onclick = () => forcePowerupDebug($('devPowerupSelect')?.value);
 $('devTriggerMutagen').onclick = () => {
-  const id = $('devMutagenSelect')?.value;
+  const id = sanitizeMutagenId($('devMutagenSelect')?.value);
   if (!id) return;
   forceMultiverseMutagen(id);
   toast(`Staged ${MULTIVERSE_MUTAGENS[id]?.name || id}.`);
