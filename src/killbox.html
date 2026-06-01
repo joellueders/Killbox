@@ -445,6 +445,44 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
   display: grid;
   gap: 8px;
 }
+.panel .powerupCodexHeader {
+  display: grid;
+  gap: 3px;
+  padding: 8px 10px;
+  border: 1px solid rgba(143, 100, 52, .55);
+  border-radius: 10px;
+  background: rgba(10, 8, 6, .72);
+  color: #cfbb96;
+  font-size: 12px;
+  line-height: 1.25;
+}
+.panel .powerupCodexHeader b {
+  color: #f0c96b;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.panel .powerupRarityGroup {
+  display: grid;
+  gap: 7px;
+}
+.panel .powerupRarityTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 2px;
+  color: #f0c96b;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.panel .powerupRarityTitle span {
+  color: #b8e6ff;
+  font-size: 10px;
+  letter-spacing: .04em;
+}
 .panel .synergyList {
   display: grid;
   gap: 8px;
@@ -486,7 +524,14 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
 }
 .panel .powerupCard .powerupText b { font-size: 12px; }
 .panel .powerupCard .powerupText span { font-size: 12px; color: #cfbb96; line-height: 1.2; }
-.panel .powerupCard .rarity {
+.panel .powerupCard .powerupMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+.panel .powerupCard .rarity,
+.panel .powerupCard .duration {
   display: inline-flex;
   width: fit-content;
   margin-top: 1px;
@@ -497,6 +542,10 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: .06em;
+}
+.panel .powerupCard .duration {
+  border-color: rgba(240, 201, 107, .65);
+  color: #ffe7ac;
 }
 .panel .synergyHeader {
   display: flex;
@@ -5662,26 +5711,87 @@ function renderCodices() {
   const powerupList = $('powerupList');
   if (powerupList && !powerupList.dataset.done) {
     powerupList.innerHTML = '';
-    const rarityOrder = { common: 0, rare: 1, epic: 2, legendary: 3 };
-    Object.entries(POWERUP_DEFS)
-      .sort((a, b) => (rarityOrder[a[1].rarity] ?? 9) - (rarityOrder[b[1].rarity] ?? 9) || a[1].label.localeCompare(b[1].label))
-      .forEach(([id, p]) => {
-        const row = document.createElement('div');
-        row.className = 'powerupCard';
-        row.innerHTML = `
-          <div class="powerupIcon">${p.icon || '?'}</div>
-          <div class="powerupText">
-            <b>${p.label}</b>
-            <span>${p.desc}</span>
-            <span class="rarity">${p.rarity}</span>
-          </div>`;
-        powerupList.appendChild(row);
-      });
+    renderPowerupCodex(powerupList);
     powerupList.dataset.done = 1;
   }
   const synergyList = $('synergyList');
   if (synergyList) {
     syncSynergyCodex();
+  }
+}
+
+function powerupCodexDuration(id) {
+  const duration = powerupDurationLabel(id).replace(/^ for /, '');
+  if (duration) return duration;
+  if (['health', 'gold', 'bomb', 'reset'].includes(id)) return 'instant';
+  return 'on pickup';
+}
+
+function powerupCodexNote(id) {
+  return ({
+    health: 'Stabilizes bad leaks and keeps the hero in the lane.',
+    gold: 'Best collected early in a wave so the payout funds the next build.',
+    frenzy: 'Strongest when the hero has a clean firing lane.',
+    haste: 'Speeds up the whole defense grid for a short burst.',
+    freeze: 'Freezes and slows nearby enemies at the pickup point.',
+    asColdAsLife: 'Spam the secondary weapon while the frost mark is active.',
+    rift: 'Buys time after leaks by shielding the rift.',
+    bomb: 'Turns a dense pack into a chain reaction.',
+    reset: 'Marks nearby enemies so ricochets hit harder.',
+    thunder: 'A visible storm source calls down repeated lightning.',
+    stampede: 'Summons allied chargers through the lane.',
+    orbital: 'Paints sky beams onto enemy clusters.',
+    bullethell: 'Turns the hero into the center of a projectile storm.',
+    blackhole: 'Pulls enemies into a temporary damage zone.',
+    tinyarmy: 'Marching allies add steady lane pressure.',
+    goblinunion: 'Stops enemies with a temporary protest line.',
+    kittens: 'A chaotic legendary burst that clears space.',
+    goose: 'Protective geese orbit the hero and punish contact.',
+    bees: 'Deploys a swarm that hunts nearby enemies.',
+    summoncat: 'Distracts enemies around the summoned cat.',
+    physics: 'Reality wobble creates unstable battlefield effects.',
+    wronggame: 'Imports a strange off-world effect for a short window.',
+  })[id] || 'Collect the orb to trigger this effect.';
+}
+
+function renderPowerupCodex(powerupList) {
+  const rarityOrder = ['common', 'rare', 'epic', 'legendary'];
+  const entries = Object.entries(POWERUP_DEFS)
+    .sort((a, b) => {
+      const ar = rarityOrder.indexOf(a[1].rarity);
+      const br = rarityOrder.indexOf(b[1].rarity);
+      return (ar < 0 ? 99 : ar) - (br < 0 ? 99 : br) || a[1].label.localeCompare(b[1].label);
+    });
+  const header = document.createElement('div');
+  header.className = 'powerupCodexHeader';
+  header.innerHTML = `<b>${entries.length} powerups logged</b><span>Pickups trigger immediately when the hero touches the orb. Timed effects show their active window.</span>`;
+  powerupList.appendChild(header);
+  for (const rarity of rarityOrder) {
+    const groupEntries = entries.filter(([, p]) => p.rarity === rarity);
+    if (!groupEntries.length) continue;
+    const group = document.createElement('div');
+    group.className = 'powerupRarityGroup';
+    const title = document.createElement('div');
+    title.className = 'powerupRarityTitle';
+    title.innerHTML = `<b>${rarity}</b><span>${groupEntries.length}</span>`;
+    group.appendChild(title);
+    groupEntries.forEach(([id, p]) => {
+      const row = document.createElement('div');
+      row.className = 'powerupCard';
+      row.innerHTML = `
+        <div class="powerupIcon" style="color:${powerupColor(id)}">${p.icon || '?'}</div>
+        <div class="powerupText">
+          <b>${p.label}</b>
+          <span>${p.desc}</span>
+          <span>${powerupCodexNote(id)}</span>
+          <div class="powerupMeta">
+            <span class="rarity">${p.rarity}</span>
+            <span class="duration">${powerupCodexDuration(id)}</span>
+          </div>
+        </div>`;
+      group.appendChild(row);
+    });
+    powerupList.appendChild(group);
   }
 }
 
