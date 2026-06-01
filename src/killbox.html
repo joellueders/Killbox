@@ -3844,7 +3844,7 @@ const S = {
   hero: { x: cx(2), y: cy(13), hp: 100, max: 100, level: 1, cool: 0, inv: 0, shoveCd: 0, weapon: 'blunderbuss', weaponCd: 0, secondaryCd: 0, charge: 0, charging: false, weaponRecoil: 0, spawnState: 'active', spawnLock: 0, ghostGrabbed: false, ghostId: null, flaskCharges: 0, shieldHits: 0, blunderShieldUntil: 0, blunderShieldMult: 1, slimeDebuffUntil: 0, upgrades: [], upgradeChoices: [], upgradeLevel: 0, fireRateMult: 1, damageMult: 1, shoveForceMult: 1, critChance: 0, pierceCount: 0, freezeDurationMult: 1, freezeTrapVuln: 0, chainBonus: 0, stormChainBonus: 0, stormStunMult: 1, crossbowStunMult: 1, crossbowKnockbackMult: 1, blunderDamageMult: 1, goldMult: 1, trapCooldownMult: 1, trinketAttackSlow: 0, trinketFireRateMult: 1, trinketMoveMult: 1, trinketFireRateActiveMult: 1, trinketMoveActiveMult: 1, trinketGoldActiveMult: 1, overclockAura: false, lastStandBeacon: false, lastStandBeaconActive: false, heroScale: 1 },
   engineer: { active: false, x: cx(3), y: cy(13), hp: 90, max: 90, cool: 0, inv: 0, dash: 0, dashCd: 0, aimX: cx(8), aimY: cy(8), volleyCd: 0, oilCd: 0, shoveCd: 0 },
   net: { mode: 'solo', pc: null, dc: null, connected: false, remoteInput: { up:false, down:false, left:false, right:false, shoot:false, volley:false, oil:false, aimX:0, aimY:0 }, remotePrev: { volley:false, oil:false }, lastSend: 0, lastSnapshot: 0 },
-  mods: { gold: 1.14, dmg: 1, overclockUntil: 0, frenzyUntil: 0, hasteUntil: 0, coinPurseUntil: 0, lastStandUntil: 0, riftShieldUntil: 0 },
+  mods: { gold: 1.14, dmg: 1, overclockUntil: 0, frenzyUntil: 0, hasteUntil: 0, coinPurseUntil: 0, lastStandUntil: 0, riftShieldUntil: 0, asColdAsLifeUntil: 0 },
 };
 const LOADOUT_STATE = {
   selectedIds: [],
@@ -4763,6 +4763,7 @@ function resetRunForLevelSwitch(levelId) {
   S.mods.coinPurseUntil = 0;
   S.mods.lastStandUntil = 0;
   S.mods.riftShieldUntil = 0;
+  S.mods.asColdAsLifeUntil = 0;
   applyTrinketPassives();
   S.hero.hp = S.hero.max;
   $('clear').classList.add('hidden');
@@ -4787,13 +4788,13 @@ const EFFECT_VISUALS = {
   frenzy: { label: 'BLOOD RUSH', icon: '⚡', color: '#ff6d3a' },
   haste: { label: 'OVERCLOCK', icon: '⏩', color: '#6ad6ff' },
   freeze: { label: 'FROSTBITE', icon: '❄', color: '#9fe8ff' },
+  asColdAsLife: { label: 'AS COLD AS LIFE', icon: '❄', color: '#dff4ff' },
   rift: { label: 'RIFT SHIELD', icon: '◌', color: '#8edcff' },
   thunder: { label: 'STORM CLOUD', icon: '⚡', color: '#fff34d' },
   orbital: { label: 'ORBITAL BEAM', icon: '☄', color: '#fff0b8' },
   stampede: { label: 'STAMPEDE', icon: '♞', color: '#d99b54' },
   bullethell: { label: 'BULLET HELL', icon: '✶', color: '#ffd56a' },
   blackhole: { label: 'BLACK HOLE', icon: '◉', color: '#d7c8ff' },
-  clone: { label: 'CLONE FIELD', icon: '⧉', color: '#8edcff' },
   tinyarmy: { label: 'TINY ARMY', icon: '⚔', color: '#f7d38a' },
   goblinunion: { label: 'GOBLIN UNION', icon: '✊', color: '#d7c8ff' },
   kittens: { label: 'KITTEN RIFT', icon: '🐾', color: '#ffffff' },
@@ -4802,7 +4803,6 @@ const EFFECT_VISUALS = {
   summoncat: { label: 'SUMMON CAT', icon: '🐈', color: '#ffffff' },
   physics: { label: 'PHYSICS ERROR', icon: '∿', color: '#8edcff' },
   wronggame: { label: 'WRONG GAME', icon: '⌘', color: '#b37cff' },
-  heaven: { label: 'ANGEL', icon: '✦', color: '#fff8c8' },
 };
 
 const MUTAGEN_VISUALS = {
@@ -4843,31 +4843,7 @@ function updateTempEffects(dt) {
   }
   for (const fx of S.effects) {
     fx.t -= dt;
-    if (fx.type === 'heaven') {
-      fx.data.x += (S.hero.x - fx.data.x) * Math.min(1, dt * 2.1);
-      fx.data.y += ((S.hero.y - 124) - fx.data.y) * Math.min(1, dt * 2.1);
-      fx.data.lightningCd = Math.max(0, (fx.data.lightningCd || 0) - dt);
-      fx.data.brightness = Math.max(.2, Math.min(1, fx.t / fx.max));
-      if (fx.data.lightningCd <= 0) {
-        const living = S.enemies.filter(e => !e.dead);
-        living.sort((a, b) => dist(a.x, a.y, S.hero.x, S.hero.y) - dist(b.x, b.y, S.hero.x, S.hero.y));
-        const target = living.find(e => dist(e.x, e.y, fx.data.x, fx.data.y) < 360) || living[0];
-        if (target) {
-          const a = Math.atan2(target.y - fx.data.y, target.x - fx.data.x);
-          const chainCount = 4;
-          for (let i = 0; i < chainCount; i++) {
-            const arc = a + (Math.random() - .5) * .55;
-            const x = fx.data.x + Math.cos(arc) * 18;
-            const y = fx.data.y + Math.sin(arc) * 18;
-            burst(x, y, '#ffffff', 5, 'spark', 160);
-            shockwave(x, y, '#ffffff', 22, .12);
-          }
-          const hits = [target, ...S.enemies.filter(e => !e.dead && e !== target && dist(target.x, target.y, e.x, e.y) < 88)].slice(0, 4);
-          for (const e of hits) hit(e, 85 + S.wave * 1.5, null);
-          fx.data.lightningCd = .12;
-        }
-      }
-    } else if (fx.type === 'blackhole') {
+    if (fx.type === 'blackhole') {
       for (const e of S.enemies) {
         if (e.dead) continue;
         const d = dist(fx.data.x, fx.data.y, e.x, e.y);
@@ -4960,20 +4936,6 @@ function updateTempEffects(dt) {
         const a = Math.random() * Math.PI * 2;
         const sp = 480;
         S.heroShots.push({ x: S.hero.x, y: S.hero.y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp, dmg: 15, life: 1.2, range: 360, travel: 0, type:'arrow', weapon:S.hero.weapon });
-      }
-    } else if (fx.type === 'clone') {
-      fx.data.fireCd = (fx.data.fireCd || 0) - dt;
-      if (fx.data.fireCd <= 0) {
-        fx.data.fireCd = .62;
-        for (const tw of S.towers) {
-          if (tw.dead || TOWERS[tw.type]?.trap) continue;
-          const target = targetForTower(tw);
-          if (!target) continue;
-          const d = TOWERS[tw.type];
-          tw.clonePulse = .32;
-          S.shots.push({ x: tw.x + 18, y: tw.y - 18, tx: target, spd: 600, dmg: d.d * .46, t: tw, d, life: 1.4, cloneShot: true });
-          S.parts.push({ kind: 'bolt', x: tw.x, y: tw.y - 24, x2: tw.x + 18, y2: tw.y - 18, life: .16, maxLife: .16, c: '#8edcff', w: 3 });
-        }
       }
     } else if (fx.type === 'tinyarmy') {
       fx.data.soldiers = fx.data.soldiers || [];
@@ -6236,7 +6198,7 @@ function forcePowerupDebug(type) {
     floatText('RIFT SHIELD', S.hero.x - 34, S.hero.y - 20, '#8edcff');
     return true;
   }
-  if (POWERUP_DEFS[type] || ['thunder','orbital','stampede','bullethell','blackhole','clone','tinyarmy','goblinunion','kittens','goose','bees','summoncat','physics','wronggame','heaven'].includes(type)) {
+  if (POWERUP_DEFS[type] || ['thunder','orbital','stampede','bullethell','blackhole','tinyarmy','goblinunion','kittens','goose','bees','summoncat','physics','wronggame'].includes(type)) {
     applyPowerupEffect(type, { x: S.hero.x, y: S.hero.y, full: true, type });
     return true;
   }
@@ -6250,10 +6212,10 @@ function populateDevDropDowns() {
   const powerSel = $('devPowerupSelect');
   if (powerSel && !powerSel.dataset.populated) {
     const groups = [
-      ['common', ['health','gold','frenzy','haste','freeze','rift']],
+      ['common', ['health','gold','frenzy','haste','freeze','asColdAsLife','rift']],
       ['rare', ['bomb','reset','thunder','stampede','orbital']],
-      ['epic', ['bullethell','blackhole','clone','tinyarmy','goblinunion']],
-      ['legendary', ['kittens','goose','bees','summoncat','physics','wronggame','heaven']],
+      ['epic', ['bullethell','blackhole','tinyarmy','goblinunion']],
+      ['legendary', ['kittens','goose','bees','summoncat','physics','wronggame']],
     ];
     powerSel.innerHTML = `<option value="" selected disabled>Powerups</option>` + groups.map(([label, ids]) => {
       const opts = ids.filter(id => POWERUP_DEFS[id]).map(id => `<option value="${id}">${POWERUP_DEFS[id].label}</option>`).join('');
@@ -7134,7 +7096,7 @@ function restoreWaveSnapshot() {
   S.waveArchetypeLabel = o.waveArchetypeLabel || S.waveArchetypeLabel || 'Recovery';
   S.waveArchetypeData = WAVE_ARCHETYPE_RULES[S.waveArchetype] || pickWaveArchetype(S.wave || 1);
   S.aiEngineerOwned = !!o.aiEngineerOwned;
-  S.mods = { gold: 1.14, dmg: 1, overclockUntil: 0, frenzyUntil: 0, hasteUntil: 0, coinPurseUntil: 0, lastStandUntil: 0, riftShieldUntil: 0, ...(o.mods || {}) };
+  S.mods = { gold: 1.14, dmg: 1, overclockUntil: 0, frenzyUntil: 0, hasteUntil: 0, coinPurseUntil: 0, lastStandUntil: 0, riftShieldUntil: 0, asColdAsLifeUntil: 0, ...(o.mods || {}) };
   S.hero  = { ...S.hero, ...o.hero, cool: 0, inv: 0, dash: 0, dashCd: 0 };
   S.towers     = o.towers.map(t   => ({ ...t, cool: 0 }));
   S.barriers   = o.barriers.map(b  => ({ ...b }));
@@ -8513,6 +8475,7 @@ function heroStep(dt) {
   h.weaponCd = Math.max(0, (h.weaponCd || 0) - dt * (h.fireRateMult || 1) * (h.trinketFireRateMult || 1) * (h.trinketFireRateActiveMult || 1) * frenzyMult);
   const prevSecondaryCd = h.secondaryCd || 0;
   h.secondaryCd = Math.max(0, (h.secondaryCd || 0) - dt);
+  if (secondaryNoCooldownActive()) h.secondaryCd = 0;
   h.shoveCd  = Math.max(0, h.shoveCd  - dt);
   h.weaponRecoil = Math.max(0, (h.weaponRecoil || 0) - dt * 3.5);
   if (h.blunderShieldUntil && h.blunderShieldUntil <= performance.now() / 1000) {
@@ -8537,10 +8500,14 @@ function shootHero() {
     const spawned = S.heroShots.slice(before);
     for (const s of spawned) {
       if (!s || s.dead) continue;
-      const clone = { ...s, x: h.x, y: h.y, vx: -(s.vx || 0), vy: -(s.vy || 0), mirrored: true };
-      S.heroShots.push(clone);
+      const mirroredShot = { ...s, x: h.x, y: h.y, vx: -(s.vx || 0), vy: -(s.vy || 0), mirrored: true };
+      S.heroShots.push(mirroredShot);
     }
   }
+}
+
+function secondaryNoCooldownActive() {
+  return (S.mods.asColdAsLifeUntil || 0) > performance.now() / 1000;
 }
 
 function weaponSecondaryDown() {
@@ -8560,6 +8527,7 @@ function weaponSecondaryDown() {
   const beforeCd = h.secondaryCd;
   const beforeShield = h.blunderShieldUntil || 0;
   if (w.secondaryFire) w.secondaryFire(h, a);
+  if (secondaryNoCooldownActive()) h.secondaryCd = 0;
   if ((h.secondaryCd || 0) !== beforeCd || (h.blunderShieldUntil || 0) !== beforeShield) playSfx('secondaryUsed');
 }
 
@@ -8610,7 +8578,7 @@ function weaponSecondaryUp() {
     shockwave(h.x + Math.cos(aim) * 46, h.y + Math.sin(aim) * 46, '#8fd6ff', 72, .24);
     burst(h.x + Math.cos(aim) * 46, h.y + Math.sin(aim) * 46, '#bfe7ff', 8, 'spark', 120);
   }
-  h.secondaryCd = 0.25;
+  h.secondaryCd = secondaryNoCooldownActive() ? 0 : 0.25;
   h.charging = false;
   h.charge = 0;
 }
@@ -8634,7 +8602,7 @@ function useBlunderShield() {
   const now = performance.now() / 1000;
   const duration = 3 * (h.blunderShieldMult || 1);
   h.blunderShieldUntil = Math.max(h.blunderShieldUntil || 0, now + duration);
-  h.secondaryCd = WEAPONS.blunderbuss.secondaryCooldown;
+  h.secondaryCd = secondaryNoCooldownActive() ? 0 : WEAPONS.blunderbuss.secondaryCooldown;
   shockwave(h.x, h.y, '#8fd6ff', 78, .24);
   shockwave(h.x, h.y, '#f4cf6f', 54, .18);
   boom(h.x + Math.cos(aim) * 22, h.y + Math.sin(aim) * 22, '#cfe8ff', 10);
@@ -9257,14 +9225,15 @@ function dropRandomPowerup(e, byHero = false) {
     { type: 'frenzy', weight: 14 },
     { type: 'haste', weight: 12 },
     { type: 'freeze', weight: 10 },
+    { type: 'asColdAsLife', weight: 8 },
     { type: 'bomb', weight: 8 },
     { type: 'reset', weight: 6 * trinketReadyBias },
     { type: 'rift', weight: 6 },
   ];
   if (r < .75) weights.push({ type: 'thunder', weight: 12 }, { type: 'orbital', weight: 12 });
   if (r < .60) weights.push({ type: 'stampede', weight: 10 }, { type: 'bullethell', weight: 10 }, { type: 'blackhole', weight: 10 });
-  if (r < .45) weights.push({ type: 'clone', weight: 9 }, { type: 'tinyarmy', weight: 9 }, { type: 'goblinunion', weight: 9 });
-  if (r < .30) weights.push({ type: 'kittens', weight: 7 }, { type: 'goose', weight: 7 }, { type: 'bees', weight: 7 }, { type: 'summoncat', weight: 7 }, { type: 'physics', weight: 7 }, { type: 'wronggame', weight: 7 }, { type: 'heaven', weight: 1.4 });
+  if (r < .45) weights.push({ type: 'tinyarmy', weight: 9 }, { type: 'goblinunion', weight: 9 });
+  if (r < .30) weights.push({ type: 'kittens', weight: 7 }, { type: 'goose', weight: 7 }, { type: 'bees', weight: 7 }, { type: 'summoncat', weight: 7 }, { type: 'physics', weight: 7 }, { type: 'wronggame', weight: 7 });
   const total = weights.reduce((n, w) => n + w.weight, 0);
   let roll = Math.random() * total;
   let type = weights[0].type;
@@ -9283,6 +9252,7 @@ function dropPowerup(x, y, type = 'health', full = false) {
     frenzy: { r: 13, life: 12, frenzy: 8 },
     haste:  { r: 13, life: 12, haste: 8 },
     freeze: { r: 13, life: 12, freeze: 3.25 },
+    asColdAsLife: { r: 13, life: 12, asColdAsLife: 10 },
     bomb:   { r: 14, life: 12, bomb: 300 + S.wave * 6 },
     reset:  { r: 13, life: 12, reset: true },
     rift:   { r: 14, life: 12, rift: 8 },
@@ -9291,7 +9261,6 @@ function dropPowerup(x, y, type = 'health', full = false) {
     stampede: { r: 15, life: 12, stampede: 12 },
     bullethell: { r: 14, life: 12, bullethell: 10 },
     blackhole: { r: 16, life: 12, blackhole: 8 },
-    clone: { r: 14, life: 12, clone: 14 },
     tinyarmy: { r: 14, life: 12, tinyarmy: 16 },
     goblinunion: { r: 14, life: 12, goblinunion: 8 },
     kittens: { r: 18, life: 12, kittens: 8 },
@@ -9300,7 +9269,6 @@ function dropPowerup(x, y, type = 'health', full = false) {
     summoncat: { r: 18, life: 12, summoncat: 18 },
     physics: { r: 16, life: 12, physics: 12 },
     wronggame: { r: 16, life: 12, wronggame: 10 },
-    heaven: { r: 18, life: 12, heaven: 180 },
   }[type] || { r: 12, life: 10 };
   const now = performance.now() / 1000;
   const orb = { id: `orb-${type}-${Math.floor(now * 1000)}-${Math.floor(Math.random() * 10000)}`, born: now, x, y, type, full, ...cfg, r: full ? 20 : cfg.r, life: full ? 9999 : cfg.life };
@@ -9317,12 +9285,13 @@ function powerupColor(type, full = false) {
   if (t === 'frenzy') return '#ff6d3a';
   if (t === 'haste') return '#6ad6ff';
   if (t === 'freeze') return '#9fe8ff';
+  if (t === 'asColdAsLife') return '#dff4ff';
   if (t === 'bomb') return '#ff9b32';
   if (t === 'reset') return '#c78cff';
   if (t === 'rift') return '#8edcff';
   if (['thunder', 'orbital', 'stampede'].includes(t)) return '#ffd56a';
-  if (['bullethell', 'blackhole', 'clone', 'tinyarmy', 'goblinunion'].includes(t)) return '#d7c8ff';
-  if (['kittens', 'goose', 'bees', 'summoncat', 'physics', 'wronggame', 'heaven'].includes(t)) return '#ffffff';
+  if (['bullethell', 'blackhole', 'tinyarmy', 'goblinunion'].includes(t)) return '#d7c8ff';
+  if (['kittens', 'goose', 'bees', 'summoncat', 'physics', 'wronggame'].includes(t)) return '#ffffff';
   return '#b9d84f';
 }
 
@@ -9332,6 +9301,7 @@ const POWERUP_DEFS = {
   frenzy: { rarity: 'common', label: 'BLOOD RUSH', icon: '⚡', desc: 'Hero attack speed surges.' },
   haste: { rarity: 'common', label: 'OVERCLOCK', icon: '⏩', desc: 'All fire rates spike.' },
   freeze: { rarity: 'common', label: 'FROSTBITE', icon: '❄', desc: 'Damage slows enemies.' },
+  asColdAsLife: { rarity: 'common', label: 'AS COLD AS LIFE', icon: '❄', desc: 'Your secondary weapon has no cooldown.' },
   rift: { rarity: 'common', label: 'RIFT SHIELD', icon: '◌', desc: 'The rift absorbs the next leaks briefly.' },
   bomb: { rarity: 'rare', label: 'CHAIN REACTION', icon: '✹', desc: 'Enemies explode on death.' },
   reset: { rarity: 'rare', label: 'RICHOCHET', icon: '↺', desc: 'Projectiles bounce harder.' },
@@ -9340,7 +9310,6 @@ const POWERUP_DEFS = {
   orbital: { rarity: 'rare', label: 'ORBITAL STRIKE', icon: '☄', desc: 'Sky beams rain down.' },
   bullethell: { rarity: 'epic', label: 'BULLET HELL', icon: '✶', desc: 'The hero fires everywhere.' },
   blackhole: { rarity: 'epic', label: 'BLACK HOLE', icon: '◉', desc: 'A temporary vortex forms.' },
-  clone: { rarity: 'epic', label: 'CLONE MACHINE', icon: '⧉', desc: 'Ghost copies of towers fire alongside them.' },
   tinyarmy: { rarity: 'epic', label: 'TINY ARMY', icon: '⚔', desc: 'Rows of tiny soldiers march through enemies.' },
   goblinunion: { rarity: 'epic', label: 'GOBLIN UNION', icon: '✊', desc: 'Enemies stop and protest.' },
   kittens: { rarity: 'legendary', label: 'KITTENPOCALYPSE', icon: '🐾', desc: 'Thousands of kittens erupt from dimensional rifts.' },
@@ -9349,7 +9318,6 @@ const POWERUP_DEFS = {
   summoncat: { rarity: 'legendary', label: 'SUMMON CAT', icon: '🐈', desc: 'Enemies abandon the rift to adore a cat.' },
   physics: { rarity: 'legendary', label: 'PHYSICS ERROR', icon: '∿', desc: 'Reality becomes unstable.' },
   wronggame: { rarity: 'legendary', label: 'WRONG GAME', icon: '⌘', desc: 'Assets from another universe.' },
-  heaven: { rarity: 'legendary', label: 'THREE MINUTES IN HEAVEN', icon: '✦', desc: 'A divine AI companion descends.' },
 };
 
 const MULTIVERSE_MUTAGENS = {
@@ -10086,7 +10054,7 @@ function scareEnemy(e, x, y, duration = 1.4) {
 }
 
 function randomLegendaryType() {
-  const pool = ['kittens', 'goose', 'bees', 'summoncat', 'physics', 'wronggame', 'kittens', 'goose', 'summoncat', 'wronggame', 'heaven'];
+  const pool = ['kittens', 'goose', 'bees', 'summoncat', 'physics', 'wronggame', 'kittens', 'goose', 'summoncat', 'wronggame'];
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -10122,6 +10090,13 @@ function applyPowerupEffect(type, orb) {
     floatText('FROSTBITE', orb.x - 24, orb.y - 14, '#9fe8ff');
     return;
   }
+  if (type === 'asColdAsLife') {
+    S.mods.asColdAsLifeUntil = Math.max(S.mods.asColdAsLifeUntil || 0, now + 10);
+    S.hero.secondaryCd = 0;
+    floatText('AS COLD AS LIFE', orb.x - 48, orb.y - 14, '#dff4ff');
+    shockwave(orb.x, orb.y, '#dff4ff', 120, .32);
+    return;
+  }
   if (type === 'rift') {
     S.mods.riftShieldUntil = Math.max(S.mods.riftShieldUntil || 0, now + 8);
     floatText('RIFT SHIELD', orb.x - 34, orb.y - 14, '#8edcff');
@@ -10151,7 +10126,7 @@ function applyPowerupEffect(type, orb) {
     return;
   }
 
-  if (['thunder', 'orbital', 'stampede', 'bullethell', 'blackhole', 'clone', 'tinyarmy', 'goblinunion', 'kittens', 'goose', 'bees', 'summoncat', 'physics', 'wronggame', 'heaven'].includes(type)) {
+  if (['thunder', 'orbital', 'stampede', 'bullethell', 'blackhole', 'tinyarmy', 'goblinunion', 'kittens', 'goose', 'bees', 'summoncat', 'physics', 'wronggame'].includes(type)) {
     triggerLegendaryPowerup(type, orb);
   }
 }
@@ -10159,13 +10134,6 @@ function applyPowerupEffect(type, orb) {
 function triggerLegendaryPowerup(type, orb) {
   const now = performance.now() / 1000;
   S.hero.weaponRecoil = 0;
-  if (type === 'heaven') {
-    startTempEffect('heaven', 180, { x: orb.x, y: orb.y, lightningCd: 0, brightness: 1 });
-    floatText('ANGEL DESCENDS', orb.x - 48, orb.y - 42, '#fff8c8');
-    playSfx('bossWarning');
-    announceWave('THREE MINUTES IN HEAVEN', 'boss', 1.8);
-    return;
-  }
   if (type === 'kittens') {
     startTempEffect('kittens', 12, { x: orb.x, y: orb.y, tick: 0 });
     for (let i = 0; i < 36; i++) {
@@ -10218,11 +10186,6 @@ function triggerLegendaryPowerup(type, orb) {
   if (type === 'blackhole') {
     startTempEffect('blackhole', 8, { x: orb.x, y: orb.y, pull: 180 });
     floatText('BLACK HOLE', orb.x - 34, orb.y - 32, '#d7c8ff');
-    return;
-  }
-  if (type === 'clone') {
-    startTempEffect('clone', 14, { x: orb.x, y: orb.y });
-    floatText('CLONE FIELD', orb.x - 34, orb.y - 32, '#8edcff');
     return;
   }
   if (type === 'tinyarmy') {
@@ -10321,6 +10284,7 @@ function powerupDurationLabel(type, o = {}) {
     frenzy: 8,
     haste: 8,
     freeze: 8,
+    asColdAsLife: 10,
     bomb: 0,
     reset: 0,
     rift: 8,
@@ -10329,7 +10293,6 @@ function powerupDurationLabel(type, o = {}) {
     stampede: 12,
     bullethell: 10,
     blackhole: 8,
-    clone: 14,
     tinyarmy: 16,
     goblinunion: 8,
     kittens: 12,
@@ -10339,7 +10302,6 @@ function powerupDurationLabel(type, o = {}) {
     summoncat: 18,
     physics: 12,
     wronggame: 10,
-    heaven: 180,
   };
   const d = o.full ? null : durations[type];
   if (!d) return '';
@@ -10377,6 +10339,12 @@ function collectHealthOrbs(dt) {
           e.slow = Math.max(e.slow || 0, .45);
         }
         floatText('FREEZE BURST', o.x - 36, o.y - 14, '#9fe8ff');
+      } else if (type === 'asColdAsLife') {
+        const now = performance.now() / 1000;
+        S.mods.asColdAsLifeUntil = Math.max(S.mods.asColdAsLifeUntil || 0, now + (o.asColdAsLife || 10));
+        S.hero.secondaryCd = 0;
+        floatText('AS COLD AS LIFE', o.x - 48, o.y - 14, '#dff4ff');
+        shockwave(o.x, o.y, '#dff4ff', 120, .32);
       } else if (type === 'bomb') {
         const radius = 180;
         for (const e of S.enemies) {
@@ -10396,7 +10364,7 @@ function collectHealthOrbs(dt) {
       const now = performance.now() / 1000;
       S.mods.riftShieldUntil = Math.max(S.mods.riftShieldUntil || 0, now + (o.rift || 8));
       floatText('RIFT SHIELD', o.x - 34, o.y - 14, '#8edcff');
-      } else if (['thunder','orbital','stampede','bullethell','blackhole','clone','tinyarmy','goblinunion','kittens','goose','bees','summoncat','physics','wronggame','heaven'].includes(type)) {
+      } else if (['thunder','orbital','stampede','bullethell','blackhole','tinyarmy','goblinunion','kittens','goose','bees','summoncat','physics','wronggame'].includes(type)) {
         applyPowerupEffect(type, o);
       } else {
         const amt = o.full ? S.hero.max : (o.hp || Math.floor(S.hero.max * .45));
@@ -10410,7 +10378,7 @@ function collectHealthOrbs(dt) {
       o.dead = true;
       if (S.waveStats) S.waveStats.powerups++;
       if (S.runStats) S.runStats.powerups++;
-      if (['kittens','goose','bees','summoncat','physics','wronggame','heaven'].includes(type)) {
+      if (['kittens','goose','bees','summoncat','physics','wronggame'].includes(type)) {
         S.runStats[`${type}Used`] = (S.runStats[`${type}Used`] || 0) + 1;
       }
       boom(o.x, o.y, powerupColor(type, o.full), o.full ? 30 : 14);
@@ -12532,17 +12500,7 @@ function draw(t) {
 function drawTempEffects(t) {
   for (const fx of S.effects) {
     drawPowerupEffectSource(fx, t);
-    if (fx.type === 'heaven') {
-      ctx.save();
-      ctx.globalAlpha = .22 + Math.sin(t * 4) * .05;
-      ctx.fillStyle = '#fff9df';
-      ctx.beginPath(); ctx.arc(fx.data.x, fx.data.y, 36, 0, 7); ctx.fill();
-      ctx.globalAlpha = .12;
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.arc(fx.data.x, fx.data.y, 58, 0, 7); ctx.stroke();
-      ctx.restore();
-    } else if (fx.type === 'slimeRain') {
+    if (fx.type === 'slimeRain') {
       const alpha = Math.max(.08, Math.min(.9, fx.data.brightness || fx.t / fx.max));
       ctx.save();
       ctx.globalAlpha = alpha * .52;
@@ -12793,26 +12751,6 @@ function drawPowerupEffectSource(fx, t) {
   const x = fx.data.x ?? S.hero.x;
   const y = fx.data.y ?? S.hero.y;
   const phase = fx.max ? 1 - Math.max(0, fx.t / fx.max) : 0;
-  if (fx.type === 'heaven') {
-    ctx.save();
-    ctx.globalCompositeOperation = 'screen';
-    ctx.globalAlpha = .9;
-    ctx.fillStyle = '#fff8c8';
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(x, y, 24 + Math.sin(t * 5) * 2, 0, 7); ctx.fill(); ctx.stroke();
-    ctx.globalAlpha = .5;
-    ctx.beginPath();
-    ctx.moveTo(x - 18, y + 4); ctx.quadraticCurveTo(x - 58, y - 22, x - 82, y + 8); ctx.quadraticCurveTo(x - 48, y + 20, x - 18, y + 10);
-    ctx.moveTo(x + 18, y + 4); ctx.quadraticCurveTo(x + 58, y - 22, x + 82, y + 8); ctx.quadraticCurveTo(x + 48, y + 20, x + 18, y + 10);
-    ctx.fill();
-    ctx.globalAlpha = .7;
-    ctx.strokeStyle = '#fff8c8';
-    ctx.beginPath(); ctx.arc(x, y - 30, 18, 0, 7); ctx.stroke();
-    ctx.restore();
-    drawPowerupDebugBox(x, y, 184, 92, 'heaven: god ally', fx);
-    return;
-  }
   if (fx.type === 'blackhole') {
     const p = parallaxPoint(x, y, .18);
     ctx.save();
@@ -12969,21 +12907,6 @@ function drawPowerupEffectSource(fx, t) {
     drawLabeledDisc(S.hero.x, S.hero.y, '✶', 'BULLET HELL', vis.color, t, { r: 34, alpha: .28, pulse: .18 });
     return;
   }
-  if (fx.type === 'clone') {
-    drawLabeledDisc(x, y, '⧉', 'CLONES ONLINE', vis.color, t, { r: 27, alpha: .32 });
-    for (const tw of S.towers) {
-      if (tw.dead || !tw.clonePulse) continue;
-      ctx.save();
-      ctx.globalCompositeOperation = 'screen';
-      ctx.globalAlpha = Math.min(.65, tw.clonePulse * 2);
-      ctx.strokeStyle = '#8edcff';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(tw.x - 18, tw.y - 42, 36, 36);
-      ctx.restore();
-      tw.clonePulse = Math.max(0, (tw.clonePulse || 0) - .03);
-    }
-    return;
-  }
   drawLabeledDisc(x, y, vis.icon, vis.label, vis.color, t, { r: 24, alpha: .35 });
 }
 
@@ -12993,6 +12916,7 @@ function drawHeroStatusBadges(t) {
   if ((S.mods.coinPurseUntil || 0) > now) badges.push(EFFECT_VISUALS.gold);
   if ((S.mods.frenzyUntil || 0) > now) badges.push(EFFECT_VISUALS.frenzy);
   if ((S.mods.hasteUntil || 0) > now || (S.mods.overclockUntil || 0) > now) badges.push(EFFECT_VISUALS.haste);
+  if ((S.mods.asColdAsLifeUntil || 0) > now) badges.push(EFFECT_VISUALS.asColdAsLife);
   if ((S.mods.riftShieldUntil || 0) > now) badges.push(EFFECT_VISUALS.rift);
   if (!badges.length) return;
   badges.slice(0, 4).forEach((b, i) => {
@@ -14999,7 +14923,7 @@ function applySnapshot(st) {
   const net = S.net;
   if (st.levelId) applyLevel(st.levelId, { silent: true });
   Object.assign(S, st);
-  S.mods = { gold: 1.14, dmg: 1, overclockUntil: 0, frenzyUntil: 0, hasteUntil: 0, coinPurseUntil: 0, lastStandUntil: 0, riftShieldUntil: 0, ...(S.mods || {}) };
+  S.mods = { gold: 1.14, dmg: 1, overclockUntil: 0, frenzyUntil: 0, hasteUntil: 0, coinPurseUntil: 0, lastStandUntil: 0, riftShieldUntil: 0, asColdAsLifeUntil: 0, ...(S.mods || {}) };
   S.quartermaster = { active: false, inventory: [], lastWave: -99, bought: {}, ...(S.quartermaster || {}) };
   S.quartermasterUpgrades = { fieldRepairs: 0, coffeeRations: 0, emergencyReserve: false, logistics: 0, betterMaps: false, expandedToolbelt: false, insurance: false, ...(S.quartermasterUpgrades || {}) };
   S.synergyStats = { ...blankSynergyStats(), ...(S.synergyStats || {}) };
