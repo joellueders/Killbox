@@ -428,39 +428,131 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
 }
 .ui.panelHidden .panel { transform: translateX(390px); opacity: 0; pointer-events: none; }
 .panel .buildSection { display: none; }
-.panel .codexScroll {
-  max-height: calc(100vh - 204px);
-  overflow: auto;
-  display: grid;
-  gap: 10px;
-  padding-right: 2px;
-}
-.panel .codexSection {
-  border: 1px solid #4f371d;
+.guideButton {
+  width: 100%;
+  margin-top: 10px;
+  padding: 11px 12px;
+  border: 1px solid #7ac6e8;
   border-radius: 10px;
-  background: linear-gradient(180deg, rgba(18,16,12,.95), rgba(11,9,7,.98));
-  overflow: hidden;
-}
-.panel .codexHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 9px 12px;
-  color: #f0c96b;
+  background: linear-gradient(180deg, rgba(32, 25, 18, .98), rgba(14, 10, 7, .98));
+  color: #f6e9bf;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: .08em;
-  font-family: Georgia, 'Times New Roman', serif;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 3px 0 #100b08;
+}
+.guideButton:hover { filter: brightness(1.08); }
+.guideButton:focus { outline: 2px solid #7ac6e8; outline-offset: 1px; }
+.guideModal {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(5, 4, 3, .68);
+}
+.guideModal.open { display: flex; }
+.guideModalCard {
+  width: min(980px, calc(100vw - 28px));
+  height: min(84vh, 860px);
+  border: 2px solid #b18445;
+  border-radius: 14px;
+  background:
+    linear-gradient(90deg, rgba(115, 22, 14, .18), transparent 18%),
+    linear-gradient(180deg, rgba(36, 40, 42, .98), rgba(13, 10, 8, .99));
+  box-shadow: 0 18px 44px rgba(0,0,0,.55), inset 0 0 0 1px rgba(232, 199, 131, .12);
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  overflow: hidden;
+}
+.guideModalBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
   border-bottom: 1px solid #4f371d;
 }
-.panel .codexHeader span {
-  color: #b8e6ff;
-  font-size: 10px;
-  letter-spacing: .04em;
+.guideModalBar .title {
+  color: #f0c96b;
+  font: 800 15px Georgia, 'Times New Roman', serif;
+  letter-spacing: .08em;
   text-transform: uppercase;
 }
-.panel .codexBody { padding: 10px 10px 12px; }
+.guideClose {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #9d6a35;
+  background: linear-gradient(180deg, rgba(31, 23, 16, .98), rgba(16, 11, 8, .98));
+  color: #fff4d0;
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.guideTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 14px 0;
+  border-bottom: 1px solid rgba(79, 55, 29, .8);
+}
+.guideTab {
+  padding: 8px 10px;
+  border: 1px solid rgba(143, 100, 52, .8);
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  background: linear-gradient(180deg, rgba(28, 21, 14, .98), rgba(12, 9, 6, .98));
+  color: #cfbb96;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.guideTab.active {
+  color: #f0c96b;
+  background: linear-gradient(180deg, rgba(48, 34, 20, .98), rgba(18, 12, 8, .98));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+.guideTabPanel {
+  min-height: 0;
+  overflow: auto;
+  padding: 14px;
+  display: none;
+}
+.guideTabPanel.active { display: block; }
+.guideTabPanel .codexSection,
+.guideTabPanel .guideText {
+  max-width: 100%;
+}
+.guideText {
+  display: grid;
+  gap: 12px;
+  color: #cfbb96;
+  font-size: 13px;
+  line-height: 1.35;
+}
+.guideText h3 {
+  margin: 0 0 4px;
+  color: #f0c96b;
+  font: 800 12px Georgia, 'Times New Roman', serif;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.guideText p, .guideText li { margin: 0; }
+.guideText ul, .guideText ol {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}
+.guidePanelWrap {
+  display: grid;
+  gap: 10px;
+}
 .panel .enemyList, .panel .towerList {
   display: grid;
   gap: 8px;
@@ -2682,6 +2774,7 @@ kbd {
       <button id="sell"    class="danger">Sell Selected Tower</button>
       <button id="newRunBtn" class="danger">Reset Run</button>
     </div>
+    <button id="guideButton" class="guideButton" type="button">Guide</button>
     <div id="devPanel" class="devPanel debugHidden">
       <h2>Debug Tools</h2>
       <div class="devRow">
@@ -2733,24 +2826,6 @@ kbd {
         <button id="devResetCd">Reset Cooldowns</button>
       </div>
     </div>
-    <div class="codexScroll">
-      <section class="codexSection" id="towerCodex">
-        <div class="codexHeader">Tactics Codex <span>loadout</span></div>
-        <div class="codexBody"><div id="towerList" class="towerList"></div></div>
-      </section>
-      <section class="codexSection" id="enemyCodex">
-        <div class="codexHeader">Foe Codex <span>reference</span></div>
-        <div class="codexBody"><div class="enemyList" id="enemyList"></div></div>
-      </section>
-      <section class="codexSection" id="powerupCodex">
-        <div class="codexHeader">Powerup Codex <span>pickup effects</span></div>
-        <div class="codexBody"><div class="powerupList" id="powerupList"></div></div>
-      </section>
-      <section class="codexSection" id="synergyCodex">
-        <div class="codexHeader">Synergy Codex <span>discoveries</span></div>
-        <div class="codexBody"><div class="synergyList" id="synergyList"></div></div>
-      </section>
-    </div>
     <h2 class="debugHidden">Test Tools</h2>
     <div class="testControls debugHidden">
       <input id="testWave" type="number" min="1" max="999" value="1" aria-label="Next wave number">
@@ -2773,6 +2848,36 @@ kbd {
       <kbd>1</kbd>–<kbd>8</kbd> build
     </p>
     <div class="sidebarFooter">Killbox 7.8.0-battlefield-scars. Still rude.</div>
+</div>
+</div>
+
+<div id="guideModal" class="guideModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="guideModalTitle">
+  <div class="guideModalCard" role="document">
+    <div class="guideModalBar">
+      <div class="title" id="guideModalTitle">War Room Guide</div>
+      <button id="guideClose" class="guideClose" type="button" aria-label="Close guide">×</button>
+    </div>
+    <div class="guideTabs" role="tablist" aria-label="Guide tabs">
+      <button class="guideTab active" data-guide-tab="how" type="button" role="tab" aria-selected="true">How to Play</button>
+      <button class="guideTab" data-guide-tab="weapons" type="button" role="tab" aria-selected="false">Weapons</button>
+      <button class="guideTab" data-guide-tab="towers" type="button" role="tab" aria-selected="false">Towers &amp; Traps</button>
+      <button class="guideTab" data-guide-tab="enemies" type="button" role="tab" aria-selected="false">Enemies</button>
+      <button class="guideTab" data-guide-tab="powerups" type="button" role="tab" aria-selected="false">Powerups</button>
+      <button class="guideTab" data-guide-tab="synergies" type="button" role="tab" aria-selected="false">Synergies</button>
+    </div>
+    <div class="guidePanelWrap">
+      <section class="guideTabPanel active" data-guide-panel="how" role="tabpanel">
+        <div id="guideHowText" class="guideText"></div>
+      </section>
+      <section class="guideTabPanel" data-guide-panel="weapons" role="tabpanel"><div id="guideWeaponList" class="enemyList"></div></section>
+      <section class="guideTabPanel" data-guide-panel="towers" role="tabpanel">
+        <div id="guideTowerText" class="guideText"></div>
+        <div id="towerList" class="towerList"></div>
+      </section>
+      <section class="guideTabPanel" data-guide-panel="enemies" role="tabpanel"><div class="enemyList" id="enemyList"></div></section>
+      <section class="guideTabPanel" data-guide-panel="powerups" role="tabpanel"><div class="powerupList" id="powerupList"></div></section>
+      <section class="guideTabPanel" data-guide-panel="synergies" role="tabpanel"><div class="synergyList" id="synergyList"></div></section>
+    </div>
   </div>
 </div>
 
@@ -3935,6 +4040,9 @@ const S = {
   paths: [], levelId: 'field', levelLabel: 'Field',
   cornerSkulls: [],
   cornerGhosts: [],
+  guideOpen: false,
+  guideTab: 'how',
+  guideTabDefaulted: false,
   mutationPending: false, // Upgrade modal is live and must be chosen before starting a new wave.
   pendingUpgrade: false, // Hard block for startWave() while upgrade selection is unresolved.
   rewardRerollsUsed: 0,
@@ -5729,6 +5837,89 @@ function startGameFromLoadout() {
 }
 
 function renderCodices() {
+  const guideHowText = $('guideHowText');
+  if (guideHowText && !guideHowText.dataset.done) {
+    guideHowText.innerHTML = `
+      <div>
+        <h3>Objective</h3>
+        <p>Protect the Rift and survive as many waves as possible.</p>
+      </div>
+      <div>
+        <h3>Controls</h3>
+        <ul>
+          <li>WASD = Move</li>
+          <li>Mouse = Aim</li>
+          <li>Left Click = Fire</li>
+          <li>Right Click = Secondary Weapon</li>
+          <li>Shift = Sprint/Run</li>
+          <li>Space = Start Wave</li>
+          <li>P = Pause</li>
+          <li>Drag loadout cards to equip weapons, towers, and traps</li>
+          <li>Select towers to upgrade, repair, or sell</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Game Flow</h3>
+        <ol>
+          <li>Build your loadout.</li>
+          <li>Place towers and traps during the build phase.</li>
+          <li>Start the wave with Space or wait for the timer.</li>
+          <li>Fight enemies and protect the Rift.</li>
+          <li>Earn rewards between waves.</li>
+          <li>Upgrade your equipment.</li>
+          <li>Choose mutations, powerups, and other bonuses.</li>
+          <li>Survive increasingly difficult waves.</li>
+        </ol>
+      </div>
+      <div>
+        <h3>Tips</h3>
+        <ul>
+          <li>Towers weaken enemies before they reach you.</li>
+          <li>Some enemies are resistant to certain defenses.</li>
+          <li>Upgrade frequently.</li>
+          <li>Synergies between towers, weapons, and powerups are often stronger than raw damage.</li>
+          <li>Positioning matters.</li>
+          <li>Do not spend all resources immediately.</li>
+        </ul>
+      </div>`;
+    guideHowText.dataset.done = 1;
+  }
+  const guideTowerText = $('guideTowerText');
+  if (guideTowerText && !guideTowerText.dataset.done) {
+    guideTowerText.innerHTML = `
+      <div>
+        <h3>Towers & Traps</h3>
+        <p>Build pieces are grouped here because they shape the lane before enemies reach you. Towers fire on their own. Traps trigger when enemies move through them.</p>
+      </div>
+      <div>
+        <h3>What to watch</h3>
+        <ul>
+          <li>Range and placement.</li>
+          <li>Cooldowns and uptime.</li>
+          <li>How well the piece handles grouped enemies.</li>
+          <li>Whether it supports slowing, pushing, blocking, or burst damage.</li>
+        </ul>
+      </div>`;
+    guideTowerText.dataset.done = 1;
+  }
+  const weaponList = $('guideWeaponList');
+  if (weaponList && !weaponList.dataset.done) {
+    weaponList.innerHTML = '';
+    Object.entries(WEAPONS).forEach(([k, w]) => {
+      const copy = LOADOUT_INSPECTOR_COPY[k];
+      const row = document.createElement('div');
+      row.className = 'enemyCard';
+      row.innerHTML = `
+        <div class="enemyPortrait"><div class="enemyIcon ${k}">${miniWeaponIcon(k)}</div></div>
+        <div class="enemyText">
+          <b>${w.shortName || w.name}</b>
+          <span>${copy?.desc || w.desc || 'Weapon'}</span>
+          <span>${(LOADOUT_WEAPON_COPY[k] || '').replace(/\.$/, '')}</span>
+        </div>`;
+      weaponList.appendChild(row);
+    });
+    weaponList.dataset.done = 1;
+  }
   const towerList = $('towerList');
   if (towerList && !towerList.dataset.done) {
     towerList.innerHTML = '';
@@ -5859,6 +6050,55 @@ function renderPowerupCodex(powerupList) {
     });
     powerupList.appendChild(group);
   }
+}
+
+function isGuideOpen() {
+  return !!S.guideOpen;
+}
+
+function setGuideTab(tabId, { focus = false } = {}) {
+  const next = tabId || S.guideTab || 'how';
+  S.guideTab = next;
+  const tabs = [...document.querySelectorAll('.guideTab')];
+  const panels = [...document.querySelectorAll('.guideTabPanel')];
+  tabs.forEach(btn => {
+    const active = btn.dataset.guideTab === next;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  panels.forEach(panel => panel.classList.toggle('active', panel.dataset.guidePanel === next));
+  if (focus) {
+    const activeTab = tabs.find(btn => btn.dataset.guideTab === next);
+    if (activeTab && activeTab.focus) activeTab.focus();
+  }
+}
+
+function openGuide(tabId = null) {
+  renderCodices();
+  const modal = $('guideModal');
+  if (!modal) return;
+  if (!S.guideTabDefaulted) {
+    S.guideTab = 'how';
+    S.guideTabDefaulted = true;
+  }
+  if (tabId) S.guideTab = tabId;
+  S.guideOpen = true;
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  setGuideTab(S.guideTab);
+}
+
+function closeGuide() {
+  const modal = $('guideModal');
+  if (!modal) return;
+  S.guideOpen = false;
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+}
+
+function toggleGuide() {
+  if (isGuideOpen()) closeGuide();
+  else openGuide();
 }
 
 function rollMutationChoices(kind = 'weapon') {
@@ -15402,11 +15642,30 @@ if ($('loadoutPreviewRail')) {
     dropIndex = -1;
   });
 }
+if ($('guideButton')) $('guideButton').onclick = () => toggleGuide();
+if ($('guideClose')) $('guideClose').onclick = () => closeGuide();
+if ($('guideModal')) {
+  $('guideModal').addEventListener('click', e => {
+    if (e.target === $('guideModal')) closeGuide();
+  });
+  $('guideModal').addEventListener('click', e => {
+    const tab = e.target.closest('.guideTab');
+    if (!tab) return;
+    setGuideTab(tab.dataset.guideTab);
+  });
+}
 
 function canStartRun() {
   return !!LOADOUT_STATE.selectedIds.length && LOADOUT_STATE.selectedIds.some(k => !!WEAPONS[k]);
 }
 addEventListener('keydown', e => {
+  if (isGuideOpen()) {
+    if (e.key.toLowerCase() === 'g' || e.key === 'Escape') {
+      e.preventDefault();
+      closeGuide();
+    }
+    return;
+  }
   keys[e.key] = true; keys[e.key.toLowerCase()] = true; keys[e.code] = true;
   if (e.key === '`' || e.code === 'F10') { e.preventDefault(); S.devToolsOpen = !S.devToolsOpen; ui(); return; }
   const tKeys = S.loadout && S.loadout.length ? S.loadout : [];
@@ -15429,6 +15688,7 @@ addEventListener('keydown', e => {
   }
   if (e.code === 'Space') { e.preventDefault(); if (S.net.mode !== 'guest') startWave(); }
   if (e.key.toLowerCase() === 'p') { S.paused = !S.paused; ui(); }
+  if (e.key.toLowerCase() === 'g') { e.preventDefault(); toggleGuide(); }
   if (e.key.toLowerCase() === 't') toggleSpeed();
   if (e.key.toLowerCase() === 'c' && S.net.mode !== 'guest') useLifeFlask();
 });
