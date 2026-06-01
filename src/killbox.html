@@ -428,14 +428,38 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
 }
 .ui.panelHidden .panel { transform: translateX(390px); opacity: 0; pointer-events: none; }
 .panel .buildSection { display: none; }
-.panel details.codex { margin-top: 10px; border: 1px solid #4f371d; border-radius: 10px; background: linear-gradient(180deg, rgba(18,16,12,.95), rgba(11,9,7,.98)); }
-.panel details.codex > summary {
-  list-style: none; cursor: pointer; padding: 9px 12px; color: #f0c96b; font-weight: bold;
-  text-transform: uppercase; letter-spacing: .08em;
-  font-family: Georgia, 'Times New Roman', serif;
+.panel .codexScroll {
+  max-height: calc(100vh - 204px);
+  overflow: auto;
+  display: grid;
+  gap: 10px;
+  padding-right: 2px;
 }
-.panel details.codex > summary::-webkit-details-marker { display: none; }
-.panel details.codex[open] > summary { border-bottom: 1px solid #4f371d; }
+.panel .codexSection {
+  border: 1px solid #4f371d;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(18,16,12,.95), rgba(11,9,7,.98));
+  overflow: hidden;
+}
+.panel .codexHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  color: #f0c96b;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-family: Georgia, 'Times New Roman', serif;
+  border-bottom: 1px solid #4f371d;
+}
+.panel .codexHeader span {
+  color: #b8e6ff;
+  font-size: 10px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
 .panel .codexBody { padding: 10px 10px 12px; }
 .panel .enemyList, .panel .towerList {
   display: grid;
@@ -2709,22 +2733,24 @@ kbd {
         <button id="devResetCd">Reset Cooldowns</button>
       </div>
     </div>
-    <details class="codex" id="towerCodex">
-      <summary>Tactics Codex <span class="codexPill">loadout</span></summary>
-      <div class="codexBody"><div id="towerList" class="towerList"></div></div>
-    </details>
-    <details class="codex" id="enemyCodex">
-      <summary>Foe Codex <span class="codexPill">reference</span></summary>
-      <div class="codexBody"><div class="enemyList" id="enemyList"></div></div>
-    </details>
-    <details class="codex" id="powerupCodex">
-      <summary>Powerup Codex <span class="codexPill">pickup effects</span></summary>
-      <div class="codexBody"><div class="powerupList" id="powerupList"></div></div>
-    </details>
-    <details class="codex" id="synergyCodex">
-      <summary>Synergy Codex <span class="codexPill">discoveries</span></summary>
-      <div class="codexBody"><div class="synergyList" id="synergyList"></div></div>
-    </details>
+    <div class="codexScroll">
+      <section class="codexSection" id="towerCodex">
+        <div class="codexHeader">Tactics Codex <span>loadout</span></div>
+        <div class="codexBody"><div id="towerList" class="towerList"></div></div>
+      </section>
+      <section class="codexSection" id="enemyCodex">
+        <div class="codexHeader">Foe Codex <span>reference</span></div>
+        <div class="codexBody"><div class="enemyList" id="enemyList"></div></div>
+      </section>
+      <section class="codexSection" id="powerupCodex">
+        <div class="codexHeader">Powerup Codex <span>pickup effects</span></div>
+        <div class="codexBody"><div class="powerupList" id="powerupList"></div></div>
+      </section>
+      <section class="codexSection" id="synergyCodex">
+        <div class="codexHeader">Synergy Codex <span>discoveries</span></div>
+        <div class="codexBody"><div class="synergyList" id="synergyList"></div></div>
+      </section>
+    </div>
     <h2 class="debugHidden">Test Tools</h2>
     <div class="testControls debugHidden">
       <input id="testWave" type="number" min="1" max="999" value="1" aria-label="Next wave number">
