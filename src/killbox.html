@@ -4136,7 +4136,7 @@ function miniTrinketIcon(k) {
   return iconImg(iconPath('trinket', k) || fallbackIcon('trinket', k) || 'assets/icons/trinkets/flask.png', k);
 }
 const S = {
-  version: '7.8.3', speed: 1,
+  version: '7.8.4', speed: 1,
   started: false,
   paused: false, // Manual pause only; do not reuse this for upgradeChoice or wave gating.
   gameOver: false, restarts: 2, waveSnapshot: null,
@@ -4186,6 +4186,7 @@ const S = {
   gameState: 'betweenWaves', // Special modal / flow state; separate from paused.
   mutationWaveType: 'hero', heroMutations: [], trapMutations: [], pendingMutationChoices: [], pendingWaveMutagen: null, activeWaveMutagen: null, activeMutagenState: {}, lastWaveMutagen: null, waveBanner: '', waveBannerKind: '', waveBannerTime: 0, waveBannerKey: '', spawningActors: [], lastDeathCause: '', lowHealthPulse: 0, lowHealthFlash: 0, lowHealthBeep: 0, lowHealthState: 0,
   hero: { x: cx(2), y: cy(13), hp: 100, max: 100, level: 1, cool: 0, inv: 0, shoveCd: 0, weapon: 'blunderbuss', weaponCd: 0, secondaryCd: 0, charge: 0, charging: false, weaponRecoil: 0, spawnState: 'active', spawnLock: 0, ghostGrabbed: false, ghostId: null, flaskCharges: 0, shieldHits: 0, blunderShieldUntil: 0, blunderShieldMult: 1, slimeDebuffUntil: 0, upgrades: [], upgradeChoices: [], upgradeLevel: 0, fireRateMult: 1, damageMult: 1, shoveForceMult: 1, critChance: 0, pierceCount: 0, freezeDurationMult: 1, freezeTrapVuln: 0, chainBonus: 0, stormChainBonus: 0, stormStunMult: 1, crossbowStunMult: 1, crossbowKnockbackMult: 1, blunderDamageMult: 1, goldMult: 1, trapCooldownMult: 1, trinketAttackSlow: 0, trinketFireRateMult: 1, trinketMoveMult: 1, trinketFireRateActiveMult: 1, trinketMoveActiveMult: 1, trinketGoldActiveMult: 1, overclockAura: false, lastStandBeacon: false, lastStandBeaconActive: false, heroScale: 1 },
+  hoverInspectId: null,
   engineer: { active: false, x: cx(3), y: cy(13), hp: 90, max: 90, cool: 0, inv: 0, dash: 0, dashCd: 0, aimX: cx(8), aimY: cy(8), volleyCd: 0, oilCd: 0, shoveCd: 0 },
   net: { mode: 'solo', pc: null, dc: null, connected: false, remoteInput: { up:false, down:false, left:false, right:false, shoot:false, volley:false, oil:false, aimX:0, aimY:0 }, remotePrev: { volley:false, oil:false }, lastSend: 0, lastSnapshot: 0 },
   mods: { gold: 1.14, dmg: 1, overclockUntil: 0, frenzyUntil: 0, hasteUntil: 0, coinPurseUntil: 0, lastStandUntil: 0, riftShieldUntil: 0, asColdAsLifeUntil: 0 },
@@ -5605,6 +5606,8 @@ function ui() {
   catch (err) { console.error('[ui] renderWaveStatus failed', err); }
   try { renderPreview(); }
   catch (err) { console.error('[ui] renderPreview failed', err); }
+  if (S.hoverInspectId) updateWarRoomInspector(S.hoverInspectId, true);
+  else restoreWarRoomInspector();
   const activeCountdown = S.started && !S.gameOver && !S.waveActive && S.phase === 'build' && S.gameState !== 'upgradeChoice' && !S.pendingUpgrade;
   const secs = activeCountdown ? Math.ceil(Math.max(0, S.waveCountdown || 0)) : 0;
   const playCountdown = $('playfieldCountdown');
@@ -7021,6 +7024,8 @@ function renderBuildButtons() {
         b.classList.toggle('upgradeTier4', tier === 4);
         b.classList.toggle('weaponReady', ready);
         b.innerHTML = `<span class="hotkey">${hotkey}</span><span class="buildIcon">${miniWeaponIcon(k)}</span><span class="buildName">${w.shortName || w.name}</span><span class="buildPrice">${cd > 0 ? `${cd.toFixed(1)}s` : '&nbsp;'}</span>${badge}${pips}`;
+        b.onmouseenter = () => { S.hoverInspectId = k; updateWarRoomInspector(k, true); };
+        b.onmouseleave = () => { S.hoverInspectId = null; restoreWarRoomInspector(); };
         b.onclick = () => { S.hero.weapon = k; S.weapon = k; S.selected = null; S.sel = null; $('info').innerHTML = `<b>${w.name}</b><br>${w.desc}`; ui(); };
       } else if (isTrinketItem(k)) {
         const tr = TRINKETS[k];
@@ -7028,6 +7033,8 @@ function renderBuildButtons() {
         b.className = 'buildCard trinket';
         if (rem > 0) b.classList.add('cooldown');
         b.innerHTML = `<span class="hotkey">${hotkey}</span><span class="buildIcon">${tr.icon}</span><span class="buildName">${tr.shortName || tr.name}</span><span class="buildPrice">${rem > 0 ? Math.ceil(rem) + 's' : 'READY'}</span><span class="buildHint">Trinket</span>`;
+        b.onmouseenter = () => { S.hoverInspectId = k; updateWarRoomInspector(k, true); };
+        b.onmouseleave = () => { S.hoverInspectId = null; restoreWarRoomInspector(); };
         b.onclick = () => { useTrinket(k); S.selected = null; S.sel = null; ui(); };
       } else {
         const t = TOWERS[k];
@@ -7044,6 +7051,8 @@ function renderBuildButtons() {
         b.classList.toggle('upgradeTier3', tier === 3);
         b.classList.toggle('upgradeTier4', tier === 4);
         b.innerHTML = `<span class="hotkey">${hotkey}</span><span class="buildIcon">${miniTowerIcon(k)}</span><span class="buildName">${shortTowerName(k)}</span><span class="buildPrice">${t.c}g</span><span class="buildHint">Build${rotateHint}</span>${badge}${pips}`;
+        b.onmouseenter = () => { S.hoverInspectId = k; updateWarRoomInspector(k, true); };
+        b.onmouseleave = () => { S.hoverInspectId = null; restoreWarRoomInspector(); };
         b.onclick   = () => { S.selected = k; S.sel = null; $('info').innerHTML = `<b>${t.n}</b><br>${towerLongDesc(k)}`; ui(); };
       }
       if (rail) rail.appendChild(b);
@@ -7421,6 +7430,168 @@ function towerLongDesc(type) {
   if (d.poison) stats.push(`Poison: ${d.poison}`);
   if (d.burn) stats.push(`Burn/sec: ${d.burn}`);
   return `${notes[type] || d.role}<br><br><b>Role:</b> ${BUILD_ROLES[type] || d.role}<br><b>Stats:</b> ${stats.length ? stats.join(' · ') : 'No attack stats.'}`;
+}
+
+function getWeaponStatLine(k) {
+  const w = WEAPONS[k];
+  if (!w) return null;
+  const baseDamage = {
+    ranger: 16 + (S.hero.level || 1) * 3,
+    crossbow: 46 + (S.hero.level || 1) * 5,
+    blunderbuss: Math.round((26 + (S.hero.level || 1) * 4) * 1),
+    storm: 18 + (S.hero.level || 1) * 2,
+    freeze: 7 + (S.hero.level || 1),
+  }[k] ?? null;
+  const damageMult = (S.hero.damageMult || 1) *
+    (k === 'blunderbuss' ? (S.hero.blunderDamageMult || 1) : 1);
+  const chainCount = k === 'storm' ? 4 + (S.hero.stormChainBonus || 0) + (S.hero.chainBonus || 0) : 0;
+  return {
+    damage: typeof baseDamage === 'number' ? Math.round(baseDamage * damageMult) : null,
+    fireRate: w.primaryCooldown ? ((1 / w.primaryCooldown) * (S.hero.fireRateMult || 1)).toFixed(2) : null,
+    crit: S.hero.critChance || 0,
+    pierce: S.hero.pierceCount || 0,
+    chain: chainCount,
+  };
+}
+
+function getHotbarWeaponModifiers(k) {
+  const mods = [];
+  if (k === 'ranger') {
+    if (S.hero.fireRateMult !== 1) mods.push(`Primary fire speed x${S.hero.fireRateMult.toFixed(2)}`);
+    if (S.hero.critChance) mods.push(`Crit chance +${Math.round(S.hero.critChance * 100)}%`);
+    if (S.hero.pierceCount) mods.push(`Pierce +${S.hero.pierceCount}`);
+  } else if (k === 'crossbow') {
+    if (S.hero.crossbowStunMult !== 1) mods.push(`Stun duration x${S.hero.crossbowStunMult.toFixed(2)}`);
+    if (S.hero.crossbowKnockbackMult !== 1) mods.push(`Knockback x${S.hero.crossbowKnockbackMult.toFixed(2)}`);
+  } else if (k === 'blunderbuss') {
+    if (S.hero.blunderDamageMult !== 1) mods.push(`Damage x${S.hero.blunderDamageMult.toFixed(2)}`);
+    if (S.hero.blunderShieldMult !== 1) mods.push(`Shield duration x${S.hero.blunderShieldMult.toFixed(2)}`);
+  } else if (k === 'storm') {
+    if ((S.hero.stormChainBonus || 0) || (S.hero.chainBonus || 0)) mods.push(`Chains +${(S.hero.stormChainBonus || 0) + (S.hero.chainBonus || 0)}`);
+    if (S.hero.stormStunMult !== 1) mods.push(`Stun x${S.hero.stormStunMult.toFixed(2)}`);
+  } else if (k === 'freeze') {
+    if (S.hero.freezeDurationMult !== 1) mods.push(`Freeze duration x${S.hero.freezeDurationMult.toFixed(2)}`);
+    if (S.hero.freezeTrapVuln) mods.push(`Trap damage +${Math.round(S.hero.freezeTrapVuln * 100)}%`);
+  }
+  if (S.mods.stormLegendary && k === 'storm') mods.push('Legendary storm state');
+  return mods;
+}
+
+function getHotbarTowerModifiers(k) {
+  const mods = [];
+  if (k === 'tar') {
+    if (S.mods.trapTarRate && S.mods.trapTarRate !== 1) mods.push(`Cooldown x${S.mods.trapTarRate.toFixed(2)}`);
+    if (S.mods.trapPush && S.mods.trapPush !== 1) mods.push(`Shove x${S.mods.trapPush.toFixed(2)}`);
+  } else if (k === 'spikes') {
+    if (S.mods.trapReset && S.mods.trapReset !== 1) mods.push(`Reset x${S.mods.trapReset.toFixed(2)}`);
+    if (S.mods.trapSpikeDmg && S.mods.trapSpikeDmg !== 1) mods.push(`Damage x${S.mods.trapSpikeDmg.toFixed(2)}`);
+  } else if (k === 'spring') {
+    if (S.mods.trapReset && S.mods.trapReset !== 1) mods.push(`Reset x${S.mods.trapReset.toFixed(2)}`);
+  } else if (k === 'spire') {
+    if (S.mods.spireChain) mods.push(`Extra chains +${S.mods.spireChain}`);
+  } else if (k === 'barrier') {
+    if (S.mods.barrierHp && S.mods.barrierHp !== 1) mods.push(`HP x${S.mods.barrierHp.toFixed(2)}`);
+  }
+  return mods;
+}
+
+function nextUpgradePreviewForWeapon(k) {
+  const options = getWeaponUpgradeOptionsForItem(k);
+  if (!options.length) return 'No further upgrades available.';
+  const next = options[0];
+  return `${next.name}: ${next.desc}`;
+}
+
+function nextUpgradePreviewForTower(k) {
+  const options = getTowerUpgradeOptionsForItem(k);
+  if (!options.length) return 'No further upgrades available.';
+  const next = options[0];
+  return `${next.name}: ${next.desc}`;
+}
+
+function weaponTooltipHTML(k) {
+  const w = WEAPONS[k];
+  if (!w) return '';
+  const level = getHotbarUpgradeCount(k);
+  const stats = getWeaponStatLine(k) || {};
+  const mods = getHotbarWeaponModifiers(k);
+  const history = (S.hero.upgrades || []).filter(id => {
+    const up = HERO_UPGRADES[id];
+    return up && new Set([...(up.weapons || []), up.targetItem, up.targetIcon, up.targetItemAlt, up.targetIconAlt].filter(Boolean)).has(k);
+  }).map(id => HERO_UPGRADES[id]?.name || id);
+  const next = nextUpgradePreviewForWeapon(k);
+  return `<div class="selGrid"><div class="selIcon"><span class="icon">${miniWeaponIcon(k)}</span></div><div><div class="selTitle">${w.name}</div><div class="selRole">Weapon · Lv. ${level}</div><div class="selDesc">${w.desc}</div><div class="loadoutStats">
+    <div class="loadoutStat"><span>Damage</span><b>${stats.damage ?? 'Varies'}</b></div>
+    <div class="loadoutStat"><span>Fire rate</span><b>${stats.fireRate ? stats.fireRate + '/s' : 'Varies'}</b></div>
+    <div class="loadoutStat"><span>Crit chance</span><b>${Math.round(stats.crit * 100)}%</b></div>
+    <div class="loadoutStat"><span>Pierce</span><b>${stats.pierce || '0'}</b></div>
+    <div class="loadoutStat"><span>Chains</span><b>${stats.chain || '0'}</b></div>
+  </div>${mods.length ? `<div class="selMeta"><b>Active modifiers</b><br>${mods.join(' · ')}</div>` : ''}
+  ${history.length ? `<div class="selWeak"><b>Upgrade history</b><br>${history.join(' · ')}</div>` : ''}
+  <div class="selFlavor"><b>Next upgrade</b><br>${next}</div></div></div>`;
+}
+
+function towerTooltipHTML(k) {
+  const t = TOWERS[k];
+  if (!t) return '';
+  const level = getHotbarUpgradeCount(k);
+  const mods = getHotbarTowerModifiers(k);
+  const next = nextUpgradePreviewForTower(k);
+  const stats = [];
+  if (t.d != null) stats.push(['Damage', Math.round(t.d * (S.mods?.dmg || 1) * (k === 'spikes' ? (S.mods.trapSpikeDmg || 1) : 1))]);
+  if (t.rate != null) stats.push(['Fire rate', `${(1 / t.rate).toFixed(2)}/s`]);
+  if (t.r != null) stats.push(['Range', t.r]);
+  stats.push(['Level', level]);
+  return `<div class="selGrid"><div class="selIcon"><span class="icon">${miniTowerIcon(k)}</span></div><div><div class="selTitle">${t.n}</div><div class="selRole">Tower · Lv. ${level}</div><div class="selDesc">${t.role}</div><div class="loadoutStats">
+    ${stats.map(([label, value]) => `<div class="loadoutStat"><span>${label}</span><b>${value}</b></div>`).join('')}
+  </div>${mods.length ? `<div class="selMeta"><b>Active modifiers</b><br>${mods.join(' · ')}</div>` : ''}
+  <div class="selFlavor"><b>Next upgrade</b><br>${next}</div></div></div>`;
+}
+
+function trinketTooltipHTML(k) {
+  const tr = TRINKETS[k];
+  if (!tr) return '';
+  const activeDuration = tr.duration ? `${tr.duration}s` : null;
+  const rows = [
+    ['Effect', tr.activeDescription || tr.passiveDescription || tr.description || ''],
+    ['Cooldown', tr.cooldown ? `${tr.cooldown}s` : 'Passive'],
+  ];
+  if (activeDuration) rows.push(['Duration', activeDuration]);
+  return `<div class="selGrid"><div class="selIcon"><span class="icon">${tr.icon}</span></div><div><div class="selTitle">${tr.name}</div><div class="selRole">Trinket</div><div class="selDesc">${tr.description}</div><div class="loadoutStats">
+    ${rows.map(([label, value]) => `<div class="loadoutStat"><span>${label}</span><b>${value}</b></div>`).join('')}
+  </div></div></div>`;
+}
+
+function hotbarTooltipHTML(k) {
+  if (!k) return '';
+  if (WEAPONS[k]) return weaponTooltipHTML(k);
+  if (TOWERS[k]) return towerTooltipHTML(k);
+  if (TRINKETS[k]) return trinketTooltipHTML(k);
+  return '';
+}
+
+function restoreWarRoomInspector() {
+  if (S.hoverInspectId) {
+    updateWarRoomInspector(S.hoverInspectId, true);
+    return;
+  }
+  if (S.sel) {
+    showSelected();
+    return;
+  }
+  const panel = $('selectedInfo');
+  if (panel) panel.innerHTML = `<div class="selGrid"><div class="selIcon"><span class="icon">⚔</span></div><div><div class="selTitle">WAR ROOM</div><div class="selRole">Hover an item for details.</div><div class="selDesc">Combat stays clean. Details live on hover.</div></div></div>`;
+}
+
+function updateWarRoomInspector(k, fromHover = false) {
+  const panel = $('selectedInfo');
+  if (!panel) return;
+  if (!k) {
+    if (!fromHover) restoreWarRoomInspector();
+    return;
+  }
+  const html = hotbarTooltipHTML(k);
+  if (html) panel.innerHTML = html;
 }
 
 function showSelected() {
