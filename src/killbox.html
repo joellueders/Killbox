@@ -1561,6 +1561,47 @@ textarea {
   border: 1px solid var(--red); border-radius: 10px;
   background: #1a1009dd; min-height: 58px; font-size: 13px;
 }
+.hotbarHoverTooltip {
+  position: fixed;
+  z-index: 80;
+  min-width: 260px;
+  max-width: min(360px, calc(100vw - 24px));
+  pointer-events: none;
+  border: 1px solid rgba(240,201,107,.48);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(27,18,11,.97), rgba(12,9,6,.98));
+  box-shadow: 0 10px 24px rgba(0,0,0,.42), 0 0 0 1px rgba(255,224,156,.07) inset;
+  padding: 10px 11px;
+  transform: translate(12px, 12px);
+  display: none;
+}
+.hotbarHoverTooltip.show { display: block; }
+.hotbarHoverTooltip .selTitle { font-size: 15px; }
+.hotbarHoverTooltip .selRole { font-size: 11px; }
+.hotbarHoverTooltip .selDesc { font-size: 12px; }
+.hotbarHoverTooltip .loadoutStats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 8px;
+  margin-top: 8px;
+}
+.hotbarHoverTooltip .loadoutStat {
+  border: 1px solid rgba(255,224,156,.12);
+  border-radius: 8px;
+  padding: 6px 7px;
+}
+.hotbarHoverTooltip .loadoutStat span {
+  font-size: 10px;
+}
+.hotbarHoverTooltip .loadoutStat b {
+  font-size: 12px;
+}
+.hotbarHoverTooltip .selMeta,
+.hotbarHoverTooltip .selFlavor,
+.hotbarHoverTooltip .selWeak {
+  margin-top: 8px;
+  font-size: 11px;
+}
 .inspectorSticky {
   position: sticky;
   top: -12px;
@@ -3093,6 +3134,7 @@ kbd {
 
 <div id="waveBanner" class="waveBanner hidden"></div>
 <div id="comboBanner" class="comboBanner hidden"></div>
+<div id="hotbarHoverTooltip" class="hotbarHoverTooltip" aria-hidden="true"></div>
 
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <!--  SCRIPT                                                         -->
@@ -4110,7 +4152,7 @@ function miniTrinketIcon(k) {
   return iconImg(iconPath('trinket', k) || fallbackIcon('trinket', k) || 'assets/icons/trinkets/flask.png', k);
 }
 const S = {
-  version: '7.8.5', speed: 1,
+  version: '7.8.6', speed: 1,
   started: false,
   paused: false, // Manual pause only; do not reuse this for upgradeChoice or wave gating.
   gameOver: false, restarts: 2, waveSnapshot: null,
@@ -7522,6 +7564,31 @@ function hotbarTooltipHTML(k) {
   if (TOWERS[k]) return towerTooltipHTML(k);
   if (TRINKETS[k]) return trinketTooltipHTML(k);
   return '';
+}
+
+function setHotbarTooltip(k, x = 0, y = 0) {
+  const tip = $('hotbarHoverTooltip');
+  if (!tip) return;
+  if (!k) {
+    tip.classList.remove('show');
+    tip.setAttribute('aria-hidden', 'true');
+    tip.innerHTML = '';
+    return;
+  }
+  const html = hotbarTooltipHTML(k);
+  if (!html) return;
+  tip.innerHTML = html;
+  tip.style.left = `${Math.min(window.innerWidth - 20, Math.max(12, x + 16))}px`;
+  tip.style.top = `${Math.min(window.innerHeight - 20, Math.max(12, y + 16))}px`;
+  tip.classList.add('show');
+  tip.setAttribute('aria-hidden', 'false');
+}
+
+function hideHotbarTooltip() {
+  const tip = $('hotbarHoverTooltip');
+  if (!tip) return;
+  tip.classList.remove('show');
+  tip.setAttribute('aria-hidden', 'true');
 }
 
 function restoreWarRoomInspector() {
@@ -15976,6 +16043,14 @@ if ($('buildHotbar')) {
     if (related && $('buildHotbar').contains(related)) return;
     S.hoverInspectId = null;
     restoreWarRoomInspector();
+    hideHotbarTooltip();
+  });
+  $('buildHotbar').addEventListener('pointermove', e => {
+    const card = e.target.closest('.buildCard[data-t]');
+    if (!card || !$('buildHotbar').contains(card)) return;
+    const k = card.dataset.t;
+    if (!k) return;
+    setHotbarTooltip(k, e.clientX, e.clientY);
   });
 }
 if ($('loadoutPreviewRail')) {
