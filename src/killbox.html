@@ -456,8 +456,8 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
 }
 .guideModal.open { display: flex; }
 .guideModalCard {
-  width: min(980px, calc(100vw - 28px));
-  height: min(84vh, 860px);
+  width: min(1120px, calc(100vw - 28px));
+  height: min(88vh, 920px);
   border: 2px solid #b18445;
   border-radius: 14px;
   background:
@@ -524,6 +524,12 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
   display: none;
 }
 .guideTabPanel.active { display: block; }
+.guideTabPanel[data-guide-panel="weapons"],
+.guideTabPanel[data-guide-panel="enemies"],
+.guideTabPanel[data-guide-panel="powerups"],
+.guideTabPanel[data-guide-panel="synergies"] {
+  padding-right: 8px;
+}
 .guideTabPanel .codexSection,
 .guideTabPanel .guideText {
   max-width: 100%;
@@ -552,6 +558,78 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
 .guidePanelWrap {
   display: grid;
   gap: 10px;
+  min-height: 0;
+  overflow: hidden;
+}
+.guideTabPanel .enemyList,
+.guideTabPanel .towerList,
+.guideTabPanel .powerupList,
+.guideTabPanel .synergyList {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.guideTabPanel .powerupList {
+  gap: 12px;
+}
+.guideTabPanel .towerCard,
+.guideTabPanel .enemyCard,
+.guideTabPanel .powerupCard,
+.guideTabPanel .synergyCard {
+  min-height: 112px;
+}
+.guideTabPanel .towerCard,
+.guideTabPanel .enemyCard,
+.guideTabPanel .powerupCard,
+.guideTabPanel .synergyCard {
+  align-items: start;
+}
+.guideTabPanel .powerupCard {
+  grid-template-columns: 42px 1fr;
+  padding: 10px 12px;
+}
+.guideTabPanel .powerupCard .powerupIcon {
+  width: 42px;
+  height: 42px;
+  font-size: 22px;
+}
+.guideTabPanel .powerupCard .powerupText b {
+  font-size: 13px;
+}
+.guideTabPanel .powerupCard .powerupText span {
+  font-size: 13px;
+}
+.guideTabPanel .enemyCard {
+  grid-template-columns: 82px 1fr;
+  padding: 12px;
+}
+.guideTabPanel .enemyPortrait {
+  width: 78px;
+  height: 78px;
+}
+.guideTabPanel .enemyPortrait img {
+  width: 70px;
+  height: 70px;
+}
+.guideTabPanel .enemyCard .enemyText b,
+.guideTabPanel .towerCard .enemyText b {
+  font-size: 13px;
+}
+.guideTabPanel .enemyCard .enemyText span,
+.guideTabPanel .towerCard .enemyText span {
+  font-size: 13px;
+}
+.guideTabPanel .towerCard {
+  grid-template-columns: 42px 1fr;
+  padding: 10px 12px;
+}
+.guideTabPanel .towerCard .buildIcon {
+  width: 42px;
+  height: 42px;
+  font-size: 22px;
+}
+.guideTabPanel .synergyCard {
+  padding: 10px 12px;
 }
 .panel .enemyList, .panel .towerList {
   display: grid;
