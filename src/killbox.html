@@ -4105,6 +4105,7 @@ const S = {
   runStats: { heroKills: 0, towerKills: 0, otherKills: 0, leaked: 0, powerups: 0, goldEarned: 0, bonusGold: 0, interestGold: 0, wavesCleared: 0 },
   selected: null, sel: null, menuOpen: false, aiEngineerOwned: false, placeDir: 1,
   devToolsOpen: false, devUnlimitedGold: false, devInvincible: false, devShowInfo: false, devRiftGuard: false,
+  balanceReportLogged: false,
   powerupDebugMode: false, powerupDebugLog: [],
   devArenaChoice: 'field',
   weapon: 'blunderbuss', loadout: [],
@@ -5517,6 +5518,10 @@ function ui() {
   if (dbg) {
     dbg.classList.toggle('debugHidden', !S.devToolsOpen || !S.devShowInfo);
     if (S.devToolsOpen && S.devShowInfo) {
+      if (!S.balanceReportLogged) {
+        console.log('[balance] tuning report', buildBalanceReport());
+        S.balanceReportLogged = true;
+      }
       dbg.textContent = [
         `gameState: ${S.gameState}`,
         `phase: ${S.phase}`,
@@ -6053,6 +6058,36 @@ function renderCodices() {
   if (synergyList) {
     syncSynergyCodex();
   }
+}
+
+function buildBalanceReport() {
+  const hpFormula = '42 + wave*20 + wave^1.38*6, then wave archetype multiplier';
+  const weaponValues = Object.entries(WEAPONS).map(([id, w]) => ({
+    id,
+    primaryCooldown: w.primaryCooldown || 0,
+    secondaryCooldown: w.secondaryCooldown || 0,
+    desc: w.desc,
+  }));
+  const towerValues = Object.entries(TOWERS).map(([id, t]) => ({
+    id,
+    damage: t.d || 0,
+    trap: !!t.trap,
+    role: t.role || '',
+  }));
+  const powerupRarity = Object.fromEntries(Object.entries(POWERUP_DEFS).map(([id, p]) => [id, p.rarity]));
+  const mutagenRarity = Object.fromEntries(Object.entries(MULTIVERSE_MUTAGENS).map(([id, m]) => [id, m.rarity || 'multiverse']));
+  return {
+    enemyHpScaling: hpFormula,
+    weaponValues,
+    towerValues,
+    powerupRarity,
+    mutagenRarity,
+    changesMade: [
+      'Reduced late-wave enemy HP scaling.',
+      'Added a modest hero wave-damage bonus after wave 8.',
+      'Added debug enemy HP labels and optional hit damage text.',
+    ],
+  };
 }
 
 function powerupCodexDuration(id) {
@@ -8395,7 +8430,7 @@ function spawn(type) {
   const arch  = S.waveArchetypeData || pickWaveArchetype(w);
 
   // Base stats scale with wave
-  let hp  = 50 + w * 32 + Math.pow(w, 1.55) * 11;
+  let hp  = 42 + w * 20 + Math.pow(w, 1.38) * 6;
   let spd = .84 + w * .024;
   let val = 5, rad = 13, range = 0, shoot = 0, healCool = 0;
 
@@ -8472,7 +8507,7 @@ function spawn(type) {
 function spawnEnemyAt(type, x, y, path, node = 0) {
   const w = S.wave;
   const arch = S.waveArchetypeData || pickWaveArchetype(w);
-  let hp  = 50 + w * 32 + Math.pow(w, 1.55) * 11;
+  let hp  = 42 + w * 20 + Math.pow(w, 1.38) * 6;
   let spd = .84 + w * .024;
   let val = 5, rad = 13, range = 0, shoot = 0, healCool = 0;
 
@@ -8577,6 +8612,10 @@ function hit(e, amt, tower, byHero = false) {
   }
   // Hero damage multiplier (from shop blessings, etc.)
   if (byHero && (S.hero.damageMult || 1) !== 1) amt *= (S.hero.damageMult || 1);
+  if (byHero) {
+    const waveBonus = Math.max(0, Math.min(.32, (S.wave - 8) * .012));
+    if (waveBonus > 0) amt *= 1 + waveBonus;
+  }
   if (byHero && S.activeWaveMutagen === 'oopsAllCrits') {
     const bossLike = e.type === 'slimeking';
     amt = bossLike ? Math.max(amt, Math.max(1, e.hp * .85)) : Math.max(amt, e.hp);
@@ -8585,6 +8624,10 @@ function hit(e, amt, tower, byHero = false) {
     S.parts.push({ kind: 'bolt', x: S.hero.x, y: S.hero.y, x2: e.x, y2: e.y, life: .12, maxLife: .12, c: '#ffe56b', w: 4 });
   }
   const applied = Math.max(1, amt);
+  if (S.devShowInfo) {
+    const dmgLabel = tower ? `-${Math.round(applied)}` : byHero ? `-${Math.round(applied)}` : `${Math.round(applied)}`;
+    floatText(dmgLabel, e.x - 10, e.y - e.rad - 18, tower ? '#ffd86a' : '#ffffff');
+  }
   e.hp   -= applied;
   if (S.waveStats) {
     const src = tower ? `tower:${tower.type}` : byHero ? `weapon:${S.hero.weapon}` : 'other';
@@ -14737,6 +14780,20 @@ function drawEnemy(e) {
   ctx.fillStyle = '#2b120b'; ctx.fillRect(e.x - w / 2, e.y - e.rad - 13, w, 5);
   ctx.fillStyle = e.hp / e.max > .5 ? '#4f8d3b' : '#a83b28';
   ctx.fillRect(e.x - w / 2, e.y - e.rad - 13, w * (e.hp / e.max), 5);
+  if (S.devShowInfo) {
+    const hpText = `${Math.max(0, Math.round(e.hp))} / ${Math.max(1, Math.round(e.max))}`;
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.font = 'bold 10px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#150d09';
+    ctx.fillStyle = '#fff7d8';
+    ctx.strokeText(hpText, e.x, e.y - e.rad - 23);
+    ctx.fillText(hpText, e.x, e.y - e.rad - 23);
+    ctx.restore();
+  }
 }
 
 function drawEnemySprite(e, base) {
@@ -15600,7 +15657,12 @@ $('devToggle').onclick = () => {
 };
 $('devGoldToggle').onclick = () => { S.devUnlimitedGold = !S.devUnlimitedGold; if (S.devUnlimitedGold) syncDevGold(); ui(); toast(`Infinite Gold ${S.devUnlimitedGold ? 'ON' : 'OFF'}`); };
 $('devInvToggle').onclick = () => { S.devInvincible = !S.devInvincible; ui(); toast(`God Mode ${S.devInvincible ? 'ON' : 'OFF'}`); };
-$('devInfoToggle').onclick = () => { S.devShowInfo = !S.devShowInfo; ui(); toast(`Debug Overlay ${S.devShowInfo ? 'ON' : 'OFF'}`); };
+$('devInfoToggle').onclick = () => {
+  S.devShowInfo = !S.devShowInfo;
+  if (S.devShowInfo) S.balanceReportLogged = false;
+  ui();
+  toast(`Debug Overlay ${S.devShowInfo ? 'ON' : 'OFF'}`);
+};
 $('devPowerupDebugToggle').onclick = () => { S.powerupDebugMode = !S.powerupDebugMode; logPowerupDebug('mode', null, { enabled: S.powerupDebugMode }); ui(); toast(`Powerup Debug ${S.powerupDebugMode ? 'ON' : 'OFF'}`); };
 $('devRiftGuardToggle').onclick = () => { S.devRiftGuard = !S.devRiftGuard; ui(); toast(`Rift Guard ${S.devRiftGuard ? 'ON' : 'OFF'}`); };
 $('devAudioToggle').onclick = () => { unlockAudio(); setAudioMuted(!AUDIO.muted); toast(`Audio ${AUDIO.muted ? 'OFF' : 'ON'}`); };
