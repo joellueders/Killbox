@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Killbox 7.8.0-battlefield-scars</title>
+<title>Killbox 7.9.0-expedition-prototype</title>
 <style>
 /* ── Design tokens ─────────────────────────────────────────────── */
 :root {
@@ -124,23 +124,23 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
 }
 .buildCard.weaponSlot.weaponReady.upgraded {
   border-color: #9fe8ff;
-  box-shadow: 0 0 0 1px rgba(159,232,255,.35) inset, 0 0 0 2px rgba(122,198,232,.95), 0 0 30px rgba(122,198,232,.85), 0 2px 0 #120c08;
+  box-shadow: 0 0 0 1px rgba(159,232,255,.35) inset, 0 0 0 2px rgba(122,198,232,.95), 0 0 12px rgba(122,198,232,.58), 0 2px 0 #120c08;
 }
 .buildCard.upgraded.upgradeTier1 {
   border-color: #7ac6e8;
-  box-shadow: 0 0 0 1px rgba(122,198,232,.18) inset, 0 0 0 1px rgba(122,198,232,.42), 0 0 10px rgba(122,198,232,.12), 0 2px 0 #120c08;
+  box-shadow: 0 0 0 1px rgba(122,198,232,.18) inset, 0 0 0 1px rgba(122,198,232,.42), 0 0 4px rgba(122,198,232,.08), 0 2px 0 #120c08;
 }
 .buildCard.upgraded.upgradeTier2 {
   border-color: #9fe8ff;
-  box-shadow: 0 0 0 1px rgba(159,232,255,.22) inset, 0 0 0 2px rgba(122,198,232,.55), 0 0 14px rgba(122,198,232,.16), 0 2px 0 #120c08;
+  box-shadow: 0 0 0 1px rgba(159,232,255,.22) inset, 0 0 0 2px rgba(122,198,232,.55), 0 0 8px rgba(122,198,232,.12), 0 2px 0 #120c08;
 }
 .buildCard.upgraded.upgradeTier3 {
   border-color: #ffd46b;
-  box-shadow: 0 0 0 1px rgba(255,212,107,.22) inset, 0 0 0 2px rgba(255,212,107,.65), 0 0 16px rgba(255,212,107,.14), 0 2px 0 #120c08;
+  box-shadow: 0 0 0 1px rgba(255,212,107,.22) inset, 0 0 0 2px rgba(255,212,107,.65), 0 0 10px rgba(255,212,107,.1), 0 2px 0 #120c08;
 }
 .buildCard.upgraded.upgradeTier4 {
   border-color: #ffe7b6;
-  box-shadow: 0 0 0 1px rgba(255,231,182,.25) inset, 0 0 0 2px rgba(255,212,107,.72), 0 0 18px rgba(255,212,107,.16), 0 2px 0 #120c08;
+  box-shadow: 0 0 0 1px rgba(255,231,182,.25) inset, 0 0 0 2px rgba(255,212,107,.72), 0 0 12px rgba(255,212,107,.12), 0 2px 0 #120c08;
 }
 .buildCard.upgraded .buildName { color: #fff2cc; }
 .buildCard.upgraded .buildHint { color: #bfe7ff; }
@@ -1614,12 +1614,18 @@ textarea {
   border: 1px solid rgba(255,224,156,.12);
   border-radius: 8px;
   padding: 6px 7px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
 }
 .hotbarHoverTooltip .loadoutStat span {
   font-size: 10px;
+  min-width: 0;
 }
 .hotbarHoverTooltip .loadoutStat b {
   font-size: 12px;
+  white-space: nowrap;
 }
 .hotbarHoverTooltip .selMeta,
 .hotbarHoverTooltip .selFlavor,
@@ -2700,7 +2706,7 @@ kbd {
   font-size: 12px; line-height: 1.5;
 }
 
-/* ── Killbox 7.8.0-battlefield-scars ───────────────────── */
+/* ── Killbox 7.9.0-expedition-prototype ───────────────────── */
 /* Changelog: tightened loadout/hotbar card layout and replaced duplicate icon fallbacks. */
 #hireEngineer, #mpBox { display: none !important; }
 .debugHidden { display: none !important; }
@@ -2999,6 +3005,7 @@ kbd {
           <option value="eastwest">East / West</option>
           <option value="spiral">Spiral Keep</option>
           <option value="citadel">Outer Loops</option>
+          <option value="expedition01">Expedition 01</option>
         </select>
         <button id="devLoadArena">Load Arena</button>
       </div>
@@ -3042,7 +3049,7 @@ kbd {
       <kbd>U</kbd> upgrade &nbsp;
       <kbd>1</kbd>–<kbd>8</kbd> build
     </p>
-    <div class="sidebarFooter">Killbox <span id="sidebarVersion">7.8.6</span>. Still rude.</div>
+    <div class="sidebarFooter">Killbox <span id="sidebarVersion">7.9.0</span>. Still rude.</div>
 </div>
 </div>
 
@@ -3101,12 +3108,13 @@ kbd {
                 <option value="eastwest">East / West</option>
                 <option value="spiral">Spiral Keep</option>
                 <option value="citadel">Outer Loops</option>
+                <option value="expedition01">Expedition 01</option>
               </select>
             </div>
           </div>
           <div class="loadoutTitle">
             <h1>Killbox</h1>
-            <div class="loadoutVersion" id="loadoutVersion">7.8.6</div>
+            <div class="loadoutVersion" id="loadoutVersion">7.9.0</div>
           </div>
           <div class="mastheadActions">
             <button id="begin" class="primary wide">Start!</button>
@@ -3530,6 +3538,74 @@ const LEVELS = {
     ],
     goal: { c: 23, r: 14 },
     heroSpawn: { c: 24, r: 18 },
+  },
+  expedition01: {
+    label: 'Expedition 01',
+    mode: 'expedition',
+    cols: 64,
+    rows: 42,
+    roadRects: [
+      // Entry -> Security Checkpoint
+      [1, 19, 6, 24],
+      [6, 18, 14, 25],
+      [14, 20, 21, 22],
+
+      // Barracks and side loop
+      [21, 16, 32, 25],
+      [24, 25, 28, 33],
+      [16, 29, 28, 31],
+      [16, 22, 18, 31],
+
+      // Laboratory wing, chapel branch, and experiment rooms
+      [32, 20, 38, 22],
+      [38, 13, 51, 25],
+      [42, 8, 47, 13],
+      [50, 18, 57, 23],
+      [32, 12, 35, 20],
+      [26, 5, 42, 13],
+      [42, 8, 45, 11],
+      [45, 13, 50, 17],
+
+      // Rift chamber and reactor route
+      [45, 2, 62, 14],
+      [47, 22, 50, 28],
+      [48, 26, 61, 36],
+
+      // Flesh garden, maintenance tunnels, extraction
+      [37, 34, 48, 36],
+      [18, 32, 37, 40],
+      [6, 34, 18, 37],
+      [2, 34, 9, 40],
+    ],
+    spawns: [
+      { c: 1, r: 21, label: 'ENTRY BREACH' },
+      { c: 61, r: 8, label: 'RIFT VENT' },
+      { c: 58, r: 34, label: 'REACTOR VENT' },
+      { c: 20, r: 38, label: 'FLESH VENT' },
+    ],
+    goal: { c: 5, r: 37 },
+    heroSpawn: { c: 3, r: 21 },
+    expedition: {
+      rift: { c: 55, r: 8 },
+      extraction: { c: 5, r: 37 },
+      shortcuts: [
+        [9, 27, 17, 29],
+        [12, 25, 14, 34],
+        [42, 14, 44, 28],
+      ],
+      rooms: [
+        { id: 'entry', name: 'Entry', rect: [1, 19, 6, 24], color: '#6f6253' },
+        { id: 'security', name: 'Security Checkpoint', rect: [6, 18, 14, 25], color: '#7a6f5c' },
+        { id: 'barracks', name: 'Barracks', rect: [21, 16, 32, 25], color: '#6a4a3d' },
+        { id: 'lab', name: 'Laboratory Wing', rect: [38, 13, 51, 25], color: '#49656b' },
+        { id: 'chapel', name: 'Chapel', rect: [26, 5, 42, 13], color: '#5d526b' },
+        { id: 'reactor', name: 'Reactor Complex', rect: [48, 26, 61, 36], color: '#6b5a39' },
+        { id: 'flesh', name: 'Flesh Garden', rect: [18, 32, 37, 40], color: '#6f3d4a' },
+        { id: 'rift', name: 'Rift Chamber', rect: [45, 2, 62, 14], color: '#483d77' },
+        { id: 'maintenance', name: 'Maintenance Tunnels', rect: [6, 34, 18, 37], color: '#3f4e52' },
+        { id: 'extraction', name: 'Extraction Pad', rect: [2, 34, 9, 40], color: '#516b58' },
+      ],
+    },
   },
 };
 const road = new Set();
@@ -4201,7 +4277,7 @@ function miniTrinketIcon(k) {
   return iconImg(iconPath('trinket', k) || fallbackIcon('trinket', k) || 'assets/icons/trinkets/flask.png', k);
 }
 const S = {
-  version: '7.8.8', speed: 1,
+  version: '7.9.0', speed: 1,
   started: false,
   paused: false, // Manual pause only; do not reuse this for upgradeChoice or wave gating.
   gameOver: false, restarts: 2, waveSnapshot: null,
@@ -4240,6 +4316,7 @@ const S = {
   guideOpen: false,
   guideTab: 'how',
   guideTabDefaulted: false,
+  expedition: null,
   mutationPending: false, // Upgrade modal is live and must be chosen before starting a new wave.
   pendingUpgrade: false, // Hard block for startWave() while upgrade selection is unresolved.
   rewardRerollsUsed: 0,
@@ -4284,9 +4361,16 @@ function getRewardRerollCost() {
 const LOADOUT_MAX_SLOTS = 8;
 function isRoad(c, r) { return road.has(key(c, r)); }
 function isBlockedTerrain(c, r) { return blockedTerrain.has(key(c, r)); }
+function isExpeditionLevel(levelId = LEVEL_ID) { return LEVELS[levelId]?.mode === 'expedition'; }
+function isExpeditionRun() { return !!S.started && isExpeditionLevel(S.levelId); }
+function expeditionConfig() { return LEVELS[S.levelId]?.expedition || null; }
 function occupied(c, r) { return S.barriers.some(b => b.c === c && b.r === r) || S.barrels.some(b => b.c === c && b.r === r) || S.towers.some(t => t.c === c && t.r === r); }
 function blocked(c, r) { return S.barriers.some(b => b.c === c && b.r === r) || S.towers.some(t => t.onRoad && !TOWERS[t.type].trap && t.c === c && t.r === r); }
-function canHeroEnterCell(c, r) { return c >= 0 && r >= 0 && c < COLS && r < ROWS && !isBlockedTerrain(c, r); }
+function canHeroEnterCell(c, r) {
+  if (c < 0 || r < 0 || c >= COLS || r >= ROWS || isBlockedTerrain(c, r)) return false;
+  if (isExpeditionLevel()) return isRoad(c, r);
+  return true;
+}
 function canEnemyEnterCell(c, r) { return c >= 0 && r >= 0 && c < COLS && r < ROWS && isRoad(c, r) && !isBlockedTerrain(c, r) && !blocked(c, r); }
 function canBuildOnCell(c, r) { return c >= 0 && r >= 0 && c < COLS && r < ROWS && !isBlockedTerrain(c, r); }
 function valid(c, r) { return canEnemyEnterCell(c, r); }
@@ -4484,6 +4568,243 @@ function switchArena(levelId) {
   return true;
 }
 
+function createExpeditionState(levelId = S.levelId) {
+  const lvl = LEVELS[levelId];
+  const cfg = lvl?.expedition;
+  if (!cfg) return null;
+  const riftX = cx(cfg.rift.c);
+  const riftY = cy(cfg.rift.r);
+  return {
+    active: true,
+    phase: 'search',
+    elapsed: 0,
+    discovered: {},
+    discoveredCount: 0,
+    riftFound: false,
+    riftActivated: false,
+    extractionRevealed: false,
+    shortcutsOpen: false,
+    completed: false,
+    message: 'Find the Rift.',
+    messageTime: 5,
+    prompt: '',
+    promptTime: 0,
+    patrolTimer: 3.5,
+    reinforceTimer: 0,
+    rift: { x: riftX, y: riftY, hp: 900, max: 900 },
+  };
+}
+
+function resetExpeditionState() {
+  S.expedition = createExpeditionState(S.levelId);
+  if (S.expedition) {
+    S.waveCountdown = 0;
+    S.waveActive = false;
+    S.phase = 'build';
+    S.gameState = 'betweenWaves';
+    S.expedition.message = 'Explore the facility. No Rift signal detected.';
+    S.expedition.messageTime = 6;
+  }
+}
+
+function discoverExpeditionCells() {
+  const ex = S.expedition;
+  if (!ex) return;
+  const hc = cellAt(S.hero.x, S.hero.y);
+  const radius = 5;
+  for (let r = hc.r - radius; r <= hc.r + radius; r++) {
+    for (let c = hc.c - radius; c <= hc.c + radius; c++) {
+      if (!isRoad(c, r)) continue;
+      const d = Math.hypot(c - hc.c, r - hc.r);
+      if (d > radius) continue;
+      const k = key(c, r);
+      if (!ex.discovered[k]) {
+        ex.discovered[k] = 1;
+        ex.discoveredCount++;
+      }
+    }
+  }
+}
+
+function expeditionRoomAtHero() {
+  const cfg = expeditionConfig();
+  if (!cfg) return null;
+  const hc = cellAt(S.hero.x, S.hero.y);
+  return (cfg.rooms || []).find(room => {
+    const [x1, y1, x2, y2] = room.rect || [];
+    return hc.c >= x1 && hc.c <= x2 && hc.r >= y1 && hc.r <= y2;
+  }) || null;
+}
+
+function openExpeditionShortcuts() {
+  const ex = S.expedition;
+  const cfg = expeditionConfig();
+  if (!ex || !cfg || ex.shortcutsOpen) return;
+  for (const rect of cfg.shortcuts || []) roadRect(rect[0], rect[1], rect[2], rect[3]);
+  ex.shortcutsOpen = true;
+  rebuildPath();
+  shockwave(S.hero.x, S.hero.y, '#ffcf6a', 140, .32);
+  shake(9, .45);
+  floatText('BLAST DOORS OPEN', S.hero.x - 62, S.hero.y - 36, '#ffcf6a');
+}
+
+function activateExpeditionRift() {
+  const ex = S.expedition;
+  const cfg = expeditionConfig();
+  if (!ex || !cfg || ex.riftActivated) return false;
+  ex.phase = 'escort';
+  ex.riftActivated = true;
+  ex.extractionRevealed = true;
+  ex.riftFound = true;
+  ex.message = 'RIFT ACTIVE. Escort it to extraction.';
+  ex.messageTime = 8;
+  ex.reinforceTimer = 1.2;
+  S.wave = Math.max(S.wave, 8);
+  openExpeditionShortcuts();
+  announceWave('RIFT ACTIVE: EXTRACT NOW', 'danger', 1.1);
+  shockwave(ex.rift.x, ex.rift.y, '#e6b8ff', 190, .45);
+  burst(ex.rift.x, ex.rift.y, '#f0b8ff', 28, 'spark', 220);
+  console.log('[expedition] rift activated', { level: S.levelId, extraction: cfg.extraction });
+  return true;
+}
+
+function tryActivateExpeditionRift() {
+  const ex = S.expedition;
+  const cfg = expeditionConfig();
+  if (!ex || !cfg || ex.riftActivated) return false;
+  const d = dist(S.hero.x, S.hero.y, cx(cfg.rift.c), cy(cfg.rift.r));
+  if (d > 95) return false;
+  activateExpeditionRift();
+  return true;
+}
+
+function expeditionSpawnCell() {
+  const cfg = expeditionConfig();
+  const vents = LEVELS[S.levelId]?.spawns || [];
+  if (!cfg || !vents.length) return null;
+  const active = S.expedition?.riftActivated;
+  const candidates = active ? vents.slice(1) : vents;
+  return candidates[Math.floor(Math.random() * candidates.length)] || vents[0];
+}
+
+function spawnExpeditionEnemy(pool) {
+  const cell = expeditionSpawnCell();
+  if (!cell) return null;
+  const path = routePath(cell, GOAL);
+  if (!path.length) return null;
+  const oldWave = S.wave;
+  const ex = S.expedition || {};
+  S.wave = Math.max(S.wave, ex.riftActivated ? 8 + Math.floor((ex.elapsed || 0) / 90) : 2 + Math.floor((ex.elapsed || 0) / 160));
+  const type = pool[Math.floor(Math.random() * pool.length)] || 'grunt';
+  const e = spawnEnemyAt(type, cx(cell.c), cy(cell.r), path, 0);
+  S.wave = oldWave;
+  if (e) e.entry = cell.label || 'facility';
+  return e;
+}
+
+function completeExpedition() {
+  const ex = S.expedition;
+  if (!ex || ex.completed) return;
+  ex.completed = true;
+  ex.message = 'Extraction complete.';
+  ex.messageTime = 20;
+  S.gameOver = true;
+  S.waveActive = false;
+  S.queue = [];
+  S.enemies = [];
+  document.querySelector('#clear .card').classList.add('clearCard');
+  $('clearTitle').textContent = 'Extraction Complete';
+  $('clearText').textContent = 'The Rift reached the pad intact. Persistent defenses, opened shortcuts, and the return route are now proven for Expedition.';
+  if ($('clearStats')) $('clearStats').innerHTML = `<div><small>Rift HP</small><b>${Math.round(ex.rift.hp)} / ${ex.rift.max}</b></div><div><small>Mapped cells</small><b>${ex.discoveredCount || 0}</b></div>`;
+  if ($('clearCountdownValue')) $('clearCountdownValue').textContent = '0';
+  $('clearBtn').textContent = 'Run Complete';
+  $('clear').classList.remove('hidden');
+  shake(12, .55);
+  console.log('[expedition] extraction complete', {
+    elapsed: Number((ex.elapsed || 0).toFixed(1)),
+    riftHp: Math.round(ex.rift.hp),
+    discoveredCells: ex.discoveredCount,
+  });
+}
+
+function updateExpedition(dt) {
+  const ex = S.expedition;
+  const cfg = expeditionConfig();
+  if (!isExpeditionRun() || !ex || !cfg || ex.completed) return;
+  ex.elapsed += dt;
+  ex.messageTime = Math.max(0, (ex.messageTime || 0) - dt);
+  ex.promptTime = Math.max(0, (ex.promptTime || 0) - dt);
+  discoverExpeditionCells();
+
+  const room = expeditionRoomAtHero();
+  if (room && ex.lastRoom !== room.id) {
+    ex.lastRoom = room.id;
+    ex.message = room.name;
+    ex.messageTime = Math.max(ex.messageTime || 0, 2.4);
+  }
+
+  const riftDist = dist(S.hero.x, S.hero.y, cx(cfg.rift.c), cy(cfg.rift.r));
+  if (!ex.riftFound && riftDist < 260) {
+    ex.riftFound = true;
+    ex.message = 'Rift signal found.';
+    ex.messageTime = 5;
+    shockwave(cx(cfg.rift.c), cy(cfg.rift.r), '#f0b8ff', 120, .28);
+  }
+  if (!ex.riftActivated && riftDist < 95) {
+    ex.prompt = 'Press E to activate the Rift.';
+    ex.promptTime = .25;
+  }
+
+  if (!ex.riftActivated) {
+    ex.patrolTimer -= dt;
+    if (ex.patrolTimer <= 0 && S.enemies.length < 18) {
+      spawnExpeditionEnemy(['grunt', 'grunt', 'runner', 'slinger', 'shield']);
+      ex.patrolTimer = 7 + Math.random() * 8;
+    }
+    return;
+  }
+
+  const rift = ex.rift;
+  const followD = dist(rift.x, rift.y, S.hero.x, S.hero.y);
+  if (followD > 76) {
+    const speed = 92;
+    rift.x += (S.hero.x - rift.x) / followD * speed * dt;
+    rift.y += (S.hero.y - rift.y) / followD * speed * dt;
+    const cc = cellAt(rift.x, rift.y);
+    if (!isRoad(cc.c, cc.r)) {
+      rift.x -= (S.hero.x - rift.x) / followD * speed * dt;
+      rift.y -= (S.hero.y - rift.y) / followD * speed * dt;
+    }
+  }
+
+  ex.reinforceTimer -= dt;
+  if (ex.reinforceTimer <= 0 && S.enemies.length < 34) {
+    spawnExpeditionEnemy(['runner', 'runner', 'grunt', 'sapper', 'warden', 'shield', 'brute', 'slinger']);
+    ex.reinforceTimer = 2.8 + Math.random() * 3.2;
+  }
+
+  for (const e of S.enemies) {
+    if (e.dead) continue;
+    const d = dist(e.x, e.y, rift.x, rift.y);
+    if (d < (e.rad || 12) + 42) {
+      const dmg = (e.type === 'brute' || e.type === 'ogre' || e.type === 'siege') ? 38 : 18;
+      rift.hp = Math.max(0, rift.hp - dmg * dt);
+      e.slow = Math.max(e.slow || 0, .28);
+      if (!e.riftBiteText || e.riftBiteText <= 0) {
+        floatText('RIFT HIT', rift.x - 28, rift.y - 42, '#ff9b8a');
+        e.riftBiteText = .9;
+      }
+      e.riftBiteText = Math.max(0, (e.riftBiteText || 0) - dt);
+    }
+  }
+  if (rift.hp <= 0) {
+    offerRestart('The Rift collapsed');
+    return;
+  }
+
+  if (dist(rift.x, rift.y, cx(cfg.extraction.c), cy(cfg.extraction.r)) < 90) completeExpedition();
+}
+
 function clearWorldForDebugWarp() {
   S.waveActive = false;
   S.phase = 'build';
@@ -4558,6 +4879,7 @@ function debugWarpToLevel(levelId) {
   S.hero.y = cy(spawn.r);
   S.waveCountdown = getWaveCountdownDuration(S.wave + 1);
   S.paused = false;
+  resetExpeditionState();
   updateCamera(true);
   rebuildPath();
   ui();
@@ -4892,6 +5214,10 @@ let W = 0, H = 0, D = 1;
 applyLevel('field', { silent: true });
 
 function getSafePlayerSpawnPoint(index = 0) {
+  if (isExpeditionLevel(S.levelId)) {
+    const spawn = LEVELS[S.levelId]?.heroSpawn || LEVELS.field.heroSpawn;
+    return { x: cx(spawn.c), y: cy(spawn.r) };
+  }
   const zones = Array.isArray(S.spawnZones) && S.spawnZones.length ? S.spawnZones : [
     { x: OX + COLS * G / 2, y: OY + ROWS * G / 2, r: 6 },
     { x: OX + COLS * G / 2 + G, y: OY + ROWS * G / 2, r: 5 },
@@ -5175,6 +5501,7 @@ function resetRunForLevelSwitch(levelId) {
   S.mods.riftShieldUntil = 0;
   S.mods.asColdAsLifeUntil = 0;
   applyTrinketPassives();
+  resetExpeditionState();
   S.hero.hp = S.hero.max;
   $('clear').classList.add('hidden');
   $('start').classList.remove('hidden');
@@ -5582,6 +5909,7 @@ function ui() {
   if ($('hudWave')) $('hudWave').textContent = displayWave;
   if ($('hudWaveArchetype')) $('hudWaveArchetype').textContent = displayWave > 0 ? `• ${displayArch.label || 'Swarm'}` : '• --';
   if ($('waveArchetypeLabel')) $('waveArchetypeLabel').textContent = displayWave > 0 ? `• ${displayArch.label || 'Swarm'}` : '• --';
+  if ($('waveBtn')) $('waveBtn').textContent = isExpeditionRun() ? 'Expedition Active' : 'Start Wave Now [Space]';
   if ($('score')) $('score').textContent = S.score;
   if ($('hudCombo')) $('hudCombo').textContent = S.combo > 0 ? `x${S.combo}` : `x1`;
   S.speed = normalizeSpeedValue(S.speed);
@@ -6209,6 +6537,7 @@ function buildBalanceReport() {
       'Reduced late-wave enemy HP scaling.',
       'Added a modest hero wave-damage bonus after wave 8.',
       'Added debug enemy HP labels and optional hit damage text.',
+      'Added Expedition 01 prototype with discovered-only map, Rift escort, persistent defenses, and extraction.',
     ],
   };
 }
@@ -6576,6 +6905,8 @@ function chooseMutation(choice) {
   $('mutation').classList.add('hidden');
   $('clear').classList.add('hidden');
   updateLoadoutSummary();
+  const rail = $('buildHotbar');
+  if (rail) rail.dataset.sig = '';
   renderBuildButtons();
   ui();
 }
@@ -6965,6 +7296,7 @@ function finishWave() {
   $('clearText').textContent  = `Wave ${S.wave} got mulched. Bonus: +${bonus}g.${interestNote} The next corridor is already snarling.`;
   const clearCountdownEl = $('clearCountdownValue');
   if (clearCountdownEl) clearCountdownEl.textContent = String(getWaveCountdownDuration(S.wave + 1) || 0);
+  if ($('clearBtn')) $('clearBtn').textContent = 'Continue';
   renderWaveSummary(bonus, interest);
   document.querySelector('#clear .card').classList.add('clearCard');
   S.clearFlash = .7;
@@ -6992,7 +7324,10 @@ function renderWaveStatus() {
   const text = $('waveStatusText');
   if (!box || !text) return;
   box.classList.remove('resting', 'danger');
-  if (!S.started) {
+  if (isExpeditionRun()) {
+    text.textContent = S.expedition?.riftActivated ? 'Escort' : 'Explore';
+    if (S.expedition?.riftActivated) box.classList.add('danger');
+  } else if (!S.started) {
     text.textContent = 'Ready';
   } else if (S.phase === 'build' || !S.waveActive) {
     text.textContent = 'Build';
@@ -7065,7 +7400,13 @@ function renderBuildButtons() {
   const box = $('builds');
   const rail = $('buildHotbar');
   const infoCard = $('selectedInfo');
-  const sig = (S.loadout.length ? S.loadout : []).join('|') + '|' + S.hero.weapon;
+  const sig = [
+    ...(S.loadout.length ? S.loadout : []).slice(0, LOADOUT_MAX_SLOTS),
+    S.hero.weapon || '',
+    (S.hero.upgrades || []).join(','),
+    (S.trapMutations || []).join(','),
+    String(S.hero.upgradeLevel || 0),
+  ].join('|');
   if (rail.dataset.sig !== sig) {
     rail.innerHTML = '';
     const slots = (S.loadout.length ? S.loadout : []).slice(0, LOADOUT_MAX_SLOTS);
@@ -7277,6 +7618,12 @@ function renderAbilityButtons() {
 
 function renderPreview() {
   if (!$('preview') || (S.phase === 'combat' && S.waveActive)) return;
+  const selectedLevel = LOADOUT_STATE.arenaId || S.devArenaChoice || S.levelId;
+  if (isExpeditionLevel(selectedLevel)) {
+    $('preview').dataset.previewKey = `expedition-${selectedLevel}`;
+    $('preview').innerHTML = '<b>Expedition:</b> Explore the facility, find the Rift, then escort it to extraction. Persistent defenses stay for the whole run.';
+    return;
+  }
   // Only recompute when the wave number has changed (cache via data attribute)
   const key = 'wave-' + (S.wave + 1) + (S.quartermasterUpgrades?.betterMaps ? '-maps' : '');
   if ($('preview').dataset.previewKey === key) return;
@@ -8687,6 +9034,18 @@ function previewWave(w) {
 
 function startWave() {
   // startWave is blocked by upgradeChoice/pendingUpgrade so the next wave cannot skip the modal.
+  if (isExpeditionRun()) {
+    const ex = S.expedition;
+    if (ex && !ex.riftActivated) {
+      ex.message = 'Expedition has no wave button. Explore until you find the Rift.';
+      ex.messageTime = 4;
+    } else if (ex) {
+      ex.message = 'Keep moving. The extraction pad is marked on the map.';
+      ex.messageTime = 4;
+    }
+    ui();
+    return;
+  }
   if (S.hero.spawnState === 'spawning') return toast('Arriving...');
   if (S.gameState === 'upgradeChoice' || S.pendingUpgrade) {
     return toast('Pick a mutagen first.');
@@ -13061,7 +13420,7 @@ function step(dt) {
   updateTempEffects(dt);
   updateCornerSkulls(dt);
   updateCornerGhosts(dt);
-  if (S.started && !S.gameOver && !S.waveActive && S.phase === 'build' && S.gameState !== 'upgradeChoice' && !S.pendingUpgrade) {
+  if (S.started && !isExpeditionRun() && !S.gameOver && !S.waveActive && S.phase === 'build' && S.gameState !== 'upgradeChoice' && !S.pendingUpgrade) {
     if (S.waveCountdown <= 0) S.waveCountdown = getWaveCountdownDuration(S.wave + 1);
     S.waveCountdown = Math.max(0, S.waveCountdown - dt);
     if (S.waveCountdown <= 0) {
@@ -13070,6 +13429,7 @@ function step(dt) {
     }
   }
   heroStep(dt);
+  updateExpedition(dt);
   engineerStep(dt);
   if (S.bossIntro > 0) S.bossIntro = Math.max(0, S.bossIntro - dt);
 
@@ -13147,14 +13507,14 @@ function step(dt) {
   if (S.shakeTime > 0) { S.shakeTime -= dt; if (S.shakeTime < 0) { S.shakeTime = 0; S.shakeAmt = 0; } }
 
   // Boss spawn: after wave queue clears, if wave is multiple of 3
-  if (S.waveActive && !S.queue.length && !S.enemies.length && S.wave % 3 === 0 && !S.bossSpawned) {
+  if (!isExpeditionRun() && S.waveActive && !S.queue.length && !S.enemies.length && S.wave % 3 === 0 && !S.bossSpawned) {
     spawnSlimeKing();
   }
 
   // Do not use paused=true for upgrade selection. It can block modal rendering.
   // This wave-end gate owns the between-wave upgrade flow and must show the modal before any new wave starts.
   // Harvest complete check
-  if (S.waveActive && !S.queue.length && !S.enemies.length) {
+  if (!isExpeditionRun() && S.waveActive && !S.queue.length && !S.enemies.length) {
     if ((S.bossDeathPause || 0) > 0) {
       S.bossDeathPause = Math.max(0, S.bossDeathPause - dt);
       return;
@@ -13268,6 +13628,7 @@ function draw(t) {
   drawMutagenWorldEffects(t);
   drawSpawnIntros(t);
   drawEngineer(t);
+  drawExpeditionObjects(t);
   drawHero(t);
   if (Array.isArray(S.cornerGhosts)) {
     for (const ghost of S.cornerGhosts) {
@@ -13391,6 +13752,7 @@ function draw(t) {
   ctx.restore();
   drawLowHealthOverlay(t);
   drawAtmosphere(t);
+  drawExpeditionHud(t);
   drawPowerupDebugHud(t);
 
   // Pause overlay
@@ -13405,6 +13767,211 @@ function draw(t) {
   }
 
   if (S.shakeTime > 0) ctx.restore();
+}
+
+function drawExpeditionDressing(t) {
+  const cfg = expeditionConfig();
+  if (!cfg) return;
+  ctx.save();
+  for (const room of cfg.rooms || []) {
+    const [x1, y1, x2, y2] = room.rect;
+    const x = OX + x1 * G;
+    const y = OY + y1 * G;
+    const w = (x2 - x1 + 1) * G;
+    const h = (y2 - y1 + 1) * G;
+    ctx.globalAlpha = .22;
+    ctx.fillStyle = room.color || '#6f6253';
+    ctx.fillRect(x, y, w, h);
+    ctx.globalAlpha = .85;
+    ctx.strokeStyle = '#1c120b';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x + 4, y + 4, w - 8, h - 8);
+    ctx.globalAlpha = .75;
+    if (room.id !== 'extraction' || S.expedition?.extractionRevealed) {
+      ctx.fillStyle = '#fff1c0';
+      ctx.font = 'bold 13px Georgia';
+      ctx.fillText(room.name.toUpperCase(), x + 12, y + 22);
+    }
+  }
+
+  // Room identity props. These are simple canvas dressing, not gameplay systems.
+  const bunkYs = [17, 20, 23];
+  ctx.globalAlpha = .9;
+  for (const r of bunkYs) {
+    for (let c = 22; c <= 30; c += 3) {
+      ctx.fillStyle = '#2b1b12';
+      ctx.fillRect(OX + c * G + 5, OY + r * G + 7, 48, 16);
+      ctx.fillStyle = '#76533d';
+      ctx.fillRect(OX + c * G + 8, OY + r * G + 9, 42, 12);
+    }
+  }
+  for (let c = 40; c <= 56; c += 4) {
+    const y = OY + (14 + (c % 3) * 3) * G;
+    ctx.fillStyle = '#0b2529';
+    ctx.fillRect(OX + c * G + 6, y + 6, 42, 32);
+    ctx.strokeStyle = '#8edcff';
+    ctx.strokeRect(OX + c * G + 6, y + 6, 42, 32);
+    ctx.fillStyle = '#8edcff44';
+    ctx.beginPath(); ctx.arc(OX + c * G + 27, y + 22, 9 + Math.sin(t * 3 + c) * 2, 0, 7); ctx.fill();
+  }
+  for (let i = 0; i < 7; i++) {
+    const x = cx(51 + i);
+    const y = cy(29 + (i % 5));
+    ctx.strokeStyle = '#ffb15b';
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(x, y, 18, 0, 7); ctx.stroke();
+    ctx.fillStyle = '#ffcf6a33';
+    ctx.beginPath(); ctx.arc(x, y, 9 + Math.sin(t * 6 + i) * 3, 0, 7); ctx.fill();
+  }
+  for (let i = 0; i < 14; i++) {
+    const x = cx(20 + (i * 3) % 17);
+    const y = cy(33 + (i * 5) % 8);
+    ctx.fillStyle = '#7a1d3a99';
+    ctx.beginPath(); ctx.arc(x, y, 10 + Math.sin(t * 4 + i) * 2, 0, 7); ctx.fill();
+    ctx.strokeStyle = '#ff9bb855';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.sin(i) * 34, y + Math.cos(i) * 26); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawExpeditionRiftCore(x, y, t, activated = false) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.globalCompositeOperation = 'screen';
+  const pulse = 1 + Math.sin(t * 5) * .06;
+  ctx.fillStyle = activated ? '#f0b8ff66' : '#b888ff55';
+  ctx.beginPath(); ctx.ellipse(0, 0, 54 * pulse, 72 * pulse, Math.sin(t * 1.2) * .25, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#fff0ff';
+  ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.ellipse(0, 0, 48 * pulse, 64 * pulse, Math.sin(t * 1.2) * .25, 0, 7); ctx.stroke();
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = '#18081f';
+  ctx.beginPath(); ctx.ellipse(0, 0, 35, 24, Math.sin(t * 2) * .18, 0, 7); ctx.fill();
+  ctx.fillStyle = '#ff6bd6';
+  ctx.beginPath(); ctx.arc(Math.sin(t * 3) * 9, Math.cos(t * 2.5) * 5, 12, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#e6b8ff';
+  ctx.lineWidth = 3;
+  for (let i = 0; i < 8; i++) {
+    const a = i * Math.PI / 4 + t * .4;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * 42, Math.sin(a) * 52);
+    ctx.lineTo(Math.cos(a) * (72 + Math.sin(t * 4 + i) * 8), Math.sin(a) * (82 + Math.cos(t * 5 + i) * 8));
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawExpeditionObjects(t) {
+  const ex = S.expedition;
+  const cfg = expeditionConfig();
+  if (!isExpeditionRun() || !ex || !cfg) return;
+  const staticX = cx(cfg.rift.c);
+  const staticY = cy(cfg.rift.r);
+  const nearRift = ex.riftActivated || ex.riftFound || dist(S.hero.x, S.hero.y, staticX, staticY) < 360;
+  if (nearRift) drawExpeditionRiftCore(ex.riftActivated ? ex.rift.x : staticX, ex.riftActivated ? ex.rift.y : staticY, t, ex.riftActivated);
+
+  if (ex.riftActivated) {
+    ctx.save();
+    const pct = Math.max(0, ex.rift.hp / ex.rift.max);
+    ctx.fillStyle = '#1a070f';
+    ctx.fillRect(ex.rift.x - 58, ex.rift.y - 90, 116, 8);
+    ctx.fillStyle = pct > .45 ? '#e6b8ff' : '#ff7b7b';
+    ctx.fillRect(ex.rift.x - 58, ex.rift.y - 90, 116 * pct, 8);
+    ctx.fillStyle = '#fff4ff';
+    ctx.font = 'bold 11px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillText('RIFT', ex.rift.x, ex.rift.y - 98);
+    ctx.restore();
+
+    const exX = cx(cfg.extraction.c);
+    const exY = cy(cfg.extraction.r);
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.fillStyle = '#9fffc866';
+    ctx.beginPath(); ctx.arc(exX, exY, 68 + Math.sin(t * 6) * 5, 0, 7); ctx.fill();
+    ctx.strokeStyle = '#d8ffd8';
+    ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.arc(exX, exY, 76, 0, 7); ctx.stroke();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#f0ffe8';
+    ctx.font = 'bold 14px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillText('EXTRACTION', exX, exY + 6);
+    ctx.restore();
+  }
+}
+
+function drawExpeditionHud(t) {
+  const ex = S.expedition;
+  const cfg = expeditionConfig();
+  if (!isExpeditionRun() || !ex || !cfg) return;
+  ctx.save();
+  const w = 230, h = 170;
+  const x = 18, y = 74;
+  ctx.fillStyle = '#120a06dd';
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = '#b18442';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, w, h);
+  ctx.fillStyle = '#ffe09c';
+  ctx.font = 'bold 14px Georgia';
+  ctx.fillText('EXPEDITION MAP', x + 12, y + 22);
+  const scale = Math.min((w - 24) / COLS, (h - 48) / ROWS);
+  const mx = x + 12, my = y + 34;
+  ctx.fillStyle = '#050403';
+  ctx.fillRect(mx, my, COLS * scale, ROWS * scale);
+  for (const k of Object.keys(ex.discovered || {})) {
+    const [c, r] = k.split(',').map(Number);
+    ctx.fillStyle = isRoad(c, r) ? '#c3a56d' : '#40352d';
+    ctx.fillRect(mx + c * scale, my + r * scale, Math.max(1, scale), Math.max(1, scale));
+  }
+  if (ex.shortcutsOpen) {
+    ctx.fillStyle = '#ffcf6a';
+    for (const rect of cfg.shortcuts || []) {
+      const [x1, y1, x2, y2] = rect;
+      ctx.fillRect(mx + x1 * scale, my + y1 * scale, (x2 - x1 + 1) * scale, (y2 - y1 + 1) * scale);
+    }
+  }
+  const hc = cellAt(S.hero.x, S.hero.y);
+  ctx.fillStyle = '#8edcff';
+  ctx.beginPath(); ctx.arc(mx + (hc.c + .5) * scale, my + (hc.r + .5) * scale, 3.5, 0, 7); ctx.fill();
+  if (ex.extractionRevealed) {
+    ctx.fillStyle = '#9fffc8';
+    ctx.beginPath(); ctx.arc(mx + (cfg.extraction.c + .5) * scale, my + (cfg.extraction.r + .5) * scale, 4.5, 0, 7); ctx.fill();
+  }
+  ctx.fillStyle = '#d8c59a';
+  ctx.font = 'bold 10px Georgia';
+  ctx.fillText(`${ex.discoveredCount || 0} cells mapped`, x + 12, y + h - 12);
+  ctx.restore();
+
+  const title = ex.riftActivated ? 'ESCORT THE RIFT' : 'FIND THE RIFT';
+  const body = ex.riftActivated ? 'Extraction revealed. The Rift moves slower than you.' : 'No compass. No marker. Build defenses that may save the return trip.';
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = '#120805';
+  ctx.fillStyle = '#ffe09c';
+  ctx.font = 'bold 24px Georgia';
+  ctx.strokeText(title, W / 2, 90);
+  ctx.fillText(title, W / 2, 90);
+  ctx.font = 'bold 13px Georgia';
+  ctx.fillStyle = '#fff6d6';
+  ctx.strokeText(body, W / 2, 116);
+  ctx.fillText(body, W / 2, 116);
+  if ((ex.messageTime || 0) > 0 && ex.message) {
+    ctx.font = 'bold 18px Georgia';
+    ctx.fillStyle = '#f0c96b';
+    ctx.strokeText(ex.message, W / 2, 146);
+    ctx.fillText(ex.message, W / 2, 146);
+  }
+  if ((ex.promptTime || 0) > 0 && ex.prompt) {
+    ctx.font = 'bold 22px Georgia';
+    ctx.fillStyle = '#f0b8ff';
+    ctx.strokeText(ex.prompt, W / 2, H - 178);
+    ctx.fillText(ex.prompt, W / 2, H - 178);
+  }
+  ctx.restore();
 }
 
 function drawTempEffects(t) {
@@ -14154,6 +14721,11 @@ function drawMap(t) {
         }
       }
     }
+  }
+
+  if (isExpeditionRun()) {
+    drawExpeditionDressing(t);
+    return;
   }
 
   // Fortress gate / village keep
@@ -16074,6 +16646,10 @@ $('devResetCd').onclick = () => devResetCooldowns();
 populateDevDropDowns();
 $('begin').onclick   = startGameFromLoadout;
 $('clearBtn').onclick = () => {
+  if (S.expedition?.completed) {
+    location.reload();
+    return;
+  }
   if (S.mutationPending) return toast('Choose a mutation first.');
   document.querySelector('#clear .card').classList.remove('clearCard');
   $('clear').classList.add('hidden');
@@ -16205,6 +16781,7 @@ addEventListener('keydown', e => {
   }
   keys[e.key] = true; keys[e.key.toLowerCase()] = true; keys[e.code] = true;
   if (e.key === '`' || e.code === 'F10') { e.preventDefault(); S.devToolsOpen = !S.devToolsOpen; ui(); return; }
+  if (e.key.toLowerCase() === 'e' && tryActivateExpeditionRift()) { e.preventDefault(); return; }
   const tKeys = S.loadout && S.loadout.length ? S.loadout : [];
   if (e.key >= '1' && e.key <= String(LOADOUT_MAX_SLOTS)) {
     const idx = +e.key - 1;
