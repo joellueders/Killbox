@@ -144,25 +144,6 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
 }
 .buildCard.upgraded .buildName { color: #fff2cc; }
 .buildCard.upgraded .buildHint { color: #bfe7ff; }
-.upgradePips {
-  position: absolute;
-  right: 6px;
-  top: 6px;
-  display: inline-flex;
-  gap: 2px;
-  align-items: center;
-  justify-content: flex-end;
-  font-size: 11px;
-  line-height: 1;
-  font-weight: 900;
-  letter-spacing: 0;
-  color: #7ac6e8;
-  text-shadow: 0 1px 0 #120c08, 0 0 8px rgba(122,198,232,.55);
-  pointer-events: none;
-}
-.upgradePips.tier1 { color: #8edcff; }
-.upgradePips.tier2 { color: #7ac6e8; }
-.upgradePips.tier3 { color: #ffd46b; text-shadow: 0 1px 0 #120c08, 0 0 8px rgba(255,212,107,.55); }
 .upgradeLevelBadge {
   position: absolute;
   right: 6px;
@@ -192,13 +173,6 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
 }
 .buildCard.weaponSlot.upgraded .upgradeLevelBadge {
   background: linear-gradient(180deg, rgba(16,20,24,.94), rgba(8,10,12,.96));
-}
-.buildCard.upgraded .upgradePips {
-  opacity: .82;
-}
-.buildCard.upgradeTier4 .upgradePips {
-  color: #ffe7b6;
-  text-shadow: 0 1px 0 #120c08, 0 0 8px rgba(255,212,107,.42);
 }
 .buildCard.emptySlot {
   opacity: .42;
@@ -4136,7 +4110,7 @@ function miniTrinketIcon(k) {
   return iconImg(iconPath('trinket', k) || fallbackIcon('trinket', k) || 'assets/icons/trinkets/flask.png', k);
 }
 const S = {
-  version: '7.8.4', speed: 1,
+  version: '7.8.5', speed: 1,
   started: false,
   paused: false, // Manual pause only; do not reuse this for upgradeChoice or wave gating.
   gameOver: false, restarts: 2, waveSnapshot: null,
@@ -7012,7 +6986,6 @@ function renderBuildButtons() {
         const tier = getHotbarUpgradeTier(k);
         const cd = S.hero.weapon === k ? S.hero.secondaryCd : 0;
         const ready = S.hero.weapon === k && cd <= 0;
-        const pips = tier ? `<span class="upgradePips tier${Math.min(3, tier)}">${'◆'.repeat(Math.min(4, count))}</span>` : '';
         const badge = count ? `<span class="upgradeLevelBadge">Lv. ${count}</span>` : '';
         b.dataset.tier = String(tier);
         b.dataset.upgradeCount = String(count);
@@ -7023,9 +6996,7 @@ function renderBuildButtons() {
         b.classList.toggle('upgradeTier3', tier === 3);
         b.classList.toggle('upgradeTier4', tier === 4);
         b.classList.toggle('weaponReady', ready);
-        b.innerHTML = `<span class="hotkey">${hotkey}</span><span class="buildIcon">${miniWeaponIcon(k)}</span><span class="buildName">${w.shortName || w.name}</span><span class="buildPrice">${cd > 0 ? `${cd.toFixed(1)}s` : '&nbsp;'}</span>${badge}${pips}`;
-        b.onmouseenter = () => { S.hoverInspectId = k; updateWarRoomInspector(k, true); };
-        b.onmouseleave = () => { S.hoverInspectId = null; restoreWarRoomInspector(); };
+        b.innerHTML = `<span class="hotkey">${hotkey}</span><span class="buildIcon">${miniWeaponIcon(k)}</span><span class="buildName">${w.shortName || w.name}</span><span class="buildPrice">${cd > 0 ? `${cd.toFixed(1)}s` : '&nbsp;'}</span>${badge}`;
         b.onclick = () => { S.hero.weapon = k; S.weapon = k; S.selected = null; S.sel = null; $('info').innerHTML = `<b>${w.name}</b><br>${w.desc}`; ui(); };
       } else if (isTrinketItem(k)) {
         const tr = TRINKETS[k];
@@ -7033,15 +7004,12 @@ function renderBuildButtons() {
         b.className = 'buildCard trinket';
         if (rem > 0) b.classList.add('cooldown');
         b.innerHTML = `<span class="hotkey">${hotkey}</span><span class="buildIcon">${tr.icon}</span><span class="buildName">${tr.shortName || tr.name}</span><span class="buildPrice">${rem > 0 ? Math.ceil(rem) + 's' : 'READY'}</span><span class="buildHint">Trinket</span>`;
-        b.onmouseenter = () => { S.hoverInspectId = k; updateWarRoomInspector(k, true); };
-        b.onmouseleave = () => { S.hoverInspectId = null; restoreWarRoomInspector(); };
         b.onclick = () => { useTrinket(k); S.selected = null; S.sel = null; ui(); };
       } else {
         const t = TOWERS[k];
         const rotateHint = t.directional ? ` · RMB rotate` : '';
         const count = getHotbarUpgradeCount(k);
         const tier = getHotbarUpgradeTier(k);
-        const pips = tier ? `<span class="upgradePips tier${Math.min(3, tier)}">${'◆'.repeat(Math.min(4, count))}</span>` : '';
         const badge = count ? `<span class="upgradeLevelBadge">+${count}</span>` : '';
         b.dataset.tier = String(tier);
         b.dataset.upgradeCount = String(count);
@@ -7050,9 +7018,7 @@ function renderBuildButtons() {
         b.classList.toggle('upgradeTier2', tier === 2);
         b.classList.toggle('upgradeTier3', tier === 3);
         b.classList.toggle('upgradeTier4', tier === 4);
-        b.innerHTML = `<span class="hotkey">${hotkey}</span><span class="buildIcon">${miniTowerIcon(k)}</span><span class="buildName">${shortTowerName(k)}</span><span class="buildPrice">${t.c}g</span><span class="buildHint">Build${rotateHint}</span>${badge}${pips}`;
-        b.onmouseenter = () => { S.hoverInspectId = k; updateWarRoomInspector(k, true); };
-        b.onmouseleave = () => { S.hoverInspectId = null; restoreWarRoomInspector(); };
+        b.innerHTML = `<span class="hotkey">${hotkey}</span><span class="buildIcon">${miniTowerIcon(k)}</span><span class="buildName">${shortTowerName(k)}</span><span class="buildPrice">${t.c}g</span><span class="buildHint">Build${rotateHint}</span>${badge}`;
         b.onclick   = () => { S.selected = k; S.sel = null; $('info').innerHTML = `<b>${t.n}</b><br>${towerLongDesc(k)}`; ui(); };
       }
       if (rail) rail.appendChild(b);
@@ -7093,12 +7059,6 @@ function renderBuildButtons() {
         badge.textContent = `Lv. ${count}`;
         badge.hidden = count <= 0;
       }
-      const pips = b.querySelector('.upgradePips');
-      if (pips) {
-        pips.textContent = tier ? '◆'.repeat(Math.min(3, tier)) : '';
-        pips.className = `upgradePips ${tier >= 3 ? 'tier3' : tier === 2 ? 'tier2' : tier === 1 ? 'tier1' : ''}`;
-        pips.hidden = tier <= 0;
-      }
     } else if (isTrinketItem(b.dataset.t)) {
       const rem = trinketCooldownRemaining(b.dataset.t);
       b.classList.toggle('cooldown', rem > 0);
@@ -7127,12 +7087,6 @@ function renderBuildButtons() {
       if (badge) {
         badge.textContent = `+${count}`;
         badge.hidden = count <= 0;
-      }
-      const pips = b.querySelector('.upgradePips');
-      if (pips) {
-        pips.textContent = tier ? '◆'.repeat(Math.min(3, tier)) : '';
-        pips.className = `upgradePips ${tier >= 3 ? 'tier3' : tier === 2 ? 'tier2' : tier === 1 ? 'tier1' : ''}`;
-        pips.hidden = tier <= 0;
       }
     }
   });
@@ -16006,6 +15960,22 @@ if ($('loadoutTabs')) {
     const tab = e.target.closest('[data-loadout-tab]');
     if (!tab || !$('loadoutTabs').contains(tab)) return;
     setLoadoutCategory(tab.dataset.loadoutTab);
+  });
+}
+if ($('buildHotbar')) {
+  $('buildHotbar').addEventListener('pointerover', e => {
+    const card = e.target.closest('.buildCard[data-t]');
+    if (!card || !$('buildHotbar').contains(card)) return;
+    const k = card.dataset.t;
+    if (!k) return;
+    S.hoverInspectId = k;
+    updateWarRoomInspector(k, true);
+  });
+  $('buildHotbar').addEventListener('pointerout', e => {
+    const related = e.relatedTarget;
+    if (related && $('buildHotbar').contains(related)) return;
+    S.hoverInspectId = null;
+    restoreWarRoomInspector();
   });
 }
 if ($('loadoutPreviewRail')) {
