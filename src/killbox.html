@@ -4152,7 +4152,7 @@ function miniTrinketIcon(k) {
   return iconImg(iconPath('trinket', k) || fallbackIcon('trinket', k) || 'assets/icons/trinkets/flask.png', k);
 }
 const S = {
-  version: '7.8.7', speed: 1,
+  version: '7.8.8', speed: 1,
   started: false,
   paused: false, // Manual pause only; do not reuse this for upgradeChoice or wave gating.
   gameOver: false, restarts: 2, waveSnapshot: null,
@@ -6374,7 +6374,7 @@ function renderMutationOverlay() {
   const subtitle = mutationEl.querySelector('#mutationSubtitle') || mutationEl.querySelector('p');
   const cost = getRewardRerollCost();
   const freeNote = (S.freeRewardRerolls || 0) > 0 ? ' One reserve reroll is free.' : '';
-  if (subtitle) subtitle.textContent = `Choose one weapon upgrade, one tower upgrade, and one multiverse mutagen for the next wave.${freeNote}`;
+  if (subtitle) subtitle.textContent = `Choose one of three random rewards from your loadout upgrades. Mutagens appear some waves, not all of them.${freeNote}`;
   let footer = mutationEl.querySelector('.mutationFooter');
   if (!footer) {
     footer = document.createElement('div');
@@ -10792,39 +10792,58 @@ function buildWaveRewardChoices(exclude = {}) {
   const towerItems = getEligibleTowerLoadoutItems();
   const weaponOptions = weaponItems.flatMap(k => getWeaponUpgradeOptionsForItem(k)).filter(u => !excludeWeaponIds.includes(u.id));
   const towerOptions = towerItems.flatMap(k => getTowerUpgradeOptionsForItem(k)).filter(u => !excludeTowerIds.includes(u.id));
-  const mutagenOptions = multiverseMutagenList();
+  const mutagenOptions = multiverseMutagenList().filter(m => !excludeMutagenIds.includes(m.id));
   const pick = arr => {
     const src = arr.length ? [...arr] : [];
     if (!src.length) return null;
     return src[Math.floor(Math.random() * src.length)];
   };
+  const shuffle = arr => {
+    const out = arr.slice();
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  };
   const weaponEligible = weaponItems.filter(k => getWeaponUpgradeOptionsForItem(k).length && !excludeWeaponItems.includes(k));
   const towerEligible = towerItems.filter(k => getTowerUpgradeOptionsForItem(k).length && !excludeTowerItems.includes(k));
-  const weaponItem = pick(weaponEligible.length ? weaponEligible : weaponItems);
-  const towerPick = pickFreshTowerReward(towerEligible.length ? towerEligible : towerItems, excludeTowerIds, S.rewardRerollSalt || 0);
-  const towerItem = towerPick.item;
-  const fallbackWeaponKey = weaponItem || weaponItems[0] || S.hero.weapon;
-  const fallbackTowerKey = towerItem || towerItems[0] || (S.loadout || []).find(k => !!TOWERS[k]) || null;
-  const weaponPool = fallbackWeaponKey ? getWeaponUpgradeOptionsForItem(fallbackWeaponKey) : [];
-  const towerPool = towerItem ? getTowerUpgradeOptionsForItem(towerItem).filter(u => !excludeTowerIds.includes(u.id)) : [];
-  const weapon = weaponPool.length
-    ? pick(weaponPool)
-    : (fallbackWeaponKey
-      ? Object.values(HERO_UPGRADES).find(u => (u.weapons || []).includes(fallbackWeaponKey))
-        || Object.values(HERO_UPGRADES).find(u => (u.weapons || []).length)
-        || null
-      : null);
-  const tower = towerPick.upgrade || (towerPool.length ? pick(towerPool) : (fallbackTowerKey ? Object.values(TRAP_UPGRADES).find(u => {
-    const targets = new Set([u.targetItem, u.targetItemAlt, ...(Array.isArray(u.items) ? u.items : []), ...(Array.isArray(u.towers) ? u.towers : [])].filter(Boolean));
-    return targets.has(fallbackTowerKey);
-  }) || null : null));
-  const mutagenId = chooseNextMutagenId(excludeMutagenIds);
-  const mutagen = mutagenId ? MULTIVERSE_MUTAGENS[mutagenId] : null;
-  const choices = [
-    weapon ? buildUpgradeChoice('weapon', weapon.id) : null,
-    tower ? buildUpgradeChoice('tower', tower.id) : null,
-    mutagen ? buildMutagenChoice(mutagen.id) : null,
-  ].filter(Boolean);
+  const weaponPool = weaponOptions.slice();
+  const towerPool = towerOptions.slice();
+  const mutagenPool = Math.random() < 0.5 ? mutagenOptions.slice() : [];
+  const pool = shuffle([
+    ...weaponPool.map(u => ({ kind: 'weapon', id: u.id, priority: 0 })),
+    ...towerPool.map(u => ({ kind: 'tower', id: u.id, priority: 0 })),
+    ...mutagenPool.map(m => ({ kind: 'mutagen', id: m.id, priority: 1 })),
+  ]);
+  const choices = [];
+  const seen = new Set();
+  for (const entry of pool) {
+    const key = `${entry.kind}:${entry.id}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const choice = entry.kind === 'weapon'
+      ? buildUpgradeChoice('weapon', entry.id)
+      : entry.kind === 'tower'
+        ? buildUpgradeChoice('tower', entry.id)
+        : buildMutagenChoice(entry.id);
+    if (choice) choices.push(choice);
+    if (choices.length >= 3) break;
+  }
+  while (choices.length < 3) {
+    const fallbackWeapon = weaponPool.find(u => !seen.has(`weapon:${u.id}`));
+    const fallbackTower = towerPool.find(u => !seen.has(`tower:${u.id}`));
+    const fallbackMutagen = mutagenPool.find(m => !seen.has(`mutagen:${m.id}`));
+    const choice = fallbackWeapon
+      ? (seen.add(`weapon:${fallbackWeapon.id}`), buildUpgradeChoice('weapon', fallbackWeapon.id))
+      : fallbackTower
+        ? (seen.add(`tower:${fallbackTower.id}`), buildUpgradeChoice('tower', fallbackTower.id))
+        : fallbackMutagen
+          ? (seen.add(`mutagen:${fallbackMutagen.id}`), buildMutagenChoice(fallbackMutagen.id))
+          : null;
+    if (!choice) break;
+    choices.push(choice);
+  }
   console.log('[reward] generated', {
     wave: S.wave,
     weaponItems,
@@ -10834,14 +10853,10 @@ function buildWaveRewardChoices(exclude = {}) {
     towerOptions: towerOptions.map(u => u.id),
     towerEligible,
     towerTargets: eligibleTowerMutagenTargets(),
-    towerPool: towerPick.pool.map(p => `${p.item}:${p.upgrade.id}`),
-    weapon: weapon && weapon.id,
-    weaponItem,
-    tower: tower && tower.id,
-    towerItem,
-    fallbackWeaponKey,
-    fallbackTowerKey,
-    mutagen: mutagen && mutagen.id,
+    weaponPool: weaponPool.map(u => u.id),
+    towerPool: towerPool.map(u => u.id),
+    mutagenPool: mutagenPool.map(m => m.id),
+    choices: choices.map(c => `${c.kind}:${c.id}`),
     excludeWeaponIds,
     excludeTowerIds,
     excludeMutagenIds,
