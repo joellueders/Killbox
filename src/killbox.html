@@ -4107,7 +4107,7 @@ function miniTrinketIcon(k) {
   return iconImg(iconPath('trinket', k) || fallbackIcon('trinket', k) || 'assets/icons/trinkets/flask.png', k);
 }
 const S = {
-  version: '7.8.0', speed: 1,
+  version: '7.8.1', speed: 1,
   started: false,
   paused: false, // Manual pause only; do not reuse this for upgradeChoice or wave gating.
   gameOver: false, restarts: 2, waveSnapshot: null,
@@ -6471,6 +6471,7 @@ function chooseMutation(choice) {
   clearCombatInputState();
   $('mutation').classList.add('hidden');
   $('clear').classList.add('hidden');
+  renderBuildButtons();
   ui();
 }
 
