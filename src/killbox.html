@@ -1209,20 +1209,24 @@ button:disabled { opacity: .42; cursor: not-allowed; filter: grayscale(.45) brig
   display: none;
 }
 #mutation .mutationFooter {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  justify-items: center;
-  gap: 10px;
+  justify-content: stretch;
+  gap: 12px;
   margin-top: 8px;
   position: relative;
   flex-shrink: 0;
+  width: 100%;
 }
 #mutation .mutationFooter .secondary.wide {
   min-width: 220px;
   padding: 10px 14px;
   font-size: 13px;
+}
+#mutation .mutationFooter #mutationRerollBtn {
+  grid-column: 2;
+  justify-self: center;
 }
 .diceButton {
   min-width: 194px;
@@ -1237,6 +1241,13 @@ button:disabled { opacity: .42; cursor: not-allowed; filter: grayscale(.45) brig
 }
 .diceButton .diceText {
   display: inline-block;
+}
+#mutation .mutationFooter #quartermasterChest {
+  grid-column: 3;
+  justify-self: end;
+}
+#mutation .mutationFooter #quartermasterPanel {
+  grid-column: 1 / -1;
 }
 #mutation .mutationRerollNote {
   display: none;
