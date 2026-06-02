@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "smoke:killbox": "node tests/playwright/killbox-smoke.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.60.0"
+  }
+}
