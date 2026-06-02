@@ -2993,7 +2993,7 @@ kbd {
       <kbd>U</kbd> upgrade &nbsp;
       <kbd>1</kbd>–<kbd>8</kbd> build
     </p>
-    <div class="sidebarFooter">Killbox 7.8.0-battlefield-scars. Still rude.</div>
+    <div class="sidebarFooter">Killbox <span id="sidebarVersion">7.8.6</span>. Still rude.</div>
 </div>
 </div>
 
@@ -3057,7 +3057,7 @@ kbd {
           </div>
           <div class="loadoutTitle">
             <h1>Killbox</h1>
-            <div class="loadoutVersion">7.8</div>
+            <div class="loadoutVersion" id="loadoutVersion">7.8.6</div>
           </div>
           <div class="mastheadActions">
             <button id="begin" class="primary wide">Start!</button>
@@ -5571,6 +5571,8 @@ function ui() {
   if ($('devAudioState')) $('devAudioState').textContent = AUDIO.muted ? 'OFF' : 'ON';
   if ($('devVolumeState')) $('devVolumeState').textContent = `${Math.round(AUDIO.volume * 100)}%`;
   if ($('devVolume') && document.activeElement !== $('devVolume')) $('devVolume').value = Math.round(AUDIO.volume * 100);
+  if ($('loadoutVersion')) $('loadoutVersion').textContent = S.version;
+  if ($('sidebarVersion')) $('sidebarVersion').textContent = S.version;
   if ($('devArenaSelect') && document.activeElement !== $('devArenaSelect')) {
     const want = S.devArenaChoice || S.levelId || 'field';
     if ($('devArenaSelect').value !== want) $('devArenaSelect').value = want;
