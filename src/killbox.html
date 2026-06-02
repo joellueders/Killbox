@@ -126,6 +126,22 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
   border-color: #9fe8ff;
   box-shadow: 0 0 0 1px rgba(159,232,255,.35) inset, 0 0 0 2px rgba(122,198,232,.95), 0 0 30px rgba(122,198,232,.85), 0 2px 0 #120c08;
 }
+.buildCard.upgraded.upgradeTier1 {
+  border-color: #7ac6e8;
+  box-shadow: 0 0 0 1px rgba(122,198,232,.18) inset, 0 0 0 1px rgba(122,198,232,.42), 0 0 10px rgba(122,198,232,.12), 0 2px 0 #120c08;
+}
+.buildCard.upgraded.upgradeTier2 {
+  border-color: #9fe8ff;
+  box-shadow: 0 0 0 1px rgba(159,232,255,.22) inset, 0 0 0 2px rgba(122,198,232,.55), 0 0 14px rgba(122,198,232,.16), 0 2px 0 #120c08;
+}
+.buildCard.upgraded.upgradeTier3 {
+  border-color: #ffd46b;
+  box-shadow: 0 0 0 1px rgba(255,212,107,.22) inset, 0 0 0 2px rgba(255,212,107,.65), 0 0 16px rgba(255,212,107,.14), 0 2px 0 #120c08;
+}
+.buildCard.upgraded.upgradeTier4 {
+  border-color: #ffe7b6;
+  box-shadow: 0 0 0 1px rgba(255,231,182,.25) inset, 0 0 0 2px rgba(255,212,107,.72), 0 0 18px rgba(255,212,107,.16), 0 2px 0 #120c08;
+}
 .buildCard.upgraded .buildName { color: #fff2cc; }
 .buildCard.upgraded .buildHint { color: #bfe7ff; }
 .upgradePips {
@@ -151,13 +167,13 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
   position: absolute;
   right: 6px;
   top: 6px;
-  min-width: 34px;
-  padding: 2px 5px;
+  min-width: 36px;
+  padding: 3px 6px;
   border: 1px solid rgba(255,224,156,.28);
   background: linear-gradient(180deg, rgba(16,12,8,.88), rgba(9,7,5,.92));
   color: #ffe7b6;
   box-shadow: 0 0 0 1px rgba(255,224,156,.08) inset, 0 0 12px rgba(122,198,232,.18);
-  font-size: 10px;
+  font-size: 9px;
   line-height: 1;
   font-weight: 900;
   letter-spacing: 0;
@@ -168,8 +184,21 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
   color: #fff3c4;
   box-shadow: 0 0 0 1px rgba(159,232,255,.16) inset, 0 0 16px rgba(122,198,232,.32);
 }
+.buildCard.upgradeTier3 .upgradeLevelBadge,
+.buildCard.upgradeTier4 .upgradeLevelBadge {
+  border-color: rgba(255,212,107,.56);
+  color: #fff1c0;
+  box-shadow: 0 0 0 1px rgba(255,212,107,.18) inset, 0 0 16px rgba(255,212,107,.22);
+}
 .buildCard.weaponSlot.upgraded .upgradeLevelBadge {
   background: linear-gradient(180deg, rgba(16,20,24,.94), rgba(8,10,12,.96));
+}
+.buildCard.upgraded .upgradePips {
+  opacity: .82;
+}
+.buildCard.upgradeTier4 .upgradePips {
+  color: #ffe7b6;
+  text-shadow: 0 1px 0 #120c08, 0 0 8px rgba(255,212,107,.42);
 }
 .buildCard.emptySlot {
   opacity: .42;
@@ -4107,7 +4136,7 @@ function miniTrinketIcon(k) {
   return iconImg(iconPath('trinket', k) || fallbackIcon('trinket', k) || 'assets/icons/trinkets/flask.png', k);
 }
 const S = {
-  version: '7.8.2', speed: 1,
+  version: '7.8.3', speed: 1,
   started: false,
   paused: false, // Manual pause only; do not reuse this for upgradeChoice or wave gating.
   gameOver: false, restarts: 2, waveSnapshot: null,
@@ -6946,7 +6975,13 @@ function getHotbarUpgradeCount(k) {
 }
 
 function getHotbarUpgradeTier(k) {
-  return Math.min(3, getHotbarUpgradeCount(k));
+  const count = getHotbarUpgradeCount(k);
+  return count >= 4 ? 4 : Math.min(3, count);
+}
+
+function getHotbarUpgradeClass(k) {
+  const tier = getHotbarUpgradeTier(k);
+  return tier ? `upgradeTier${tier}` : '';
 }
 
 function renderBuildButtons() {
@@ -6971,15 +7006,19 @@ function renderBuildButtons() {
       } else if (WEAPONS[k]) {
         const w = WEAPONS[k];
         const count = getHotbarUpgradeCount(k);
-        const tier = Math.min(3, count);
+        const tier = getHotbarUpgradeTier(k);
         const cd = S.hero.weapon === k ? S.hero.secondaryCd : 0;
         const ready = S.hero.weapon === k && cd <= 0;
-        const pips = tier ? `<span class="upgradePips tier${Math.min(3, tier)}">${'◆'.repeat(Math.min(3, tier))}</span>` : '';
+        const pips = tier ? `<span class="upgradePips tier${Math.min(3, tier)}">${'◆'.repeat(Math.min(4, count))}</span>` : '';
         const badge = count ? `<span class="upgradeLevelBadge">Lv. ${count}</span>` : '';
         b.dataset.tier = String(tier);
         b.dataset.upgradeCount = String(count);
         b.classList.toggle('weaponSlot', true);
         b.classList.toggle('upgraded', count > 0);
+        b.classList.toggle('upgradeTier1', tier === 1);
+        b.classList.toggle('upgradeTier2', tier === 2);
+        b.classList.toggle('upgradeTier3', tier === 3);
+        b.classList.toggle('upgradeTier4', tier === 4);
         b.classList.toggle('weaponReady', ready);
         b.innerHTML = `<span class="hotkey">${hotkey}</span><span class="buildIcon">${miniWeaponIcon(k)}</span><span class="buildName">${w.shortName || w.name}</span><span class="buildPrice">${cd > 0 ? `${cd.toFixed(1)}s` : '&nbsp;'}</span>${badge}${pips}`;
         b.onclick = () => { S.hero.weapon = k; S.weapon = k; S.selected = null; S.sel = null; $('info').innerHTML = `<b>${w.name}</b><br>${w.desc}`; ui(); };
@@ -6994,12 +7033,16 @@ function renderBuildButtons() {
         const t = TOWERS[k];
         const rotateHint = t.directional ? ` · RMB rotate` : '';
         const count = getHotbarUpgradeCount(k);
-        const tier = Math.min(3, count);
-        const pips = tier ? `<span class="upgradePips tier${Math.min(3, tier)}">${'◆'.repeat(Math.min(3, tier))}</span>` : '';
+        const tier = getHotbarUpgradeTier(k);
+        const pips = tier ? `<span class="upgradePips tier${Math.min(3, tier)}">${'◆'.repeat(Math.min(4, count))}</span>` : '';
         const badge = count ? `<span class="upgradeLevelBadge">+${count}</span>` : '';
         b.dataset.tier = String(tier);
         b.dataset.upgradeCount = String(count);
         b.classList.toggle('upgraded', count > 0);
+        b.classList.toggle('upgradeTier1', tier === 1);
+        b.classList.toggle('upgradeTier2', tier === 2);
+        b.classList.toggle('upgradeTier3', tier === 3);
+        b.classList.toggle('upgradeTier4', tier === 4);
         b.innerHTML = `<span class="hotkey">${hotkey}</span><span class="buildIcon">${miniTowerIcon(k)}</span><span class="buildName">${shortTowerName(k)}</span><span class="buildPrice">${t.c}g</span><span class="buildHint">Build${rotateHint}</span>${badge}${pips}`;
         b.onclick   = () => { S.selected = k; S.sel = null; $('info').innerHTML = `<b>${t.n}</b><br>${towerLongDesc(k)}`; ui(); };
       }
@@ -7020,13 +7063,17 @@ function renderBuildButtons() {
       const equipped = S.hero.weapon === b.dataset.t;
       const active = equipped && !S.selected;
       const count = getHotbarUpgradeCount(b.dataset.t);
-      const tier = Math.min(3, count);
+      const tier = getHotbarUpgradeTier(b.dataset.t);
       b.classList.toggle('equipped', equipped);
       b.classList.toggle('activeHotbar', active);
       b.classList.toggle('activeBuild', false);
       b.classList.toggle('weaponSlot', true);
       b.classList.toggle('weaponReady', equipped && S.hero.secondaryCd <= 0);
       b.classList.toggle('upgraded', count > 0);
+      b.classList.toggle('upgradeTier1', tier === 1);
+      b.classList.toggle('upgradeTier2', tier === 2);
+      b.classList.toggle('upgradeTier3', tier === 3);
+      b.classList.toggle('upgradeTier4', tier === 4);
       b.dataset.upgradeCount = String(count);
       b.dataset.tier = String(tier);
       const price = b.querySelector('.buildPrice');
@@ -7059,8 +7106,12 @@ function renderBuildButtons() {
       b.classList.toggle('activeHotbar', false);
       b.classList.toggle('equipped', false);
       const count = getHotbarUpgradeCount(b.dataset.t);
-      const tier = Math.min(3, count);
+      const tier = getHotbarUpgradeTier(b.dataset.t);
       b.classList.toggle('upgraded', count > 0);
+      b.classList.toggle('upgradeTier1', tier === 1);
+      b.classList.toggle('upgradeTier2', tier === 2);
+      b.classList.toggle('upgradeTier3', tier === 3);
+      b.classList.toggle('upgradeTier4', tier === 4);
       b.dataset.upgradeCount = String(count);
       b.dataset.tier = String(tier);
       const badge = b.querySelector('.upgradeLevelBadge');
