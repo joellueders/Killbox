@@ -147,6 +147,30 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
 .upgradePips.tier1 { color: #8edcff; }
 .upgradePips.tier2 { color: #7ac6e8; }
 .upgradePips.tier3 { color: #ffd46b; text-shadow: 0 1px 0 #120c08, 0 0 8px rgba(255,212,107,.55); }
+.upgradeLevelBadge {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  min-width: 34px;
+  padding: 2px 5px;
+  border: 1px solid rgba(255,224,156,.28);
+  background: linear-gradient(180deg, rgba(16,12,8,.88), rgba(9,7,5,.92));
+  color: #ffe7b6;
+  box-shadow: 0 0 0 1px rgba(255,224,156,.08) inset, 0 0 12px rgba(122,198,232,.18);
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: 0;
+  pointer-events: none;
+}
+.buildCard.upgraded .upgradeLevelBadge {
+  border-color: rgba(159,232,255,.5);
+  color: #fff3c4;
+  box-shadow: 0 0 0 1px rgba(159,232,255,.16) inset, 0 0 16px rgba(122,198,232,.32);
+}
+.buildCard.weaponSlot.upgraded .upgradeLevelBadge {
+  background: linear-gradient(180deg, rgba(16,20,24,.94), rgba(8,10,12,.96));
+}
 .buildCard.emptySlot {
   opacity: .42;
   filter: grayscale(.8) brightness(.76);
@@ -3699,18 +3723,18 @@ const TRINKETS = {
   },
 };
 const HERO_UPGRADES = {
-  quickFingers: { id:'quickFingers', name:'Quick Fingers', desc:'+15% primary fire speed', targetItem:'ranger', targetIcon:'ranger', weapons:['ranger'], apply: h => h.fireRateMult *= 1.15 },
-  deadeye: { id:'deadeye', name:'Deadeye', desc:'+12% crit chance', targetItem:'ranger', targetIcon:'ranger', weapons:['ranger'], apply: h => h.critChance += 0.12 },
+  quickFingers: { id:'quickFingers', name:'Quick Fingers', desc:'+18% primary fire speed', targetItem:'ranger', targetIcon:'ranger', weapons:['ranger'], apply: h => h.fireRateMult *= 1.18 },
+  deadeye: { id:'deadeye', name:'Deadeye', desc:'+15% crit chance', targetItem:'ranger', targetIcon:'ranger', weapons:['ranger'], apply: h => h.critChance += 0.15 },
   deepPin: { id:'deepPin', name:'Deep Pin', desc:'Boltcaster stuns last much longer', targetItem:'crossbow', targetIcon:'crossbow', weapons:['crossbow'], apply: h => h.crossbowStunMult *= 1.6 },
-  impactFrame: { id:'impactFrame', name:'Impact Frame', desc:'+30% Boltcaster knockback', targetItem:'crossbow', targetIcon:'crossbow', weapons:['crossbow'], apply: h => h.crossbowKnockbackMult *= 1.3 },
-  packedShot: { id:'packedShot', name:'Packed Shot', desc:'+18% blunderbuss damage', targetItem:'blunderbuss', targetIcon:'blunderbuss', weapons:['blunderbuss'], apply: h => h.blunderDamageMult *= 1.18 },
+  impactFrame: { id:'impactFrame', name:'Impact Frame', desc:'+35% Boltcaster knockback', targetItem:'crossbow', targetIcon:'crossbow', weapons:['crossbow'], apply: h => h.crossbowKnockbackMult *= 1.35 },
+  packedShot: { id:'packedShot', name:'Packed Shot', desc:'+22% blunderbuss damage', targetItem:'blunderbuss', targetIcon:'blunderbuss', weapons:['blunderbuss'], apply: h => h.blunderDamageMult *= 1.22 },
   brutalStock: { id:'brutalStock', name:'Brutal Stock', desc:'+35% blunder shield duration', targetItem:'blunderbuss', targetIcon:'blunderbuss', weapons:['blunderbuss'], apply: h => h.blunderShieldMult *= 1.35 },
   forkedArc: { id:'forkedArc', name:'Forked Arc', desc:'+1 Arc Emitter chain jump', targetItem:'storm', targetIcon:'storm', weapons:['storm'], apply: h => h.stormChainBonus += 1 },
   staticLock: { id:'staticLock', name:'Static Lock', desc:'+32% Arc Emitter stun time', targetItem:'storm', targetIcon:'storm', weapons:['storm'], apply: h => h.stormStunMult *= 1.32 },
-  deepFreeze: { id:'deepFreeze', name:'Deep Freeze', desc:'+35% Freeze Gun freeze duration', targetItem:'freeze', targetIcon:'freeze', weapons:['freeze'], apply: h => h.freezeDurationMult *= 1.35 },
+  deepFreeze: { id:'deepFreeze', name:'Deep Freeze', desc:'+40% Freeze Gun freeze duration', targetItem:'freeze', targetIcon:'freeze', weapons:['freeze'], apply: h => h.freezeDurationMult *= 1.4 },
   cryoSynergy: { id:'cryoSynergy', name:'Cryo Synergy', desc:'Frozen enemies take +25% trap damage', targetItem:'freeze', targetIcon:'freeze', weapons:['freeze'], apply: h => h.freezeTrapVuln += 0.25 },
   titanKick: { id:'titanKick', name:'Titan Kick', desc:'Stronger shove and knockback', targetItem:'ranger', targetIcon:'ranger', weapons:['ranger','crossbow','blunderbuss','storm','freeze'], apply: h => h.shoveForceMult *= 1.25 },
-  scavenger: { id:'scavenger', name:'Scavenger', desc:'+9% gold from kills', weapons:['ranger','crossbow','blunderbuss','storm','freeze'], apply: h => h.goldMult *= 1.09 },
+  scavenger: { id:'scavenger', name:'Scavenger', desc:'+10% gold from kills', weapons:['ranger','crossbow','blunderbuss','storm','freeze'], apply: h => h.goldMult *= 1.1 },
 };
 const TRAP_UPGRADES = {
   overclockedPistons: { id:'overclockedPistons', name:'Overclocked Pistons', desc:'Push Wall cooldown -22%', targetItem:'tar', targetIcon:'tar', apply: () => S.mods.trapTarRate = (S.mods.trapTarRate || 1) * 0.78 },
@@ -6255,7 +6279,7 @@ function renderMutationOverlay() {
     const footer = u.kind === 'mutagen'
       ? { icon: '⚡', label: 'NEXT WAVE ONLY' }
       : { icon: '✓', label: 'PERMANENT UPGRADE' };
-    return { category, mechanics, footer };
+    return { category, mechanics: mechanics ? `Improves: ${mechanics}` : 'Improves an equipped option.', footer };
   };
   if (!options.length) {
     const msg = document.createElement('div');
@@ -6888,7 +6912,7 @@ function renderWaveBanner() {
   }
 }
 
-function getHotbarUpgradeTier(k) {
+function getHotbarUpgradeCount(k) {
   if (!k) return 0;
   const heroUpgrades = new Set(S.hero?.upgrades || []);
   let tier = 0;
@@ -6899,7 +6923,7 @@ function getHotbarUpgradeTier(k) {
       const targets = new Set([...(up.weapons || []), up.targetItem, up.targetIcon, up.targetItemAlt, up.targetIconAlt].filter(Boolean));
       if (targets.has(k)) tier++;
     }
-    return Math.min(3, tier);
+    return tier;
   }
   if (k === 'tar') {
     if ((S.mods.trapTarRate || 1) !== 1) tier++;
@@ -6914,7 +6938,11 @@ function getHotbarUpgradeTier(k) {
   } else if (k === 'barrier') {
     if ((S.mods.barrierHp || 1) !== 1) tier++;
   }
-  return Math.min(3, tier);
+  return tier;
+}
+
+function getHotbarUpgradeTier(k) {
+  return Math.min(3, getHotbarUpgradeCount(k));
 }
 
 function renderBuildButtons() {
@@ -6938,15 +6966,18 @@ function renderBuildButtons() {
         b.onclick = () => {};
       } else if (WEAPONS[k]) {
         const w = WEAPONS[k];
-        const tier = getHotbarUpgradeTier(k);
+        const count = getHotbarUpgradeCount(k);
+        const tier = Math.min(3, count);
         const cd = S.hero.weapon === k ? S.hero.secondaryCd : 0;
         const ready = S.hero.weapon === k && cd <= 0;
         const pips = tier ? `<span class="upgradePips tier${Math.min(3, tier)}">${'◆'.repeat(Math.min(3, tier))}</span>` : '';
+        const badge = count ? `<span class="upgradeLevelBadge">Lv. ${count}</span>` : '';
         b.dataset.tier = String(tier);
+        b.dataset.upgradeCount = String(count);
         b.classList.toggle('weaponSlot', true);
-        b.classList.toggle('upgraded', tier > 0);
+        b.classList.toggle('upgraded', count > 0);
         b.classList.toggle('weaponReady', ready);
-        b.innerHTML = `<span class="hotkey">${hotkey}</span><span class="buildIcon">${miniWeaponIcon(k)}</span><span class="buildName">${w.shortName || w.name}</span><span class="buildPrice">${cd > 0 ? `${cd.toFixed(1)}s` : '&nbsp;'}</span>${pips}`;
+        b.innerHTML = `<span class="hotkey">${hotkey}</span><span class="buildIcon">${miniWeaponIcon(k)}</span><span class="buildName">${w.shortName || w.name}</span><span class="buildPrice">${cd > 0 ? `${cd.toFixed(1)}s` : '&nbsp;'}</span>${badge}${pips}`;
         b.onclick = () => { S.hero.weapon = k; S.weapon = k; S.selected = null; S.sel = null; $('info').innerHTML = `<b>${w.name}</b><br>${w.desc}`; ui(); };
       } else if (isTrinketItem(k)) {
         const tr = TRINKETS[k];
@@ -6958,11 +6989,14 @@ function renderBuildButtons() {
       } else {
         const t = TOWERS[k];
         const rotateHint = t.directional ? ` · RMB rotate` : '';
-        const tier = getHotbarUpgradeTier(k);
+        const count = getHotbarUpgradeCount(k);
+        const tier = Math.min(3, count);
         const pips = tier ? `<span class="upgradePips tier${Math.min(3, tier)}">${'◆'.repeat(Math.min(3, tier))}</span>` : '';
+        const badge = count ? `<span class="upgradeLevelBadge">+${count}</span>` : '';
         b.dataset.tier = String(tier);
-        b.classList.toggle('upgraded', tier > 0);
-        b.innerHTML = `<span class="hotkey">${hotkey}</span><span class="buildIcon">${miniTowerIcon(k)}</span><span class="buildName">${shortTowerName(k)}</span><span class="buildPrice">${t.c}g</span><span class="buildHint">Build${rotateHint}</span>${pips}`;
+        b.dataset.upgradeCount = String(count);
+        b.classList.toggle('upgraded', count > 0);
+        b.innerHTML = `<span class="hotkey">${hotkey}</span><span class="buildIcon">${miniTowerIcon(k)}</span><span class="buildName">${shortTowerName(k)}</span><span class="buildPrice">${t.c}g</span><span class="buildHint">Build${rotateHint}</span>${badge}${pips}`;
         b.onclick   = () => { S.selected = k; S.sel = null; $('info').innerHTML = `<b>${t.n}</b><br>${towerLongDesc(k)}`; ui(); };
       }
       if (rail) rail.appendChild(b);
@@ -6981,17 +7015,24 @@ function renderBuildButtons() {
     if (WEAPONS[b.dataset.t]) {
       const equipped = S.hero.weapon === b.dataset.t;
       const active = equipped && !S.selected;
-      const tier = getHotbarUpgradeTier(b.dataset.t);
+      const count = getHotbarUpgradeCount(b.dataset.t);
+      const tier = Math.min(3, count);
       b.classList.toggle('equipped', equipped);
       b.classList.toggle('activeHotbar', active);
       b.classList.toggle('activeBuild', false);
       b.classList.toggle('weaponSlot', true);
       b.classList.toggle('weaponReady', equipped && S.hero.secondaryCd <= 0);
-      b.classList.toggle('upgraded', tier > 0);
+      b.classList.toggle('upgraded', count > 0);
+      b.dataset.upgradeCount = String(count);
       b.dataset.tier = String(tier);
       const price = b.querySelector('.buildPrice');
       if (price) price.textContent = equipped && S.hero.secondaryCd > 0 ? `${S.hero.secondaryCd.toFixed(1)}s` : '';
       b.classList.toggle('cooldown', equipped && S.hero.secondaryCd > 0);
+      const badge = b.querySelector('.upgradeLevelBadge');
+      if (badge) {
+        badge.textContent = `Lv. ${count}`;
+        badge.hidden = count <= 0;
+      }
       const pips = b.querySelector('.upgradePips');
       if (pips) {
         pips.textContent = tier ? '◆'.repeat(Math.min(3, tier)) : '';
@@ -7013,9 +7054,16 @@ function renderBuildButtons() {
       b.classList.toggle('activeBuild', active);
       b.classList.toggle('activeHotbar', false);
       b.classList.toggle('equipped', false);
-      const tier = getHotbarUpgradeTier(b.dataset.t);
-      b.classList.toggle('upgraded', tier > 0);
+      const count = getHotbarUpgradeCount(b.dataset.t);
+      const tier = Math.min(3, count);
+      b.classList.toggle('upgraded', count > 0);
+      b.dataset.upgradeCount = String(count);
       b.dataset.tier = String(tier);
+      const badge = b.querySelector('.upgradeLevelBadge');
+      if (badge) {
+        badge.textContent = `+${count}`;
+        badge.hidden = count <= 0;
+      }
       const pips = b.querySelector('.upgradePips');
       if (pips) {
         pips.textContent = tier ? '◆'.repeat(Math.min(3, tier)) : '';
