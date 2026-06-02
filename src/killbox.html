@@ -1224,6 +1224,20 @@ button:disabled { opacity: .42; cursor: not-allowed; filter: grayscale(.45) brig
   padding: 10px 14px;
   font-size: 13px;
 }
+.diceButton {
+  min-width: 194px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.diceButton .diceIcon {
+  font-size: 16px;
+  line-height: 1;
+}
+.diceButton .diceText {
+  display: inline-block;
+}
 #mutation .mutationRerollNote {
   display: none;
 }
@@ -1736,9 +1750,33 @@ textarea {
   position: relative;
   animation: chestGlow 1.8s ease-in-out infinite alternate;
 }
+.quartermasterChest.waiting {
+  border-color: rgba(170, 153, 120, .5);
+  background: radial-gradient(circle at 50% 40%, rgba(160, 140, 96, .18), rgba(33, 26, 18, .92) 68%);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.06) inset, 0 4px 0 #2a241b, inset 0 0 18px rgba(255,255,255,.04);
+  color: rgba(240, 224, 192, .7);
+  filter: grayscale(.8) brightness(.82);
+  cursor: default;
+  opacity: .88;
+  animation: none;
+}
 .quartermasterChest:hover {
   filter: brightness(1.08);
   transform: translateY(-1px);
+}
+.quartermasterChest.waiting:hover {
+  filter: grayscale(.8) brightness(.86);
+  transform: none;
+}
+.quartermasterChest.active {
+  border-color: #ffd35d;
+  background: radial-gradient(circle at 50% 40%, rgba(255,214,64,.34), rgba(37,19,5,.94) 68%);
+  box-shadow: 0 0 24px rgba(255,211,93,.5), 0 4px 0 #3a1b08, inset 0 0 0 1px rgba(255,255,255,.28);
+  color: #fff2b8;
+  filter: none;
+  cursor: pointer;
+  opacity: 1;
+  animation: chestGlow 1.8s ease-in-out infinite alternate;
 }
 .quartermasterChest img {
   width: 100%;
@@ -6329,7 +6367,7 @@ function renderMutationOverlay() {
     const footer = u.kind === 'mutagen'
       ? { icon: '⚡', label: 'NEXT WAVE ONLY' }
       : { icon: '✓', label: 'PERMANENT UPGRADE' };
-    return { category, mechanics: mechanics ? `Improves: ${mechanics}` : 'Improves an equipped option.', footer };
+    return { category, mechanics: mechanics || 'Directly strengthens your build.', footer };
   };
   if (!options.length) {
     const msg = document.createElement('div');
@@ -6370,7 +6408,7 @@ function renderMutationOverlay() {
     }
   }
   const title = mutationEl.querySelector('h1');
-  if (title) title.textContent = 'Between Waves';
+  if (title) title.textContent = 'Choose Your Reward';
   const subtitle = mutationEl.querySelector('#mutationSubtitle') || mutationEl.querySelector('p');
   const cost = getRewardRerollCost();
   const freeNote = (S.freeRewardRerolls || 0) > 0 ? ' One reserve reroll is free.' : '';
@@ -6382,10 +6420,13 @@ function renderMutationOverlay() {
     mutationEl.querySelector('.card')?.appendChild(footer);
   }
   footer.innerHTML = `
-    <button id="mutationRerollBtn" class="secondary wide">Reroll options${cost ? ` - ${cost}g` : (S.freeRewardRerolls || 0) > 0 ? ' - FREE' : ''}</button>
-    <button id="quartermasterChest" class="quartermasterChest hidden" type="button" aria-label="Quartermaster arrived. Open offers.">
+    <button id="mutationRerollBtn" class="secondary wide diceButton" type="button" aria-label="Reroll reward options">
+      <span class="diceIcon">🎲</span>
+      <span class="diceText">Reroll Options${cost ? ` - ${cost}g` : (S.freeRewardRerolls || 0) > 0 ? ' - FREE' : ''}</span>
+    </button>
+    <button id="quartermasterChest" class="quartermasterChest waiting" type="button" aria-label="Quartermaster status">
       <img src="assets/icons/quartermaster/quartermaster-chest-closed.png" alt="" aria-hidden="true">
-      <span class="chestLabel">Quartermaster Arrived!</span>
+      <span class="chestLabel">Quartermaster Waiting</span>
     </button>
     <div id="quartermasterPanel" class="quartermasterPanel hidden">
       <div class="quartermasterHeader">
@@ -6688,11 +6729,15 @@ function renderQuartermaster() {
   const active = !!S.quartermaster?.active;
   const open = active && !!S.quartermaster?.open;
   if (chest) {
-    chest.classList.toggle('hidden', !active);
+    chest.classList.toggle('waiting', !active);
+    chest.classList.toggle('active', active);
     chest.onclick = () => {
+      if (!active) return;
       S.quartermaster.open = !S.quartermaster.open;
       renderQuartermaster();
     };
+    const label = chest.querySelector('.chestLabel');
+    if (label) label.textContent = active ? 'Quartermaster Arrived!' : 'Quartermaster Waiting';
   }
   if (panel) panel.classList.toggle('hidden', !open);
   if (!grid) return;
