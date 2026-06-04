@@ -62,7 +62,7 @@ The repository contract requires runtime source to remain under `src/`. The prot
 
 7. Validate the prototype at multiple layers.
 
-   Shared simulation and validation rules will have unit tests. Colyseus room integration tests will verify slots, synchronization, accepted and rejected commands, disconnects, and cleanup. A browser smoke test will connect two isolated client contexts to the same local room and exercise a synchronized build and wave. The Tailscale flow remains a documented manual validation because CI cannot assume access to a private tailnet.
+   Shared simulation and validation rules will have unit tests. Colyseus room integration tests will verify slots, synchronization, accepted and rejected commands, disconnects, and cleanup. A browser smoke test will connect two isolated client contexts to the same local room and exercise a synchronized build and wave. This change verifies that Tailscale mode starts with network-reachable configuration and documents the remote flow, but it does not require execution from a second computer. A related follow-up change will design a multi-agent, single-machine method for stronger multiplayer-efficacy validation.
 
 ## Risks / Trade-offs
 
@@ -80,12 +80,11 @@ The repository contract requires runtime source to remain under `src/`. The prot
 2. Implement and test the singleton room, shared state, and command path.
 3. Add the minimal authoritative wave simulation and Phaser rendering adapter.
 4. Validate two local browser clients before enabling network-reachable Tailscale mode.
-5. Document and perform the private remote playtest.
+5. Document the private remote play flow and create the related multi-agent validation-design follow-up.
 
 Rollback consists of removing the isolated multiplayer source, scripts, dependencies, tests, and documentation; the existing single-player game remains the unchanged fallback.
 
 ## Open Questions
 
-- What Tailscale machine name or IP will be used for the first remote validation session?
 - Should the prototype's room secret be entered in the client UI or supplied only through a generated private join URL?
 - After the prototype succeeds, should shared multiplayer concepts be used to incrementally replace parts of the existing single-player simulation?

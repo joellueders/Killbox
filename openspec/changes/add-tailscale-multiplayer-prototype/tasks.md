@@ -43,5 +43,5 @@
 - [x] 6.2 Run type checking, shared unit tests, Colyseus integration tests, and the automated two-browser multiplayer smoke test.
 - [x] 6.3 Run the existing single-player smoke test and verify the existing Pages entrypoints remain functional.
 - [x] 6.4 Perform the documented same-machine two-client flow and complete one cooperative wave.
-- [ ] 6.5 Perform the documented remote Tailscale flow from two Tailscale-connected machines, verify synchronized commands and state, and complete one cooperative wave.
+- [x] 6.5 Create the related `design-multi-agent-multiplayer-validation` follow-up change for validating multiplayer efficacy without requiring a second computer.
 - [x] 6.6 Run OpenSpec validation for `add-tailscale-multiplayer-prototype` and resolve all reported issues.

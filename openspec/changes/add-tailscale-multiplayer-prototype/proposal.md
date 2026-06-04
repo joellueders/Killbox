@@ -26,7 +26,7 @@ The project needs to validate real two-player cooperative tower defense behavior
 
 - Adds multiplayer runtime source under `src/`, separated into client, server, and shared modules.
 - Adds Phaser, Colyseus server/client, schema, TypeScript, and development-runner dependencies plus package scripts.
-- Adds multiplayer-focused automated tests and manual same-machine and Tailscale validation procedures.
+- Adds multiplayer-focused automated tests, a validated same-machine flow, and documented Tailscale remote-operation procedures.
 - Adds developer documentation under `docs/` and may extend `mise.toml` with multiplayer shortcuts.
 - Introduces a network-reachable development server that must not embed or expose room secrets in browser-delivered client code.
 - Does not require external persistent infrastructure or change the existing single-player public game contract.
