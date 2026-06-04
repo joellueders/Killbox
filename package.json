@@ -9,6 +9,7 @@
     "test": "vitest run",
     "test:shared": "vitest run tests/multiplayer/shared.test.ts",
     "test:server": "vitest run tests/multiplayer/server.test.ts",
+    "validate:multiplayer-agents": "tsx src/multiplayer/validation/main.ts",
     "smoke:killbox": "node tests/playwright/killbox-smoke.mjs",
     "smoke:multiplayer": "node tests/playwright/multiplayer-smoke.mjs",
     "build:multiplayer": "vite build --config vite.multiplayer.config.ts"

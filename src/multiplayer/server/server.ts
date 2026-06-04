@@ -1,13 +1,25 @@
 import cors from "cors";
 import { Server, WebSocketTransport, matchMaker } from "colyseus";
-import { CoopRoom, COOP_ROOM_NAME, configureRoomSecret } from "./CoopRoom";
+import {
+  CoopRoom,
+  COOP_ROOM_NAME,
+  configureRoomSecret,
+  configureSimulationInterval,
+  SIMULATION_INTERVAL_MS,
+} from "./CoopRoom";
 import { loadMultiplayerConfig, type MultiplayerConfig } from "./config";
+import { configureValidationObserver, type ValidationObserver } from "./validationObserver";
 
 export type RunningMultiplayerServer = {
   gameServer: Server;
   config: MultiplayerConfig;
   roomId: string;
   close: () => Promise<void>;
+};
+
+export type MultiplayerServerOptions = Partial<MultiplayerConfig> & {
+  simulationIntervalMs?: number;
+  validationObserver?: ValidationObserver;
 };
 
 let pendingRoom: Promise<string> | undefined;
@@ -28,10 +40,12 @@ async function ensureCoopRoom(): Promise<string> {
 }
 
 export async function startMultiplayerServer(
-  overrides: Partial<MultiplayerConfig> = {},
+  overrides: MultiplayerServerOptions = {},
 ): Promise<RunningMultiplayerServer> {
   const config = loadMultiplayerConfig(overrides);
   configureRoomSecret(config.roomSecret);
+  configureSimulationInterval(overrides.simulationIntervalMs ?? SIMULATION_INTERVAL_MS);
+  configureValidationObserver(overrides.validationObserver);
 
   const transport = new WebSocketTransport();
   const gameServer = new Server({
@@ -66,6 +80,8 @@ export async function startMultiplayerServer(
     roomId,
     close: async () => {
       await gameServer.gracefullyShutdown(false);
+      configureValidationObserver(undefined);
+      configureSimulationInterval(SIMULATION_INTERVAL_MS);
     },
   };
 }

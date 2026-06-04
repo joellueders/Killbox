@@ -64,14 +64,13 @@ try {
     });
   }
   const joinUrl = `${clientUrl}/?server=${encodeURIComponent(serverUrl)}&room=${encodeURIComponent(roomId)}&secret=${encodeURIComponent(secret)}&autoconnect=1`;
-  await Promise.all([page1.goto(joinUrl), page2.goto(joinUrl)]);
-  await Promise.all([
-    page1.getByTestId("connection-status").waitFor({ state: "visible" }),
-    page2.getByTestId("connection-status").waitFor({ state: "visible" }),
-  ]);
+  await page1.goto(joinUrl);
+  await page1.getByTestId("connection-status").waitFor({ state: "visible" });
+  await page1.waitForFunction(() => document.querySelector("#players .local")?.textContent?.includes("p1"));
+  await page2.goto(joinUrl);
+  await page2.getByTestId("connection-status").waitFor({ state: "visible" });
   await page1.waitForFunction(() => document.querySelectorAll("#players .connected").length === 2);
   await page2.waitForFunction(() => document.querySelectorAll("#players .connected").length === 2);
-  await page1.waitForFunction(() => document.querySelector("#players .local")?.textContent?.includes("p1"));
   await page2.waitForFunction(() => document.querySelector("#players .local")?.textContent?.includes("p2"));
   await page1.getByTestId("ready").click();
   await page2.getByTestId("ready").click();
