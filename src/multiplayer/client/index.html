@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Killbox Multiplayer Prototype</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">Private development prototype</p>
+          <h1>Killbox Co-op</h1>
+        </div>
+        <div id="connection-status" data-testid="connection-status" class="status offline">
+          Disconnected
+        </div>
+      </header>
+
+      <section id="connect-panel" class="panel connect-panel">
+        <label>Colyseus server URL <input id="server-url" data-testid="server-url" /></label>
+        <label>Room ID <input id="room-id" data-testid="room-id" /></label>
+        <label>Room secret <input id="room-secret" data-testid="room-secret" type="password" /></label>
+        <button id="connect" data-testid="connect">Join room</button>
+      </section>
+
+      <section class="session-grid">
+        <div class="panel">
+          <h2>Session</h2>
+          <div id="session-status" data-testid="session-status">No synchronized state yet.</div>
+          <div id="players" data-testid="players" class="players"></div>
+          <div id="command-result" data-testid="command-result" class="command-result"></div>
+        </div>
+        <div class="panel">
+          <h2>Commands</h2>
+          <div class="commands">
+            <button data-command="ready" data-testid="ready">Ready</button>
+            <button data-command="start_wave" data-testid="start-wave">Start wave</button>
+            <button data-command="build_arrow" data-testid="build-arrow">Build arrow</button>
+            <button data-command="build_cannon" data-testid="build-cannon">Build cannon</button>
+            <button data-command="upgrade_tower" data-testid="upgrade-tower">Upgrade first tower</button>
+            <button data-command="sell_tower" data-testid="sell-tower">Sell first tower</button>
+            <button data-command="cast_ability" data-testid="cast-ability">Cast volley</button>
+            <button data-command="choose_reward" data-testid="choose-reward">Choose reward</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel game-panel">
+        <div id="game"></div>
+      </section>
+    </main>
+    <script type="module" src="/main.ts"></script>
+  </body>
+</html>

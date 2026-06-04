@@ -19,6 +19,9 @@ Desktop.ini
 
 # Local caches
 .cache/
+node_modules/
+dist/
+*.log
 
 !src/assets/icons/
 !src/assets/icons/**/

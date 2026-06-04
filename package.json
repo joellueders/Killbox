@@ -1,8 +1,36 @@
 {
+  "type": "module",
   "scripts": {
-    "smoke:killbox": "node tests/playwright/killbox-smoke.mjs"
+    "dev:server": "tsx watch src/multiplayer/server/main.ts",
+    "dev:client": "vite --config vite.multiplayer.config.ts",
+    "dev:multiplayer": "concurrently -k -n server,client -c blue,green \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:tailscale": "node scripts/dev-tailscale.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:shared": "vitest run tests/multiplayer/shared.test.ts",
+    "test:server": "vitest run tests/multiplayer/server.test.ts",
+    "smoke:killbox": "node tests/playwright/killbox-smoke.mjs",
+    "smoke:multiplayer": "node tests/playwright/multiplayer-smoke.mjs",
+    "build:multiplayer": "vite build --config vite.multiplayer.config.ts"
   },
   "devDependencies": {
-    "playwright": "^1.60.0"
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.9.1",
+    "concurrently": "^10.0.3",
+    "playwright": "^1.60.0",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.8"
+  },
+  "dependencies": {
+    "@colyseus/schema": "^4.0.26",
+    "@colyseus/sdk": "^0.17.42",
+    "@colyseus/ws-transport": "^0.17.13",
+    "colyseus": "^0.17.10",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "phaser": "^4.1.0"
   }
 }
