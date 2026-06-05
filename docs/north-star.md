@@ -117,6 +117,21 @@ Expedition should become the mode that best supports the long-term dream.
 
 It should feel like a dungeon crawl mixed with tower defense and twin-stick shooting.
 
+Expedition should alternate between:
+
+- ADVANCE
+- ESTABLISH
+
+The player pushes into unknown territory, then temporarily turns part of it into civilization.
+
+Expedition risk:
+
+Do not become a sequence of isolated combat rooms.
+
+The player should feel like they are advancing through territory.
+
+Forward momentum is critical.
+
 The target loop:
 
 1. Enter room.

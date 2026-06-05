@@ -3039,6 +3039,8 @@ kbd {
         <button id="devPowerupDebugToggle">Powerup Debug <span class="devBadge" id="devPowerupDebugState">OFF</span></button>
         <button id="devRiftGuardToggle">Rift Guard <span class="devBadge" id="devRiftGuardState">OFF</span></button>
         <button id="devRiftNoHpLossToggle">Rift No HP Loss <span class="devBadge" id="devRiftNoHpLossState">OFF</span></button>
+        <button id="devRoomBoundsToggle">Room Bounds <span class="devBadge" id="devRoomBoundsState">OFF</span></button>
+        <button id="devPathToggle">Pathing <span class="devBadge" id="devPathState">OFF</span></button>
       </div>
       <div class="devRow">
         <input id="devGoldValue" type="number" min="0" step="1" value="9999" aria-label="Set gold amount">
@@ -3081,6 +3083,13 @@ kbd {
         <button id="devKillHero">Damage Player</button>
         <button id="devHealHero">Heal Player</button>
         <button id="devResetCd">Reset Cooldowns</button>
+      </div>
+      <div class="devRow">
+        <button id="devRestartMission">Restart Mission</button>
+        <button id="devClearRoom">Clear Current Room</button>
+        <button id="devRevealMap">Reveal Map</button>
+        <button id="devDamageCore">Damage Core</button>
+        <button id="devTeleportRelay">Teleport To Relay</button>
       </div>
     </div>
     <h2 class="debugHidden">Test Tools</h2>
@@ -3189,6 +3198,7 @@ kbd {
             <div class="loadoutVersion" id="loadoutVersion">7.9.0</div>
           </div>
           <div class="mastheadActions">
+            <button id="playLastRun" class="secondary wide">Play Last Run</button>
             <button id="begin" class="primary wide">Start!</button>
           </div>
         </div>
@@ -4383,7 +4393,7 @@ const S = {
   synergyLog: [],
   runStats: { heroKills: 0, towerKills: 0, otherKills: 0, leaked: 0, powerups: 0, goldEarned: 0, bonusGold: 0, interestGold: 0, wavesCleared: 0 },
   selected: null, sel: null, menuOpen: false, aiEngineerOwned: false, placeDir: 1,
-  devToolsOpen: false, devUnlimitedGold: false, devInvincible: false, devShowInfo: false, devRiftGuard: false, devRiftNoHpLoss: false,
+  devToolsOpen: false, devUnlimitedGold: false, devInvincible: false, devShowInfo: false, devRiftGuard: false, devRiftNoHpLoss: false, devShowRoomBounds: false, devShowPathing: false,
   balanceReportLogged: false,
   powerupDebugMode: false, powerupDebugLog: [],
   devArenaChoice: 'field',
@@ -4425,6 +4435,7 @@ const LOADOUT_STATE = {
   arenaId: 'field',
   expeditionId: 'expedition01'
 };
+const LOADOUT_STORAGE_KEY = 'killbox.lastLoadout.v1';
 
 const ECONOMY_TUNING = {
   waveBonusBase: 20,
@@ -5821,6 +5832,86 @@ function devResetCooldowns() {
   ui();
   toast('Cooldowns reset.');
 }
+
+function devAddGold(amount = 1000) {
+  S.gold += amount;
+  ui();
+  floatText(`+${amount}g`, S.hero.x - 18, S.hero.y - 22, '#f4c24f');
+}
+
+function devSpawnBoonSelection() {
+  if (!S.started) {
+    playLastRun();
+    if (!S.started) return;
+  }
+  showMutationOverlay();
+}
+
+function devSpawnSurgeSelection() {
+  forcePowerupDebug('bullethell');
+  toast('Surge staged: Bullet Hell.');
+}
+
+function devDamageCore(amount = 100) {
+  const ex = S.expedition;
+  if (isExpeditionRun() && ex?.rift) {
+    ex.rift.hp = Math.max(0, ex.rift.hp - amount);
+    ex.rift.flash = Math.max(ex.rift.flash || 0, .55);
+    floatText(`CORE -${amount}`, ex.rift.x - 28, ex.rift.y - 42, '#ff9b8a');
+    if (ex.rift.hp <= 0) offerRestart('The Core collapsed');
+    ui();
+    return true;
+  }
+  devKillHero();
+  return false;
+}
+
+function devRevealMap() {
+  const ex = S.expedition;
+  if (!isExpeditionRun() || !ex) return false;
+  for (const k of road) {
+    if (!ex.discovered[k]) {
+      ex.discovered[k] = 1;
+      ex.discoveredCount++;
+    }
+  }
+  ex.riftFound = true;
+  ex.extractionRevealed = true;
+  ui();
+  return true;
+}
+
+function devClearCurrentRoom() {
+  const ex = S.expedition;
+  if (!isExpeditionRun() || !ex?.activeRoomId) return false;
+  const roomId = ex.activeRoomId;
+  for (const e of S.enemies) if (e.expeditionRoomId === roomId) e.dead = true;
+  for (const nest of ex.roomNests || []) if (nest.roomId === roomId) nest.dead = true;
+  completeExpeditionRoomEncounter(roomId);
+  ui();
+  return true;
+}
+
+function devTeleportToRelay() {
+  const ex = S.expedition;
+  if (isExpeditionRun()) {
+    const cfg = expeditionConfig();
+    const target = ex?.rift || (cfg?.rift ? { x: cx(cfg.rift.c), y: cy(cfg.rift.r) } : null);
+    if (target) {
+      S.hero.x = target.x + 42;
+      S.hero.y = target.y;
+      CAMERA.x = S.hero.x - W / 2;
+      CAMERA.y = S.hero.y - H / 2;
+      ui();
+      return true;
+    }
+  }
+  S.hero.x = cx(GOAL.c);
+  S.hero.y = cy(GOAL.r);
+  ui();
+  return true;
+}
+
 function resetRunForLevelSwitch(levelId) {
   S.sel = null;
   S.selected = null;
@@ -6394,6 +6485,8 @@ function ui() {
   if ($('devPowerupDebugState')) $('devPowerupDebugState').textContent = S.powerupDebugMode ? 'ON' : 'OFF';
   if ($('devRiftGuardState')) $('devRiftGuardState').textContent = S.devRiftGuard ? 'ON' : 'OFF';
   if ($('devRiftNoHpLossState')) $('devRiftNoHpLossState').textContent = S.devRiftNoHpLoss ? 'ON' : 'OFF';
+  if ($('devRoomBoundsState')) $('devRoomBoundsState').textContent = S.devShowRoomBounds ? 'ON' : 'OFF';
+  if ($('devPathState')) $('devPathState').textContent = S.devShowPathing ? 'ON' : 'OFF';
   if ($('devAudioState')) $('devAudioState').textContent = AUDIO.muted ? 'OFF' : 'ON';
   if ($('devVolumeState')) $('devVolumeState').textContent = `${Math.round(AUDIO.volume * 100)}%`;
   if ($('devVolume') && document.activeElement !== $('devVolume')) $('devVolume').value = Math.round(AUDIO.volume * 100);
@@ -6410,26 +6503,17 @@ function ui() {
   if ($('devPowerupDebugToggle')) $('devPowerupDebugToggle').classList.toggle('toggleOn', S.powerupDebugMode);
   if ($('devRiftGuardToggle')) $('devRiftGuardToggle').classList.toggle('toggleOn', S.devRiftGuard);
   if ($('devRiftNoHpLossToggle')) $('devRiftNoHpLossToggle').classList.toggle('toggleOn', S.devRiftNoHpLoss);
+  if ($('devRoomBoundsToggle')) $('devRoomBoundsToggle').classList.toggle('toggleOn', S.devShowRoomBounds);
+  if ($('devPathToggle')) $('devPathToggle').classList.toggle('toggleOn', S.devShowPathing);
   const dbg = $('devInfoOverlay');
   if (dbg) {
-    dbg.classList.toggle('debugHidden', !S.devToolsOpen || !S.devShowInfo);
-    if (S.devToolsOpen && S.devShowInfo) {
+    dbg.classList.toggle('debugHidden', !S.devShowInfo);
+    if (S.devShowInfo) {
       if (!S.balanceReportLogged) {
         console.log('[balance] tuning report', buildBalanceReport());
         S.balanceReportLogged = true;
       }
-      dbg.textContent = [
-        `gameState: ${S.gameState}`,
-        `phase: ${S.phase}`,
-        `waveActive: ${S.waveActive}`,
-        `pendingUpgrade: ${S.pendingUpgrade}`,
-        `selected: ${S.selected || 'none'}`,
-        `weapon: ${S.hero.weapon}`,
-        `mouse.down: ${mouse.down}`,
-        `riftGuard: ${S.devRiftGuard ? 'ON' : 'OFF'}`,
-        `riftNoHpLoss: ${S.devRiftNoHpLoss ? 'ON' : 'OFF'}`,
-        `lastBalance: ${JSON.stringify((S.balanceLog || [])[S.balanceLog.length - 1] || null)}`,
-      ].join('\n');
+      dbg.textContent = developerOverlayText();
     }
   }
   if (!S.sel) {
@@ -6572,6 +6656,43 @@ function refreshStartMenu() {
   ui();
 }
 
+function loadoutSavePayload() {
+  return {
+    missionType: LOADOUT_STATE.missionType === 'expedition' ? 'expedition' : 'arena',
+    arenaId: LEVELS[LOADOUT_STATE.arenaId] && !isExpeditionLevel(LOADOUT_STATE.arenaId) ? LOADOUT_STATE.arenaId : 'field',
+    expeditionId: isExpeditionLevel(LOADOUT_STATE.expeditionId) ? LOADOUT_STATE.expeditionId : 'expedition01',
+    selectedIds: LOADOUT_STATE.selectedIds.filter(k => WEAPONS[k] || TOWERS[k] || TRINKETS[k]).slice(0, LOADOUT_MAX_SLOTS),
+    inspectedId: LOADOUT_STATE.inspectedId || null,
+  };
+}
+
+function persistLoadoutState() {
+  try {
+    localStorage.setItem(LOADOUT_STORAGE_KEY, JSON.stringify(loadoutSavePayload()));
+  } catch (err) {
+    console.warn('[loadout] save failed', err);
+  }
+}
+
+function restoreLoadoutState() {
+  let data = null;
+  try {
+    data = JSON.parse(localStorage.getItem(LOADOUT_STORAGE_KEY) || 'null');
+  } catch (err) {
+    console.warn('[loadout] restore failed', err);
+  }
+  if (!data || typeof data !== 'object') return false;
+  LOADOUT_STATE.missionType = data.missionType === 'expedition' ? 'expedition' : 'arena';
+  if (LEVELS[data.arenaId] && !isExpeditionLevel(data.arenaId)) LOADOUT_STATE.arenaId = data.arenaId;
+  if (isExpeditionLevel(data.expeditionId)) LOADOUT_STATE.expeditionId = data.expeditionId;
+  LOADOUT_STATE.selectedIds = Array.isArray(data.selectedIds)
+    ? data.selectedIds.filter(k => WEAPONS[k] || TOWERS[k] || TRINKETS[k]).slice(0, LOADOUT_MAX_SLOTS)
+    : [];
+  LOADOUT_STATE.inspectedId = LOADOUT_STATE.selectedIds.includes(data.inspectedId) ? data.inspectedId : (LOADOUT_STATE.selectedIds[0] || null);
+  S.devArenaChoice = getSelectedMissionLevel();
+  return true;
+}
+
 function getSelectedMissionLevel() {
   return LOADOUT_STATE.missionType === 'expedition'
     ? (LOADOUT_STATE.expeditionId || 'expedition01')
@@ -6605,6 +6726,7 @@ function updateMissionSelectionUI() {
 function setLoadoutMissionType(type) {
   LOADOUT_STATE.missionType = type === 'expedition' ? 'expedition' : 'arena';
   S.devArenaChoice = getSelectedMissionLevel();
+  persistLoadoutState();
   updateMissionSelectionUI();
   updateLoadoutSummary();
   renderPreview();
@@ -6658,6 +6780,12 @@ function updateLoadoutSummary() {
     beginBtn.disabled = !enabled;
     beginBtn.classList.toggle('disabled', !enabled);
   }
+  const lastBtn = $('playLastRun');
+  if (lastBtn) {
+    const enabled = !!LOADOUT_STATE.selectedIds.some(k => !!WEAPONS[k]);
+    lastBtn.disabled = !enabled;
+    lastBtn.classList.toggle('disabled', !enabled);
+  }
   // Show selected count per category on tabs
   const selectedByKind = { weapon: 0, tower: 0, trap: 0, trinket: 0 };
   LOADOUT_STATE.selectedIds.forEach(k => {
@@ -6683,6 +6811,26 @@ function updateLoadoutSummary() {
       badge.remove();
     }
   });
+}
+
+function developerOverlayText() {
+  const ex = S.expedition;
+  const roomId = ex?.activeRoomId || expeditionRoomAtHero()?.id || 'none';
+  const roomState = roomId !== 'none' ? expeditionRoomState(roomId) : 'none';
+  const coreHp = ex?.rift ? `${Math.round(ex.rift.hp)} / ${Math.round(ex.rift.max)}` : 'n/a';
+  const hunters = S.enemies.filter(e => !e.dead && e.expeditionTarget === 'rift').length;
+  return [
+    `MISSION: ${isExpeditionRun() ? 'EXPEDITION' : 'ARENA'}`,
+    `LEVEL: ${S.levelId}`,
+    `ROOM: ${String(roomId).toUpperCase()}`,
+    `ROOM STATE: ${String(roomState).toUpperCase()}`,
+    `CORE HP: ${coreHp}${ex?.riftCarried ? ' CARRIED' : ''}`,
+    `ENEMIES: ${S.enemies.filter(e => !e.dead).length}`,
+    `RIFT HUNTERS: ${hunters}`,
+    `MONEY: ${Math.floor(S.gold)}`,
+    `GOD: ${S.devInvincible ? 'ON' : 'OFF'}`,
+    `CORE SAFE: ${S.devRiftNoHpLoss ? 'ON' : 'OFF'}`,
+  ].join('\n');
 }
 
 function loadoutItemLabel(k) {
@@ -6733,6 +6881,7 @@ function reorderLoadoutItem(fromIndex, toIndex) {
   updateLoadoutInspector();
   updateLoadoutSummary();
   updateLoadoutPreviewRail();
+  persistLoadoutState();
   return true;
 }
 
@@ -6793,6 +6942,7 @@ function toggleLoadout(k) {
   updateLoadoutInspector();
   updateLoadoutSummary();
   updateLoadoutPreviewRail();
+  persistLoadoutState();
 }
 function clearLoadout() {
   LOADOUT_STATE.selectedIds = [];
@@ -6802,6 +6952,7 @@ function clearLoadout() {
   updateLoadoutInspector();
   updateLoadoutSummary();
   updateLoadoutPreviewRail();
+  persistLoadoutState();
 }
 
 function validateLoadoutState() {
@@ -6834,6 +6985,7 @@ function startGameFromLoadout() {
   console.log('[loadout] Start button clicked');
   console.log('[loadout] startGameFromLoadout begins');
   if (!validateLoadoutState()) return;
+  persistLoadoutState();
   const missionLevel = getSelectedMissionLevel();
   if (missionLevel && missionLevel !== S.levelId && switchArena(missionLevel) === false) {
     console.log('[loadout] validation fails', 'arena switch failed');
@@ -6863,6 +7015,87 @@ function startGameFromLoadout() {
   toast('The warden descends...');
   ui();
   console.log('[loadout] startGameFromLoadout completes');
+}
+
+function playLastRun() {
+  restoreLoadoutState();
+  updateMissionSelectionUI();
+  updateLoadoutCards();
+  updateLoadoutInspector();
+  updateLoadoutSummary();
+  updateLoadoutPreviewRail();
+  startGameFromLoadout();
+}
+
+function restartMission() {
+  if (!S.started) return playLastRun();
+  const current = S.levelId || getSelectedMissionLevel();
+  if (isExpeditionLevel(current)) {
+    LOADOUT_STATE.missionType = 'expedition';
+    LOADOUT_STATE.expeditionId = current;
+  } else {
+    LOADOUT_STATE.missionType = 'arena';
+    LOADOUT_STATE.arenaId = current;
+  }
+  persistLoadoutState();
+  resetRunForLevelSwitch(current);
+  $('start').classList.add('hidden');
+  startGameFromLoadout();
+}
+
+function handleDeveloperHotkey(e) {
+  if (!e || e.repeat) return false;
+  if (e.code === 'F12') {
+    e.preventDefault();
+    S.devShowInfo = !S.devShowInfo;
+    if (S.devShowInfo) S.balanceReportLogged = false;
+    ui();
+    toast(`Debug Overlay ${S.devShowInfo ? 'ON' : 'OFF'}`);
+    return true;
+  }
+  if (e.key === '`') {
+    e.preventDefault();
+    S.devToolsOpen = !S.devToolsOpen;
+    ui();
+    toast(`Debug Tools ${S.devToolsOpen ? 'ON' : 'OFF'}`);
+    return true;
+  }
+  if (!S.devToolsOpen) return false;
+  if (e.shiftKey && e.code === 'KeyR') {
+    e.preventDefault();
+    restartMission();
+    toast('Mission restarted.');
+    return true;
+  }
+  const code = e.code;
+  if (!/^F\d+$/.test(code)) return false;
+  e.preventDefault();
+  if (code === 'F1') { devAddGold(1000); return true; }
+  if (code === 'F2') { devSpawnBoonSelection(); return true; }
+  if (code === 'F3') { devSpawnSurgeSelection(); return true; }
+  if (code === 'F4') { devHealHero(); return true; }
+  if (code === 'F5') { devDamageCore(); return true; }
+  if (code === 'F6') { devSpawnSlimeKing(); return true; }
+  if (code === 'F7') {
+    if (!devRevealMap()) toast('Reveal Map is Expedition-only.');
+    return true;
+  }
+  if (code === 'F8') {
+    S.devInvincible = !S.devInvincible;
+    ui();
+    toast(`God Mode ${S.devInvincible ? 'ON' : 'OFF'}`);
+    return true;
+  }
+  if (code === 'F9') {
+    if (!devClearCurrentRoom()) toast('No active room to clear.');
+    return true;
+  }
+  if (code === 'F10') {
+    devTeleportToRelay();
+    toast(isExpeditionRun() ? 'Teleported to Core.' : 'Teleported to endpoint.');
+    return true;
+  }
+  return false;
 }
 
 function renderCodices() {
@@ -14084,6 +14317,62 @@ function step(dt) {
 }
 
 // ── Draw routines ──────────────────────────────────────────────────
+function drawDeveloperDebugWorld(t) {
+  if (!S.devToolsOpen) return;
+  const showRooms = S.devShowRoomBounds && isExpeditionRun();
+  const showPaths = S.devShowPathing;
+  if (!showRooms && !showPaths) return;
+  ctx.save();
+  if (showRooms) {
+    const cfg = expeditionConfig();
+    ctx.font = '11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+    ctx.textBaseline = 'top';
+    for (const room of cfg?.rooms || []) {
+      const [x1, y1, x2, y2] = room.rect || [];
+      const x = OX + x1 * G;
+      const y = OY + y1 * G;
+      const w = (x2 - x1 + 1) * G;
+      const h = (y2 - y1 + 1) * G;
+      const state = expeditionRoomState(room.id);
+      ctx.globalAlpha = state === 'active' ? .44 : state === 'cleared' ? .2 : .28;
+      ctx.fillStyle = room.color || '#8edcff';
+      ctx.fillRect(x, y, w, h);
+      ctx.globalAlpha = state === 'active' ? .95 : .55;
+      ctx.strokeStyle = state === 'active' ? '#ffcf6a' : state === 'cleared' ? '#b9d84f' : '#8edcff';
+      ctx.lineWidth = state === 'active' ? 3 : 2;
+      ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+      ctx.globalAlpha = .9;
+      ctx.fillStyle = '#f4ead8';
+      ctx.fillText(`${room.id}:${state}`, x + 6, y + 6);
+    }
+  }
+  if (showPaths) {
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = .18;
+    ctx.strokeStyle = '#8edcff';
+    for (const path of S.paths || []) {
+      if (!Array.isArray(path) || path.length < 2) continue;
+      ctx.beginPath();
+      ctx.moveTo(path[0].x, path[0].y);
+      for (const p of path.slice(1)) ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = .45 + Math.sin(t * 5) * .08;
+    for (const e of S.enemies) {
+      if (e.dead || !Array.isArray(e.path) || e.path.length < 2) continue;
+      ctx.strokeStyle = e.expeditionTarget === 'rift' ? '#ff7a4a' : '#f0c96b';
+      ctx.beginPath();
+      const start = Math.max(0, e.node || 0);
+      const first = e.path[start] || e.path[0];
+      ctx.moveTo(e.x, e.y);
+      ctx.lineTo(first.x, first.y);
+      for (let i = start + 1; i < e.path.length; i++) ctx.lineTo(e.path[i].x, e.path[i].y);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
 function draw(t) {
   // Hotbar status and weapon secondary labels need per-frame updates for smooth cooldown animation.
   renderBuildButtons();
@@ -14186,6 +14475,7 @@ function draw(t) {
   drawExpeditionBuildRadius(t);
   drawExpeditionRoomBlockers(t);
   drawExpeditionObjects(t);
+  drawDeveloperDebugWorld(t);
   drawHero(t);
   if (Array.isArray(S.cornerGhosts)) {
     for (const ghost of S.cornerGhosts) {
@@ -17308,6 +17598,8 @@ $('devInfoToggle').onclick = () => {
 $('devPowerupDebugToggle').onclick = () => { S.powerupDebugMode = !S.powerupDebugMode; logPowerupDebug('mode', null, { enabled: S.powerupDebugMode }); ui(); toast(`Powerup Debug ${S.powerupDebugMode ? 'ON' : 'OFF'}`); };
 $('devRiftGuardToggle').onclick = () => { S.devRiftGuard = !S.devRiftGuard; ui(); toast(`Rift Guard ${S.devRiftGuard ? 'ON' : 'OFF'}`); };
 $('devRiftNoHpLossToggle').onclick = () => { S.devRiftNoHpLoss = !S.devRiftNoHpLoss; ui(); toast(`Rift No HP Loss ${S.devRiftNoHpLoss ? 'ON' : 'OFF'}`); };
+$('devRoomBoundsToggle').onclick = () => { S.devShowRoomBounds = !S.devShowRoomBounds; ui(); toast(`Room Bounds ${S.devShowRoomBounds ? 'ON' : 'OFF'}`); };
+$('devPathToggle').onclick = () => { S.devShowPathing = !S.devShowPathing; ui(); toast(`Pathing ${S.devShowPathing ? 'ON' : 'OFF'}`); };
 $('devAudioToggle').onclick = () => { unlockAudio(); setAudioMuted(!AUDIO.muted); toast(`Audio ${AUDIO.muted ? 'OFF' : 'ON'}`); };
 $('devVolume').oninput = e => { unlockAudio(); setAudioVolume((Number(e.target.value) || 0) / 100); };
 $('devSetGold').onclick = () => {
@@ -17331,6 +17623,7 @@ $('startArenaSelect').onchange = e => {
   LOADOUT_STATE.arenaId = e.target.value || 'field';
   LOADOUT_STATE.missionType = 'arena';
   S.devArenaChoice = getSelectedMissionLevel();
+  persistLoadoutState();
   updateMissionSelectionUI();
   updateLoadoutSummary();
   renderPreview();
@@ -17339,6 +17632,7 @@ if ($('startExpeditionSelect')) $('startExpeditionSelect').onchange = e => {
   LOADOUT_STATE.expeditionId = e.target.value || 'expedition01';
   LOADOUT_STATE.missionType = 'expedition';
   S.devArenaChoice = getSelectedMissionLevel();
+  persistLoadoutState();
   updateMissionSelectionUI();
   updateLoadoutSummary();
   renderPreview();
@@ -17359,8 +17653,17 @@ $('devTriggerMutagen').onclick = () => {
 $('devKillHero').onclick = () => devKillHero();
 $('devHealHero').onclick = () => devHealHero();
 $('devResetCd').onclick = () => devResetCooldowns();
+$('devRestartMission').onclick = () => restartMission();
+$('devClearRoom').onclick = () => { if (!devClearCurrentRoom()) toast('No active room to clear.'); };
+$('devRevealMap').onclick = () => { if (!devRevealMap()) toast('Reveal Map is Expedition-only.'); };
+$('devDamageCore').onclick = () => devDamageCore();
+$('devTeleportRelay').onclick = () => {
+  devTeleportToRelay();
+  toast(isExpeditionRun() ? 'Teleported to Core.' : 'Teleported to endpoint.');
+};
 populateDevDropDowns();
 $('begin').onclick   = startGameFromLoadout;
+$('playLastRun').onclick = playLastRun;
 $('clearBtn').onclick = () => {
   if (S.expedition?.completed) {
     location.reload();
@@ -17495,8 +17798,8 @@ addEventListener('keydown', e => {
     }
     return;
   }
+  if (handleDeveloperHotkey(e)) return;
   keys[e.key] = true; keys[e.key.toLowerCase()] = true; keys[e.code] = true;
-  if (e.key === '`' || e.code === 'F10') { e.preventDefault(); S.devToolsOpen = !S.devToolsOpen; ui(); return; }
   if (e.key.toLowerCase() === 'e' && (tryToggleExpeditionRiftCarry() || tryActivateExpeditionRift())) { e.preventDefault(); return; }
   const tKeys = S.loadout && S.loadout.length ? S.loadout : [];
   if (e.key >= '1' && e.key <= String(LOADOUT_MAX_SLOTS)) {
@@ -17550,6 +17853,8 @@ function loop(now) {
 requestAnimationFrame(loop);
 preloadEnemySprites();
 // Co-op UI disabled in 5.5.1 Waymark.
+restoreLoadoutState();
+updateMissionSelectionUI();
 ui();
 renderSetupPickers();
 </script>
