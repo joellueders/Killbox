@@ -47,7 +47,7 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
   position: absolute;
   top: 4px;
   right: 6px;
-  z-index: 50;
+  z-index: 70;
   pointer-events: auto;
   display: grid;
   place-items: center;
@@ -3228,6 +3228,20 @@ kbd {
   transform: translateX(-50%) translateY(0);
 }
 @media (max-width: 620px) {
+  .topHud {
+    left: 10px;
+    max-width: calc(100vw - 72px);
+    width: calc(100vw - 72px);
+    gap: 4px;
+    padding: 5px 8px 5px 10px;
+    font-size: 16px;
+    flex-wrap: wrap;
+    white-space: normal;
+  }
+  .gameHudToggle {
+    top: 8px;
+    right: 8px;
+  }
   .objectiveHud {
     top: 60px;
     left: 12px;
