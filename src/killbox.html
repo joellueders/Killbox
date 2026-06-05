@@ -455,6 +455,95 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
 }
 .ui.panelHidden .panel { transform: translateX(390px); opacity: 0; pointer-events: none; }
 .panel .buildSection { display: none; }
+.warRoomSection {
+  margin-top: 8px;
+  border: 1px solid rgba(123, 75, 37, .92);
+  background: rgba(14, 10, 7, .72);
+  box-shadow: inset 0 0 0 1px rgba(240, 201, 107, .08);
+}
+.warRoomSection > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 9px;
+  color: #f0c96b;
+  font: 800 12px Georgia, 'Times New Roman', serif;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(123, 75, 37, .42);
+}
+.warRoomSection > summary::-webkit-details-marker { display: none; }
+.warRoomSection > summary::after {
+  content: '+';
+  color: #cfbb96;
+  font: 900 14px/1 monospace;
+}
+.warRoomSection[open] > summary::after { content: '−'; }
+.warRoomSectionBody { padding: 8px 9px 10px; display: grid; gap: 8px; }
+.warRoomSection .sectionNote {
+  margin: 0;
+  color: #a98f61;
+  font: 11px/1.35 monospace;
+}
+.warRoomStatusGrid {
+  display: grid;
+  gap: 6px;
+}
+.warRoomStatusRow {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  font-size: 12px;
+  line-height: 1.2;
+}
+.warRoomStatusRow span {
+  color: #f0c96b;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.warRoomStatusRow b {
+  color: #f6e9bf;
+  font-weight: 700;
+}
+.warRoomStatusRow small {
+  color: #cfbb96;
+}
+.warRoomKeyValue {
+  display: grid;
+  gap: 2px;
+}
+.warRoomDebugActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.warRoomDebugActions button {
+  min-height: 30px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.15;
+  text-align: left;
+}
+.warRoomDebugActions button .actionLabel {
+  display: block;
+  font-weight: 800;
+}
+.warRoomDebugActions button .actionMeta {
+  display: block;
+  margin-top: 2px;
+  color: #a98f61;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+.warRoomDebugActions button:hover { filter: brightness(1.08); }
+.warRoomDebugActions button:focus { outline: 2px solid #7ac6e8; outline-offset: 1px; }
 .guideButton {
   width: 100%;
   margin-top: 10px;
@@ -2838,6 +2927,31 @@ kbd {
 .devPanel .devRow select {
   min-height: 34px;
 }
+.devPanel .devActionsRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 6px 0;
+}
+.devPanel .devActionsRow button {
+  min-height: 30px;
+  padding: 5px 8px;
+  font-size: 12px;
+  line-height: 1.15;
+  text-align: left;
+}
+.devPanel .devActionsRow button .actionLabel {
+  display: block;
+  font-weight: 800;
+}
+.devPanel .devActionsRow button .actionMeta {
+  display: block;
+  margin-top: 2px;
+  color: #a98f61;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
 .devBadge {
   display: inline-block;
   margin-left: 6px;
@@ -2983,6 +3097,60 @@ kbd {
   white-space: nowrap;
 }
 .objectiveHud.danger b { color: #ffddb0; }
+.devHotkeyHelp {
+  position: fixed;
+  right: 12px;
+  top: 12px;
+  z-index: 9997;
+  width: min(320px, calc(100vw - 24px));
+  padding: 10px 12px;
+  border: 1px solid #7b4b25;
+  border-radius: 10px;
+  background: rgba(18, 12, 8, .92);
+  color: #ffe6ad;
+  box-shadow: 0 8px 24px rgba(0,0,0,.32);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity .18s ease, transform .18s ease;
+}
+.devHotkeyHelp.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.devHotkeyHelp h3 {
+  margin: 0 0 8px;
+  font: 900 12px Georgia, serif;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #f0c96b;
+}
+.devHotkeyRow {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 8px;
+  font: 12px/1.3 monospace;
+  margin: 0;
+}
+.devHotkeyRow + .devHotkeyRow { margin-top: 4px; }
+.devHotkeyRow kbd {
+  display: inline-block;
+  min-width: 36px;
+  padding: 1px 5px;
+  border: 1px solid #6d4931;
+  border-radius: 4px;
+  background: rgba(255,255,255,.05);
+  color: #fff4cf;
+  text-align: center;
+}
+.devHotkeyRow span {
+  color: #cfbb96;
+}
+.devHotkeyHelp .note {
+  margin-top: 8px;
+  color: #a98f61;
+  font: 11px/1.35 monospace;
+}
 .missionBriefing {
   position: fixed;
   top: 80px;
@@ -3119,6 +3287,22 @@ kbd {
   </div>
 </div>
 <div id="missionHint" class="missionHint" aria-live="polite" aria-atomic="true"></div>
+<div id="devHotkeyHelp" class="devHotkeyHelp" aria-hidden="true">
+  <h3>DEV HOTKEYS</h3>
+  <div class="devHotkeyRow"><kbd>F1</kbd><span>Add Gold</span></div>
+  <div class="devHotkeyRow"><kbd>F2</kbd><span>Spawn Boon</span></div>
+  <div class="devHotkeyRow"><kbd>F3</kbd><span>Spawn Surge</span></div>
+  <div class="devHotkeyRow"><kbd>F4</kbd><span>Heal Hero</span></div>
+  <div class="devHotkeyRow"><kbd>F5</kbd><span>Damage Core</span></div>
+  <div class="devHotkeyRow"><kbd>F6</kbd><span>Spawn Boss</span></div>
+  <div class="devHotkeyRow"><kbd>F7</kbd><span>Reveal Map</span></div>
+  <div class="devHotkeyRow"><kbd>F8</kbd><span>Toggle God Mode</span></div>
+  <div class="devHotkeyRow"><kbd>F9</kbd><span>Clear Room</span></div>
+  <div class="devHotkeyRow"><kbd>F10</kbd><span>Teleport To Relay</span></div>
+  <div class="devHotkeyRow"><kbd>F11</kbd><span>Toggle This Help</span></div>
+  <div class="devHotkeyRow"><kbd>F12</kbd><span>Toggle Debug Overlay</span></div>
+  <div class="note">Developer tools must be enabled for F-key actions to work.</div>
+</div>
 <!-- ── Build Hotbar ─────────────────────── -->
 <div id="buildDock" class="buildDock">
   <div id="buildHotbar" class="buildRail"></div>
@@ -3144,94 +3328,131 @@ kbd {
       <div id="info">Build phase. Slot murder metal, sell your mistakes, and try not to feed the lane.</div>
       <div id="selectedInfo" class="selectedInfoCard" aria-live="polite"></div>
     </div>
-    <div class="buildSection" id="builds"></div>
-    <h2>Hero</h2>
-    <div id="weaponHudBox" class="multiplayerStatus">Gun: <b id="weaponNameHud">Blunderbuss</b><span id="weaponChargeHud"></span></div>
-    <div class="grid">
-      <button id="hireEngineer" class="primary wide">Hire Engineer <span class="cost">200g</span><div class="desc">Gremlin helper. Carries one wave, then sulks off.</div></button>
-    </div>
-    <h2>Audio</h2>
-    <div class="grid">
-      <button id="devAudioToggle">Audio <span class="devBadge" id="devAudioState">ON</span></button>
-      <div class="audioSliderRow">
-        <label class="devLabel" for="devVolume">Loudness</label>
-        <input id="devVolume" type="range" min="0" max="100" value="50" aria-label="Audio volume">
-        <span class="devBadge" id="devVolumeState">50%</span>
+    <details class="warRoomSection" open>
+      <summary>Mission Status</summary>
+      <div class="warRoomSectionBody">
+        <div id="warRoomStatus" class="warRoomStatusGrid" aria-live="polite"></div>
       </div>
-    </div>
-    <h2>Battle Controls</h2>
-    <div class="grid">
-      <div class="controlRow">
-        <button id="waveBtn" class="primary">Start Wave Now [Space]</button>
-        <button id="waveSpeedBtn" class="primary duplicateSpeedControl" aria-hidden="true" tabindex="-1">Wave Speed <span class="devBadge" id="waveSpeedState">1x</span></button>
+    </details>
+    <details class="warRoomSection" open>
+      <summary>Debug Actions</summary>
+      <div class="warRoomSectionBody">
+        <div id="devPanel" class="devPanel debugHidden">
+          <h2>Debug Tools</h2>
+          <div class="devRow">
+            <button id="devGoldToggle">Infinite Gold <span class="devBadge" id="devGoldState">OFF</span></button>
+            <button id="devInvToggle">God Mode <span class="devBadge" id="devInvState">OFF</span></button>
+            <button id="devInfoToggle">Debug Overlay <span class="devBadge" id="devInfoState">OFF</span></button>
+            <button id="devPowerupDebugToggle">Powerup Debug <span class="devBadge" id="devPowerupDebugState">OFF</span></button>
+            <button id="devRiftGuardToggle">Rift Guard <span class="devBadge" id="devRiftGuardState">OFF</span></button>
+            <button id="devRiftNoHpLossToggle">Rift No HP Loss <span class="devBadge" id="devRiftNoHpLossState">OFF</span></button>
+            <button id="devRoomBoundsToggle">Room Bounds <span class="devBadge" id="devRoomBoundsState">OFF</span></button>
+            <button id="devPathToggle">Pathing <span class="devBadge" id="devPathState">OFF</span></button>
+          </div>
+          <div class="devRow">
+            <input id="devGoldValue" type="number" min="0" step="1" value="9999" aria-label="Set gold amount">
+            <button id="devSetGold">Add Gold</button>
+          </div>
+          <div class="devRow">
+            <input id="devWaveValue" type="number" min="1" step="1" value="1" aria-label="Set next wave">
+            <button id="devSetWave">Set Next Wave</button>
+          </div>
+          <div class="devRow">
+            <select id="devArenaSelect" aria-label="Select arena">
+              <option value="field">Field</option>
+              <option value="choke">Choke</option>
+              <option value="ring">Ring</option>
+              <option value="split">Split</option>
+              <option value="proto">Prototype</option>
+              <option value="vertical">Long Fortress</option>
+              <option value="doubledeck">Double Deck</option>
+              <option value="eastwest">East / West</option>
+              <option value="spiral">Spiral Keep</option>
+              <option value="citadel">Outer Loops</option>
+              <option value="expedition01">Expedition 01</option>
+            </select>
+            <button id="devLoadArena">Load Arena</button>
+          </div>
+          <div class="devRow">
+            <button id="devSpawnBoss">Spawn Boss</button>
+            <button id="devKillBoss">Kill Boss</button>
+            <button id="devClearEnemies">Clear Enemies</button>
+          </div>
+          <div class="devRow">
+            <select id="devPowerupSelect" aria-label="Select powerup to trigger"></select>
+            <button id="devTriggerPowerup">Trigger Powerup</button>
+          </div>
+          <div class="devRow">
+            <select id="devMutagenSelect" aria-label="Select multiverse mutagen"></select>
+            <button id="devTriggerMutagen">Stage Mutagen</button>
+          </div>
+          <div class="devActionsRow" aria-label="Debug actions">
+            <button id="devKillHero"><span class="actionLabel">Damage Player</span><span class="actionMeta">F4</span></button>
+            <button id="devHealHero"><span class="actionLabel">Heal Player</span><span class="actionMeta">F4</span></button>
+            <button id="devResetCd"><span class="actionLabel">Reset Cooldowns</span><span class="actionMeta">Combat state</span></button>
+            <button id="devRestartMission"><span class="actionLabel">Restart Mission</span><span class="actionMeta">Reset current run</span></button>
+            <button id="devClearRoom"><span class="actionLabel">Clear Current Room</span><span class="actionMeta">Expedition only</span></button>
+            <button id="devRevealMap"><span class="actionLabel">Reveal Map</span><span class="actionMeta">Expedition only</span></button>
+            <button id="devDamageCore"><span class="actionLabel">Damage Core</span><span class="actionMeta">Expedition only</span></button>
+            <button id="devTeleportRelay"><span class="actionLabel">Teleport To Relay</span><span class="actionMeta">Expedition only</span></button>
+          </div>
+        </div>
       </div>
-      <button id="upgrade" class="primary">Upgrade Selected</button>
-      <button id="sell"    class="danger">Sell Selected Tower</button>
-      <button id="newRunBtn" class="danger">Reset Run</button>
-    </div>
-    <button id="guideButton" class="guideButton" type="button">Guide</button>
-    <div id="devPanel" class="devPanel debugHidden">
-      <h2>Debug Tools</h2>
-      <div class="devRow">
-        <button id="devGoldToggle">Infinite Gold <span class="devBadge" id="devGoldState">OFF</span></button>
-        <button id="devInvToggle">God Mode <span class="devBadge" id="devInvState">OFF</span></button>
-        <button id="devInfoToggle">Debug Overlay <span class="devBadge" id="devInfoState">OFF</span></button>
-        <button id="devPowerupDebugToggle">Powerup Debug <span class="devBadge" id="devPowerupDebugState">OFF</span></button>
-        <button id="devRiftGuardToggle">Rift Guard <span class="devBadge" id="devRiftGuardState">OFF</span></button>
-        <button id="devRiftNoHpLossToggle">Rift No HP Loss <span class="devBadge" id="devRiftNoHpLossState">OFF</span></button>
-        <button id="devRoomBoundsToggle">Room Bounds <span class="devBadge" id="devRoomBoundsState">OFF</span></button>
-        <button id="devPathToggle">Pathing <span class="devBadge" id="devPathState">OFF</span></button>
+    </details>
+    <details class="warRoomSection">
+      <summary>Guide</summary>
+      <div class="warRoomSectionBody">
+        <button id="guideButton" class="guideButton" type="button">Open Guide</button>
+        <p class="sectionNote">Reference tabs live in the modal. Keep the panel compact during playtests.</p>
       </div>
-      <div class="devRow">
-        <input id="devGoldValue" type="number" min="0" step="1" value="9999" aria-label="Set gold amount">
-        <button id="devSetGold">Add Gold</button>
+    </details>
+    <details class="warRoomSection">
+      <summary>Inspector</summary>
+      <div class="warRoomSectionBody">
+        <div id="selectedInfo" class="selectedInfoCard" aria-live="polite"></div>
       </div>
-      <div class="devRow">
-        <input id="devWaveValue" type="number" min="1" step="1" value="1" aria-label="Set next wave">
-        <button id="devSetWave">Set Next Wave</button>
+    </details>
+    <details class="warRoomSection">
+      <summary>Loadout Summary</summary>
+      <div class="warRoomSectionBody">
+        <div class="buildSection" id="builds"></div>
+        <h2>Hero</h2>
+        <div id="weaponHudBox" class="multiplayerStatus">Gun: <b id="weaponNameHud">Blunderbuss</b><span id="weaponChargeHud"></span></div>
+        <div class="grid">
+          <button id="hireEngineer" class="primary wide">Hire Engineer <span class="cost">200g</span><div class="desc">Gremlin helper. Carries one wave, then sulks off.</div></button>
+        </div>
+        <h2>Audio</h2>
+        <div class="grid">
+          <button id="devAudioToggle">Audio <span class="devBadge" id="devAudioState">ON</span></button>
+          <div class="audioSliderRow">
+            <label class="devLabel" for="devVolume">Loudness</label>
+            <input id="devVolume" type="range" min="0" max="100" value="50" aria-label="Audio volume">
+            <span class="devBadge" id="devVolumeState">50%</span>
+          </div>
+        </div>
+        <h2>Battle Controls</h2>
+        <div class="grid">
+          <div class="controlRow">
+            <button id="waveBtn" class="primary">Start Wave Now [Space]</button>
+            <button id="waveSpeedBtn" class="primary duplicateSpeedControl" aria-hidden="true" tabindex="-1">Wave Speed <span class="devBadge" id="waveSpeedState">1x</span></button>
+          </div>
+          <button id="upgrade" class="primary">Upgrade Selected</button>
+          <button id="sell"    class="danger">Sell Selected Tower</button>
+          <button id="newRunBtn" class="danger">Reset Run</button>
+        </div>
+        <div id="preview">Next wave grumbles here.</div>
+        <p>
+          <kbd>WASD</kbd> move &nbsp;
+          <kbd>Click</kbd> shoot &nbsp;
+          <kbd>Right Click</kbd> secondary &nbsp;
+          <kbd>Space</kbd> wave &nbsp;
+          <kbd>T</kbd> speed &nbsp;
+          <kbd>U</kbd> upgrade &nbsp;
+          <kbd>1</kbd>–<kbd>8</kbd> build
+        </p>
+        <div class="sidebarFooter">Killbox <span id="sidebarVersion">7.9.0</span>. Still rude.</div>
       </div>
-      <div class="devRow">
-        <select id="devArenaSelect" aria-label="Select arena">
-          <option value="field">Field</option>
-          <option value="choke">Choke</option>
-          <option value="ring">Ring</option>
-          <option value="split">Split</option>
-          <option value="proto">Prototype</option>
-          <option value="vertical">Long Fortress</option>
-          <option value="doubledeck">Double Deck</option>
-          <option value="eastwest">East / West</option>
-          <option value="spiral">Spiral Keep</option>
-          <option value="citadel">Outer Loops</option>
-          <option value="expedition01">Expedition 01</option>
-        </select>
-        <button id="devLoadArena">Load Arena</button>
-      </div>
-      <div class="devRow">
-        <button id="devSpawnBoss">Spawn Boss</button>
-        <button id="devKillBoss">Kill Boss</button>
-        <button id="devClearEnemies">Clear Enemies</button>
-      </div>
-      <div class="devRow">
-        <select id="devPowerupSelect" aria-label="Select powerup to trigger"></select>
-        <button id="devTriggerPowerup">Trigger Powerup</button>
-      </div>
-      <div class="devRow">
-        <select id="devMutagenSelect" aria-label="Select multiverse mutagen"></select>
-        <button id="devTriggerMutagen">Stage Mutagen</button>
-      </div>
-      <div class="devRow">
-        <button id="devKillHero">Damage Player</button>
-        <button id="devHealHero">Heal Player</button>
-        <button id="devResetCd">Reset Cooldowns</button>
-      </div>
-      <div class="devRow">
-        <button id="devRestartMission">Restart Mission</button>
-        <button id="devClearRoom">Clear Current Room</button>
-        <button id="devRevealMap">Reveal Map</button>
-        <button id="devDamageCore">Damage Core</button>
-        <button id="devTeleportRelay">Teleport To Relay</button>
-      </div>
-    </div>
+    </details>
     <h2 class="debugHidden">Test Tools</h2>
     <div class="testControls debugHidden">
       <input id="testWave" type="number" min="1" max="999" value="1" aria-label="Next wave number">
@@ -3243,18 +3464,7 @@ kbd {
       <button id="save" class="primary">Forge Seal</button>
       <button id="load">Read Seal</button>
     </div>
-    <div id="preview">Next wave grumbles here.</div>
-    <p>
-      <kbd>WASD</kbd> move &nbsp;
-      <kbd>Click</kbd> shoot &nbsp;
-      <kbd>Right Click</kbd> secondary &nbsp;
-      <kbd>Space</kbd> wave &nbsp;
-      <kbd>T</kbd> speed &nbsp;
-      <kbd>U</kbd> upgrade &nbsp;
-      <kbd>1</kbd>–<kbd>8</kbd> build
-    </p>
-    <div class="sidebarFooter">Killbox <span id="sidebarVersion">7.9.0</span>. Still rude.</div>
-</div>
+  </div>
 </div>
 
 <div id="guideModal" class="guideModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="guideModalTitle">
@@ -4533,7 +4743,7 @@ const S = {
   synergyLog: [],
   runStats: { heroKills: 0, towerKills: 0, otherKills: 0, leaked: 0, powerups: 0, goldEarned: 0, bonusGold: 0, interestGold: 0, wavesCleared: 0 },
   selected: null, sel: null, menuOpen: false, aiEngineerOwned: false, placeDir: 1,
-  devToolsOpen: false, devUnlimitedGold: false, devInvincible: false, devShowInfo: false, devRiftGuard: false, devRiftNoHpLoss: false, devShowRoomBounds: false, devShowPathing: false,
+  devToolsOpen: false, devHotkeyHelp: false, devUnlimitedGold: false, devInvincible: false, devShowInfo: false, devRiftGuard: false, devRiftNoHpLoss: false, devShowRoomBounds: false, devShowPathing: false,
   balanceReportLogged: false,
   powerupDebugMode: false, powerupDebugLog: [],
   devArenaChoice: 'field',
@@ -6642,6 +6852,7 @@ function ui() {
   if ($('devVolume') && document.activeElement !== $('devVolume')) $('devVolume').value = Math.round(AUDIO.volume * 100);
   if ($('loadoutVersion')) $('loadoutVersion').textContent = S.version;
   if ($('sidebarVersion')) $('sidebarVersion').textContent = S.version;
+  renderWarRoomStatus();
   if ($('devArenaSelect') && document.activeElement !== $('devArenaSelect')) {
     const want = S.devArenaChoice || S.levelId || 'field';
     if ($('devArenaSelect').value !== want) $('devArenaSelect').value = want;
@@ -6655,6 +6866,7 @@ function ui() {
   if ($('devRiftNoHpLossToggle')) $('devRiftNoHpLossToggle').classList.toggle('toggleOn', S.devRiftNoHpLoss);
   if ($('devRoomBoundsToggle')) $('devRoomBoundsToggle').classList.toggle('toggleOn', S.devShowRoomBounds);
   if ($('devPathToggle')) $('devPathToggle').classList.toggle('toggleOn', S.devShowPathing);
+  updateDevHotkeyHelp();
   const dbg = $('devInfoOverlay');
   if (dbg) {
     dbg.classList.toggle('debugHidden', !S.devShowInfo);
@@ -6983,6 +7195,47 @@ function developerOverlayText() {
   ].join('\n');
 }
 
+function renderWarRoomStatus() {
+  const box = $('warRoomStatus');
+  if (!box) return;
+  const expeditionMode = isExpeditionRun() || isExpeditionLevel(S.levelId);
+  const ex = S.expedition;
+  const enemies = S.enemies.filter(e => !e.dead).length;
+  const hunters = S.enemies.filter(e => !e.dead && e.expeditionTarget === 'rift').length;
+  const roomId = ex?.activeRoomId || expeditionRoomAtHero()?.id || 'none';
+  const rooms = expeditionConfig()?.rooms || [];
+  const roomName = roomId !== 'none'
+    ? (rooms.find(r => r.id === roomId)?.name || roomId)
+    : 'None';
+  const roomState = roomId !== 'none' ? expeditionRoomState(roomId) : 'none';
+  const objective = missionObjectiveText();
+  const bossActive = !!(S.bossActive || S.bossSpawned || S.enemies.some(e => !e.dead && (e.type === 'slimeking' || e.boss)));
+  const coreHp = ex?.rift ? `${Math.round(ex.rift.hp)} / ${Math.round(ex.rift.max)}` : 'n/a';
+  const rows = expeditionMode
+    ? [
+        ['Mission', 'EXPEDITION'],
+        ['Room', roomName],
+        ['State', String(roomState).toUpperCase()],
+        ['Enemies', String(enemies)],
+        ['Hunters', String(hunters)],
+        ['Core HP', `${coreHp}${ex?.riftCarried ? ' CARRIED' : ''}`],
+        ['Objective', objective],
+      ]
+    : [
+        ['Mission', 'ARENA'],
+        ['Wave', String(S.waveActive ? S.wave : Math.max(1, S.wave + 1))],
+        ['Enemies', String(enemies)],
+        ['Boss', bossActive ? 'YES' : 'NO'],
+        ['Lives', String(S.lives)],
+        ['Objective', objective],
+      ];
+  box.innerHTML = rows.map(([label, value]) => `
+    <div class="warRoomStatusRow">
+      <span>${label}</span>
+      <div class="warRoomKeyValue"><b>${value}</b></div>
+    </div>`).join('');
+}
+
 function currentMissionType() {
   return LOADOUT_STATE.missionType === 'expedition' ? 'expedition' : 'arena';
 }
@@ -7118,6 +7371,13 @@ function updateObjectiveHud() {
   value.textContent = text;
   box.classList.toggle('hidden', !S.started || S.gameOver);
   box.classList.toggle('danger', /boss/i.test(text) || /relay/i.test(text));
+}
+
+function updateDevHotkeyHelp() {
+  const box = $('devHotkeyHelp');
+  if (!box) return;
+  box.classList.toggle('show', !!S.devHotkeyHelp);
+  box.setAttribute('aria-hidden', S.devHotkeyHelp ? 'false' : 'true');
 }
 
 function loadoutItemLabel(k) {
@@ -7333,6 +7593,12 @@ function restartMission() {
 
 function handleDeveloperHotkey(e) {
   if (!e || e.repeat) return false;
+  if (e.code === 'F11') {
+    e.preventDefault();
+    S.devHotkeyHelp = !S.devHotkeyHelp;
+    ui();
+    return true;
+  }
   if (e.code === 'F12') {
     e.preventDefault();
     S.devShowInfo = !S.devShowInfo;
