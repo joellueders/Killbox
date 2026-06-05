@@ -66,7 +66,8 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
 }
 body.hideGameplayHud #topHud,
 body.hideGameplayHud #objectiveHud,
-body.hideGameplayHud #menuToggle {
+body.hideGameplayHud #menuToggle,
+body.hideGameplayHud #playfieldCountdown {
   display: none !important;
 }
 .ui {
@@ -3078,56 +3079,59 @@ kbd {
   z-index: 60;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 9px;
   pointer-events: auto;
   width: fit-content;
   max-width: calc(100vw - 36px);
-  padding: 6px 10px 6px 12px;
-  border: 2px solid rgba(177, 132, 69, .86);
-  border-radius: 6px;
-  background:
-    linear-gradient(90deg, rgba(107, 25, 17, .28), transparent 24%, transparent 76%, rgba(107, 25, 17, .28)),
-    linear-gradient(180deg, rgba(39, 45, 48, .86), rgba(10, 7, 5, .92));
-  box-shadow: 0 3px 0 #111, 0 0 12px #0008;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
   color: #f0c96b;
-  font: bold 18px Georgia, serif;
-  letter-spacing: .01em;
+  font: 900 18px Georgia, serif;
+  letter-spacing: 0;
   white-space: nowrap;
+  -webkit-text-stroke: .55px #100805;
+  text-shadow:
+    0 2px 0 #100805,
+    1px 0 0 #100805,
+    -1px 0 0 #100805,
+    0 0 10px rgba(0,0,0,.9);
 }
 .hudStat, .hudSep, .hudSpeedWrap { display: inline-flex; align-items: center; }
 .hudStat { gap: 4px; }
 .hudLabel {
-  letter-spacing: .02em;
-  font-size: 11px;
-  opacity: .95;
+  letter-spacing: 0;
+  font-size: 12px;
+  opacity: 1;
 }
 .hudValue {
   font-variant-numeric: tabular-nums;
   font-size: 20px;
   line-height: 1;
   color: #fff5cf;
-  text-shadow: 0 1px 0 #110b06;
 }
 .hudWaveArchetype {
-  font-size: 11px;
-  letter-spacing: .04em;
+  font-size: 12px;
+  letter-spacing: 0;
   color: #f0c96b;
   white-space: nowrap;
 }
 .hudStat span, .hudSpeedWrap span { font-weight: 900; }
-.hudSep { opacity: .55; padding: 0 1px; }
+.hudSep { opacity: .8; padding: 0; color: #fff5cf; }
 .hudSpeedWrap { gap: 4px; }
 .hudSpeedWrap span {
-  font-size: 11px;
-  letter-spacing: .03em;
-  opacity: .92;
+  font-size: 12px;
+  letter-spacing: 0;
+  opacity: 1;
 }
 .hudSpeedBtn {
   pointer-events: auto;
-  height: 28px;
-  min-width: 66px;
-  padding: 0 9px;
-  border-radius: 9px;
+  height: 24px;
+  min-width: 58px;
+  padding: 0 7px;
+  border-radius: 6px;
   border: 1px solid #9b6a35;
   background: linear-gradient(180deg, rgba(37,24,16,.96), rgba(13,9,6,.96));
   color: #f0c96b;
@@ -3135,41 +3139,46 @@ kbd {
   font-family: Georgia, "Times New Roman", serif;
   font-size: 14px;
   box-shadow: 0 3px 0 #111, 0 0 12px #0008;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
   cursor: pointer;
 }
 .hudSpeedBtn:hover { filter: brightness(1.15); }
 .hudSpeedBtn:focus { outline: 2px solid #7ac6e8; outline-offset: 1px; }
 .objectiveHud {
   position: absolute;
-  top: 66px;
+  top: 42px;
   left: 18px;
   z-index: 58;
-  width: min(266px, calc(100vw - 36px));
-  padding: 8px 11px 9px;
-  border: 1px solid rgba(177, 132, 69, .86);
-  border-radius: 7px;
-  background:
-    linear-gradient(90deg, rgba(115, 22, 14, .16), transparent 18%, transparent 82%, rgba(115, 22, 14, .16)),
-    linear-gradient(180deg, rgba(25, 19, 13, .94), rgba(12, 8, 5, .96));
-  box-shadow: 0 3px 0 #111, 0 0 12px #0008;
+  width: min(360px, calc(100vw - 36px));
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
   color: #fff0c9;
   pointer-events: none;
+  -webkit-text-stroke: .45px #100805;
+  text-shadow:
+    0 2px 0 #100805,
+    1px 0 0 #100805,
+    -1px 0 0 #100805,
+    0 0 10px rgba(0,0,0,.9);
 }
 .objectiveHud small {
-  display: block;
+  display: inline;
   color: #f0c96b;
   font-size: 10px;
   font-weight: 900;
-  letter-spacing: .09em;
+  letter-spacing: 0;
   text-transform: uppercase;
   line-height: 1;
 }
 .objectiveHud b {
-  display: block;
-  margin-top: 3px;
-  font: 900 13px/1.2 Georgia, serif;
+  display: inline;
+  margin-left: 5px;
+  font: 900 14px/1.2 Georgia, serif;
   color: #fff6d6;
-  text-shadow: 0 1px 0 #110b06;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -3310,9 +3319,9 @@ kbd {
     left: 10px;
     max-width: calc(100vw - 72px);
     width: calc(100vw - 72px);
-    gap: 4px;
-    padding: 5px 8px 5px 10px;
-    font-size: 16px;
+    gap: 6px;
+    padding: 0;
+    font-size: 15px;
     flex-wrap: wrap;
     white-space: normal;
   }
@@ -3321,7 +3330,7 @@ kbd {
     right: 8px;
   }
   .objectiveHud {
-    top: 60px;
+    top: 80px;
     left: 12px;
     width: calc(100vw - 24px);
   }
@@ -3341,7 +3350,7 @@ kbd {
 
 </style>
 </head>
-<body>
+<body class="hideGameplayHud">
 
 <div class="gamePlayArea" id="gamePlayArea">
 <canvas id="c"></canvas>
