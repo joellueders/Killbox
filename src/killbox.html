@@ -2913,6 +2913,11 @@ kbd {
   padding: 4px 10px;
   flex: 0 0 auto;
 }
+.exitRunButton {
+  min-width: 44px;
+  padding: 4px 10px;
+  flex: 0 0 auto;
+}
 .devToggle.toggleOn {
   color: #fff4d0;
   border-color: #f0c96b;
@@ -3405,6 +3410,7 @@ kbd {
     <div class="inspectorSticky">
       <div class="inspectorTop">
         <h2 class="inspectorLabel">War Room</h2>
+        <button id="exitToLoadoutBtn" class="exitRunButton" title="Exit to loadout screen" aria-label="Exit to loadout screen">Exit</button>
         <button id="devToggle" class="devToggle" title="Toggle debug tools" aria-label="Toggle debug tools">Debug Tools</button>
       </div>
     </div>
@@ -7683,6 +7689,31 @@ function restartMission() {
   resetRunForLevelSwitch(current);
   $('start').classList.add('hidden');
   startGameFromLoadout();
+}
+
+function exitToLoadoutScreen() {
+  const current = S.levelId || getSelectedMissionLevel();
+  if (isExpeditionLevel(current)) {
+    LOADOUT_STATE.missionType = 'expedition';
+    LOADOUT_STATE.expeditionId = current;
+  } else {
+    LOADOUT_STATE.missionType = 'arena';
+    LOADOUT_STATE.arenaId = current;
+  }
+  persistLoadoutState();
+  closeGuide();
+  dismissMissionBriefing();
+  if ($('mutation')) $('mutation').classList.add('hidden');
+  if ($('clear')) $('clear').classList.add('hidden');
+  resetRunForLevelSwitch(current);
+  S.menuOpen = false;
+  clearCombatInputState();
+  updateMissionSelectionUI();
+  updateLoadoutCards();
+  updateLoadoutInspector();
+  updateLoadoutSummary();
+  updateLoadoutPreviewRail();
+  ui();
 }
 
 function handleDeveloperHotkey(e) {
@@ -18146,6 +18177,9 @@ $('upgrade').style.display = 'none';
 $('sell').onclick    = sellSelected;
 $('newRunBtn').onclick = () => {
   if (confirm('Start a new run? Current progress will be lost.')) location.reload();
+};
+if ($('exitToLoadoutBtn')) $('exitToLoadoutBtn').onclick = () => {
+  if (!S.started || confirm('Exit to loadout? Current run progress will be lost.')) exitToLoadoutScreen();
 };
 $('setWaveBtn').onclick = setNextWaveForTesting;
 
