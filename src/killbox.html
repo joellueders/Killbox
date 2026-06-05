@@ -1884,6 +1884,7 @@ textarea {
   min-height: 196px;
 }
 #start .card {
+  box-sizing: border-box;
   width: min(1460px, calc(100vw - 26px));
   min-height: min(82vh, 820px);
   max-height: calc(100vh - 36px);
@@ -1908,6 +1909,7 @@ textarea {
 #loadoutPicker .pickerTile,
 #loadoutTabs .loadoutTab,
 #loadoutPreviewRail .loadoutRailSlot,
+#start .missionChoice,
 #begin {
   pointer-events: auto;
 }
@@ -2012,6 +2014,52 @@ textarea {
   border-radius: 8px;
   background: linear-gradient(180deg, rgba(32, 23, 15, .94), rgba(9, 8, 7, .94));
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .04), 0 4px 14px rgba(0,0,0,.22);
+}
+#start .missionChoices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+#start .missionChoice {
+  min-height: 94px;
+  padding: 8px;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  text-align: left;
+  border: 1px solid rgba(155, 106, 53, .62);
+  border-radius: 7px;
+  background: linear-gradient(180deg, rgba(22, 16, 10, .9), rgba(12, 9, 6, .96));
+  color: rgba(255, 224, 156, .72);
+  box-shadow: 0 2px 0 #0a0704;
+}
+#start .missionChoice:hover {
+  border-color: rgba(240, 201, 107, .74);
+  color: #fff1c7;
+}
+#start .missionChoice.active {
+  border-color: #7ac6e8;
+  color: #d6f4ff;
+  background: linear-gradient(180deg, rgba(22, 56, 78, .96), rgba(8, 18, 28, .98));
+  box-shadow: 0 0 0 1px rgba(122, 198, 232, .28) inset, 0 0 14px rgba(122, 198, 232, .22), 0 2px 0 #0a0704;
+}
+#start .missionChoice strong {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 17px;
+  line-height: 1;
+  letter-spacing: .04em;
+}
+#start .missionChoice span {
+  color: #f0c96b;
+  font-size: 12px;
+  line-height: 1.15;
+}
+#start .missionOptions {
+  display: grid;
+  gap: 7px;
+}
+#start .missionOption[hidden] {
+  display: none;
 }
 #start .arenaPickRow label {
   font-size: 16px;
@@ -2501,6 +2549,8 @@ textarea {
   }
   #start .loadoutMasthead { grid-template-columns: 1fr; gap: 8px; }
   #start .loadoutTitle { grid-column: 1; }
+  #start .mastheadActions { grid-column: 1; justify-self: stretch; }
+  #start .mastheadActions #begin { width: 100%; min-width: 0; }
   #start .loadoutBody { grid-template-columns: 1fr; }
   #start .loadoutCatalog {
     grid-template-rows: auto auto auto;
@@ -2512,6 +2562,10 @@ textarea {
   #start .loadoutInspectorPanel { min-height: 190px; }
   #start .startFooter { grid-template-columns: 1fr; justify-content: stretch; }
   #start .loadoutPreviewRail { grid-template-columns: repeat(4, minmax(58px, 1fr)); }
+}
+@media (max-width: 460px) {
+  #start .missionChoices { grid-template-columns: 1fr; }
+  #start .missionChoice { min-height: 74px; }
 }
 #start .howPanel {
   margin-top: 12px;
@@ -3096,6 +3150,17 @@ kbd {
       <div class="startMain">
         <div class="loadoutMasthead">
           <div class="arenaPick">
+            <div class="missionChoices" role="group" aria-label="Mission type">
+              <button class="missionChoice active" data-mission-type="arena" type="button" aria-pressed="true">
+                <strong>ARENA</strong>
+                <span>Classic survival.<br>Build. Upgrade. Endure.</span>
+              </button>
+              <button class="missionChoice" data-mission-type="expedition" type="button" aria-pressed="false">
+                <strong>EXPEDITION</strong>
+                <span>Carry the Core.<br>Activate Relays.<br>Push north.</span>
+              </button>
+            </div>
+            <div class="missionOptions">
             <div class="arenaPickRow">
               <label for="startArenaSelect">Arena</label>
               <select id="startArenaSelect" class="arenaSelect" aria-label="Select arena before starting">
@@ -3109,8 +3174,14 @@ kbd {
                 <option value="eastwest">East / West</option>
                 <option value="spiral">Spiral Keep</option>
                 <option value="citadel">Outer Loops</option>
+              </select>
+            </div>
+            <div class="arenaPickRow missionOption" id="expeditionMissionOptions" hidden>
+              <label for="startExpeditionSelect">Expedition</label>
+              <select id="startExpeditionSelect" class="arenaSelect" aria-label="Select expedition before starting">
                 <option value="expedition01">Expedition 01</option>
               </select>
+            </div>
             </div>
           </div>
           <div class="loadoutTitle">
@@ -4350,7 +4421,9 @@ const S = {
 const LOADOUT_STATE = {
   selectedIds: [],
   inspectedId: null,
-  arenaId: 'field'
+  missionType: 'arena',
+  arenaId: 'field',
+  expeditionId: 'expedition01'
 };
 
 const ECONOMY_TUNING = {
@@ -6330,10 +6403,7 @@ function ui() {
     const want = S.devArenaChoice || S.levelId || 'field';
     if ($('devArenaSelect').value !== want) $('devArenaSelect').value = want;
   }
-  if ($('startArenaSelect') && document.activeElement !== $('startArenaSelect')) {
-    const want = LOADOUT_STATE.arenaId || S.devArenaChoice || S.levelId || 'field';
-    if ($('startArenaSelect').value !== want) $('startArenaSelect').value = want;
-  }
+  updateMissionSelectionUI();
   if ($('devGoldToggle')) $('devGoldToggle').classList.toggle('toggleOn', S.devUnlimitedGold);
   if ($('devInvToggle')) $('devInvToggle').classList.toggle('toggleOn', S.devInvincible);
   if ($('devInfoToggle')) $('devInfoToggle').classList.toggle('toggleOn', S.devShowInfo);
@@ -6500,6 +6570,44 @@ function renderSetupPickers() {
 function refreshStartMenu() {
   renderSetupPickers();
   ui();
+}
+
+function getSelectedMissionLevel() {
+  return LOADOUT_STATE.missionType === 'expedition'
+    ? (LOADOUT_STATE.expeditionId || 'expedition01')
+    : (LOADOUT_STATE.arenaId || 'field');
+}
+
+function updateMissionSelectionUI() {
+  const missionType = LOADOUT_STATE.missionType === 'expedition' ? 'expedition' : 'arena';
+  LOADOUT_STATE.missionType = missionType;
+  document.querySelectorAll('#start [data-mission-type]').forEach(btn => {
+    const active = btn.dataset.missionType === missionType;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+  const arenaSelect = $('startArenaSelect');
+  const expeditionSelect = $('startExpeditionSelect');
+  const arenaRow = arenaSelect?.closest('.arenaPickRow');
+  const expeditionRow = $('expeditionMissionOptions');
+  if (arenaRow) arenaRow.hidden = missionType !== 'arena';
+  if (expeditionRow) expeditionRow.hidden = missionType !== 'expedition';
+  if (arenaSelect && document.activeElement !== arenaSelect) {
+    const want = LOADOUT_STATE.arenaId || 'field';
+    if (arenaSelect.value !== want) arenaSelect.value = want;
+  }
+  if (expeditionSelect && document.activeElement !== expeditionSelect) {
+    const want = LOADOUT_STATE.expeditionId || 'expedition01';
+    if (expeditionSelect.value !== want) expeditionSelect.value = want;
+  }
+}
+
+function setLoadoutMissionType(type) {
+  LOADOUT_STATE.missionType = type === 'expedition' ? 'expedition' : 'arena';
+  S.devArenaChoice = getSelectedMissionLevel();
+  updateMissionSelectionUI();
+  updateLoadoutSummary();
+  renderPreview();
 }
 
 function setLoadoutInspector(k) {
@@ -6718,7 +6826,7 @@ function applyLoadoutToGameState() {
   S.hero.weapon = weapon;
   S.selected = selectedIds.find(k => !WEAPONS[k] && !isTrinketItem(k)) || null;
   S.sel = null;
-  S.devArenaChoice = LOADOUT_STATE.arenaId || 'field';
+  S.devArenaChoice = getSelectedMissionLevel();
   applyTrinketPassives();
 }
 
@@ -6726,8 +6834,8 @@ function startGameFromLoadout() {
   console.log('[loadout] Start button clicked');
   console.log('[loadout] startGameFromLoadout begins');
   if (!validateLoadoutState()) return;
-  const arena = LOADOUT_STATE.arenaId || 'field';
-  if (arena && arena !== S.levelId && switchArena(arena) === false) {
+  const missionLevel = getSelectedMissionLevel();
+  if (missionLevel && missionLevel !== S.levelId && switchArena(missionLevel) === false) {
     console.log('[loadout] validation fails', 'arena switch failed');
     return;
   }
@@ -8005,7 +8113,7 @@ function renderAbilityButtons() {
 
 function renderPreview() {
   if (!$('preview') || (S.phase === 'combat' && S.waveActive)) return;
-  const selectedLevel = LOADOUT_STATE.arenaId || S.devArenaChoice || S.levelId;
+  const selectedLevel = getSelectedMissionLevel() || S.devArenaChoice || S.levelId;
   if (isExpeditionLevel(selectedLevel)) {
     $('preview').dataset.previewKey = `expedition-${selectedLevel}`;
     $('preview').innerHTML = '<b>Expedition:</b> Explore the facility, find the Rift, then escort it to extraction. Persistent defenses stay for the whole run.';
@@ -17219,7 +17327,25 @@ $('devLoadArena').onclick = () => {
   console.log('[arena] debug load result', { requested: id, active: S.levelId, ok });
   return ok;
 };
-$('startArenaSelect').onchange = e => { LOADOUT_STATE.arenaId = e.target.value || 'field'; updateLoadoutSummary(); };
+$('startArenaSelect').onchange = e => {
+  LOADOUT_STATE.arenaId = e.target.value || 'field';
+  LOADOUT_STATE.missionType = 'arena';
+  S.devArenaChoice = getSelectedMissionLevel();
+  updateMissionSelectionUI();
+  updateLoadoutSummary();
+  renderPreview();
+};
+if ($('startExpeditionSelect')) $('startExpeditionSelect').onchange = e => {
+  LOADOUT_STATE.expeditionId = e.target.value || 'expedition01';
+  LOADOUT_STATE.missionType = 'expedition';
+  S.devArenaChoice = getSelectedMissionLevel();
+  updateMissionSelectionUI();
+  updateLoadoutSummary();
+  renderPreview();
+};
+document.querySelectorAll('#start [data-mission-type]').forEach(btn => {
+  btn.addEventListener('click', () => setLoadoutMissionType(btn.dataset.missionType));
+});
 $('devSpawnBoss').onclick = () => devSpawnSlimeKing();
 $('devKillBoss').onclick = () => devKillSlimeKing();
 $('devClearEnemies').onclick = () => devClearEnemies();
