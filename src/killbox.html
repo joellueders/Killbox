@@ -64,6 +64,11 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
   height: 100%;
   pointer-events: auto;
 }
+body.hideGameplayHud #topHud,
+body.hideGameplayHud #objectiveHud,
+body.hideGameplayHud #menuToggle {
+  display: none !important;
+}
 .ui {
   position: fixed; inset: 10px;
   display: grid; grid-template-columns: 1fr 320px; gap: 10px;
@@ -6884,6 +6889,11 @@ function shake(amt, dur) {
 function ui() {
   syncDevGold();
   const expeditionMode = isExpeditionRun() || isExpeditionLevel(S.levelId);
+  const startVisible = !$('start').classList.contains('hidden');
+  const briefingVisible = !!($('missionBriefing') && !$('missionBriefing').classList.contains('hidden'));
+  const mutationVisible = !!($('mutation') && !$('mutation').classList.contains('hidden'));
+  const clearVisible = !!($('clear') && !$('clear').classList.contains('hidden'));
+  const hideGameplayHud = !S.started || startVisible || S.menuOpen || isGuideOpen() || briefingVisible || mutationVisible || clearVisible;
   const displayWave = S.waveActive ? S.wave : (S.started && !S.gameOver ? S.wave + 1 : S.wave);
   const displayArch = waveArchetypeForDisplay();
   $('lives').textContent = S.lives;
@@ -6920,6 +6930,7 @@ function ui() {
   $('ui').classList.toggle('starting', !$('start').classList.contains('hidden'));
   document.body.classList.toggle('menuOpen', !!S.menuOpen);
   document.body.classList.toggle('menuClosed', !S.menuOpen);
+  document.body.classList.toggle('hideGameplayHud', hideGameplayHud);
   if ($('menuToggle')) {
     $('menuToggle').textContent = S.menuOpen ? '✕' : '⚙';
     $('menuToggle').title = S.menuOpen ? 'Hide right menu' : 'Show right menu';
