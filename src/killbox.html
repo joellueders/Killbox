@@ -68,6 +68,7 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
   position: fixed; inset: 10px;
   display: grid; grid-template-columns: 1fr 320px; gap: 10px;
   pointer-events: none;
+  z-index: 90;
 }
 .ui.combat { grid-template-columns: 1fr 320px; }
 .ui.panelHidden { grid-template-columns: 1fr 0; }
@@ -441,7 +442,9 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
 
 /* ── Side panel ────────────────────────────────────────────────── */
 .panel {
-  grid-column: 2; padding: 10px 11px 11px; pointer-events: auto;
+  grid-column: 2; padding: 8px 9px 9px; pointer-events: auto;
+  position: relative;
+  z-index: 80;
   max-height: calc(100vh - 24px); overflow: auto;
   transition: transform .25s ease, opacity .25s ease;
   background:
@@ -455,8 +458,32 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
 }
 .ui.panelHidden .panel { transform: translateX(390px); opacity: 0; pointer-events: none; }
 .panel .buildSection { display: none; }
+@media (max-width: 700px) {
+  .ui,
+  .ui.combat {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ui.panelHidden {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .panel {
+    grid-column: 1;
+    width: 100%;
+  }
+  .ui.panelHidden .panel {
+    transform: translateX(calc(100vw + 24px));
+  }
+  .menuOpen .gamePlayArea,
+  .menuClosed .gamePlayArea {
+    right: 10px;
+  }
+  .gameHudToggle {
+    position: fixed;
+    z-index: 120;
+  }
+}
 .warRoomSection {
-  margin-top: 8px;
+  margin-top: 4px;
   border: 1px solid rgba(123, 75, 37, .92);
   background: rgba(14, 10, 7, .72);
   box-shadow: inset 0 0 0 1px rgba(240, 201, 107, .08);
@@ -468,9 +495,9 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 7px 9px;
+  padding: 5px 7px;
   color: #f0c96b;
-  font: 800 12px Georgia, 'Times New Roman', serif;
+  font: 800 11px Georgia, 'Times New Roman', serif;
   letter-spacing: .08em;
   text-transform: uppercase;
   border-bottom: 1px solid rgba(123, 75, 37, .42);
@@ -482,7 +509,7 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
   font: 900 14px/1 monospace;
 }
 .warRoomSection[open] > summary::after { content: '−'; }
-.warRoomSectionBody { padding: 8px 9px 10px; display: grid; gap: 8px; }
+.warRoomSectionBody { padding: 5px 7px 6px; display: grid; gap: 5px; }
 .warRoomSection .sectionNote {
   margin: 0;
   color: #a98f61;
@@ -490,15 +517,15 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
 }
 .warRoomStatusGrid {
   display: grid;
-  gap: 6px;
+  gap: 3px;
 }
 .warRoomStatusRow {
   display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
-  gap: 8px;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 7px;
   align-items: start;
-  font-size: 12px;
-  line-height: 1.2;
+  font-size: 11px;
+  line-height: 1.15;
 }
 .warRoomStatusRow span {
   color: #f0c96b;
@@ -517,33 +544,55 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
   display: grid;
   gap: 2px;
 }
-.warRoomDebugActions {
+.devPanel .devToggleList,
+.devPanel .devUtilityGrid,
+.devPanel .devActionsRow {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
+  gap: 4px;
 }
-.warRoomDebugActions button {
-  min-height: 30px;
-  padding: 5px 8px;
-  border-radius: 8px;
-  font-size: 12px;
-  line-height: 1.15;
+.devPanel .devToggleList {
+  gap: 3px 6px;
+}
+.devPanel .devToggleList button {
+  min-height: 22px;
+  padding: 1px 3px;
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 5px;
+  border-radius: 5px;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: #f3e2bf;
   text-align: left;
+  font: 700 10px/1.12 system-ui, sans-serif;
 }
-.warRoomDebugActions button .actionLabel {
-  display: block;
-  font-weight: 800;
+.devPanel .devToggleList button:hover,
+.devPanel .devToggleList button:focus {
+  border-color: rgba(155, 106, 53, .65);
+  background: rgba(255, 255, 255, .04);
 }
-.warRoomDebugActions button .actionMeta {
-  display: block;
-  margin-top: 2px;
-  color: #a98f61;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .04em;
+.devPanel .toggleCheck {
+  width: 13px;
+  height: 13px;
+  border: 1px solid #8f6434;
+  border-radius: 3px;
+  display: grid;
+  place-items: center;
+  color: #111;
+  background: rgba(8, 6, 4, .84);
+  font-size: 11px;
+  line-height: 1;
 }
-.warRoomDebugActions button:hover { filter: brightness(1.08); }
-.warRoomDebugActions button:focus { outline: 2px solid #7ac6e8; outline-offset: 1px; }
+.devPanel .toggleOn .toggleCheck {
+  background: #f0c96b;
+  border-color: #ffe6ad;
+}
+.devPanel .toggleOn .toggleCheck::before {
+  content: '✓';
+}
 .guideButton {
   width: 100%;
   margin-top: 10px;
@@ -1726,8 +1775,8 @@ textarea {
   position: sticky;
   top: -12px;
   z-index: 30;
-  margin: -12px -12px 12px;
-  padding: 12px 12px 2px;
+  margin: -8px -9px 6px;
+  padding: 8px 9px 2px;
   background: linear-gradient(180deg, rgba(82, 61, 37, .95), rgba(47, 36, 24, .96) 74%, rgba(47,36,24,.94));
   border-bottom: 1px solid #9b6a35;
   box-shadow: 0 12px 18px rgba(0,0,0,.24);
@@ -2864,12 +2913,17 @@ kbd {
   padding: 4px 10px;
   flex: 0 0 auto;
 }
+.devToggle.toggleOn {
+  color: #fff4d0;
+  border-color: #f0c96b;
+  box-shadow: 0 0 0 1px rgba(240, 201, 107, .28) inset, 0 0 10px rgba(240, 201, 107, .18);
+}
 .devPanel {
-  margin-top: 8px;
-  padding: 10px 12px 12px;
-  border: 1px solid #7b4b25;
-  background: rgba(22, 14, 8, .9);
-  box-shadow: 0 0 0 1px rgba(240,201,107,.12) inset, 0 12px 30px rgba(0,0,0,.35);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 .devPanel h2 {
   margin: 2px 0 8px;
@@ -2879,24 +2933,25 @@ kbd {
 }
 .devPanel .devRow {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   flex-wrap: wrap;
   align-items: center;
-  margin: 6px 0;
+  margin: 0;
 }
 .devPanel .devRow input[type="number"] {
-  width: 88px;
+  width: 64px;
 }
 .devPanel .devRow select {
-  min-height: 34px;
-  flex: 1 1 180px;
-  min-width: 180px;
+  min-height: 24px;
+  flex: 1 1 130px;
+  min-width: 130px;
   border: 1px solid #6d4931;
   background: linear-gradient(180deg, #352114, #24150f);
   color: #f3e2bf;
-  border-radius: 10px;
-  padding: 0 12px;
+  border-radius: 6px;
+  padding: 0 8px;
   font: inherit;
+  font-size: 10px;
 }
 .devPanel .devRow input[type="range"] {
   width: 140px;
@@ -2917,27 +2972,36 @@ kbd {
   min-width: 52px;
 }
 .devPanel .toggleOn {
-  outline: 2px solid #f0c96b;
   color: #fff4d0;
 }
 .devPanel .devRow button,
 .devPanel .devRow input {
-  min-height: 34px;
+  min-height: 24px;
+  padding: 2px 5px;
+  border-radius: 6px;
+  font-size: 10px;
 }
 .devPanel .devRow select {
-  min-height: 34px;
+  min-height: 24px;
+}
+.devPanel .devUtilityGrid .devRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.devPanel .devUtilityGrid .devRow select,
+.devPanel .devUtilityGrid .devRow input {
+  min-width: 0;
+  width: 100%;
 }
 .devPanel .devActionsRow {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-  margin: 6px 0;
+  margin: 0;
 }
 .devPanel .devActionsRow button {
-  min-height: 30px;
-  padding: 5px 8px;
-  font-size: 12px;
-  line-height: 1.15;
+  min-height: 22px;
+  padding: 3px 5px;
+  border-radius: 6px;
+  font-size: 10px;
+  line-height: 1.1;
   text-align: left;
 }
 .devPanel .devActionsRow button .actionLabel {
@@ -2945,23 +3009,27 @@ kbd {
   font-weight: 800;
 }
 .devPanel .devActionsRow button .actionMeta {
-  display: block;
-  margin-top: 2px;
+  display: inline;
+  margin-left: 4px;
   color: #a98f61;
-  font-size: 10px;
+  font-size: 8px;
   font-weight: 700;
   letter-spacing: .04em;
 }
 .devBadge {
   display: inline-block;
-  margin-left: 6px;
-  padding: 1px 6px;
+  margin-left: 4px;
+  padding: 0 4px;
   border: 1px solid #7b4b25;
   border-radius: 999px;
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: .5px;
   color: #ffe6ad;
   background: rgba(255,255,255,.04);
+}
+.devPanel .devToggleList .devBadge {
+  margin-left: 0;
+  justify-self: end;
 }
 #devInfoOverlay {
   position: fixed;
@@ -3339,8 +3407,6 @@ kbd {
         <h2 class="inspectorLabel">War Room</h2>
         <button id="devToggle" class="devToggle" title="Toggle debug tools" aria-label="Toggle debug tools">Debug Tools</button>
       </div>
-      <div id="info">Build phase. Slot murder metal, sell your mistakes, and try not to feed the lane.</div>
-      <div id="selectedInfo" class="selectedInfoCard" aria-live="polite"></div>
     </div>
     <details class="warRoomSection" open>
       <summary>Mission Status</summary>
@@ -3348,82 +3414,82 @@ kbd {
         <div id="warRoomStatus" class="warRoomStatusGrid" aria-live="polite"></div>
       </div>
     </details>
-    <details class="warRoomSection" open>
-      <summary>Debug Actions</summary>
-      <div class="warRoomSectionBody">
-        <div id="devPanel" class="devPanel debugHidden">
-          <h2>Debug Tools</h2>
-          <div class="devRow">
-            <button id="devGoldToggle">Infinite Gold <span class="devBadge" id="devGoldState">OFF</span></button>
-            <button id="devInvToggle">God Mode <span class="devBadge" id="devInvState">OFF</span></button>
-            <button id="devInfoToggle">Debug Overlay <span class="devBadge" id="devInfoState">OFF</span></button>
-            <button id="devPowerupDebugToggle">Powerup Debug <span class="devBadge" id="devPowerupDebugState">OFF</span></button>
-            <button id="devRiftGuardToggle">Rift Guard <span class="devBadge" id="devRiftGuardState">OFF</span></button>
-            <button id="devRiftNoHpLossToggle">Rift No HP Loss <span class="devBadge" id="devRiftNoHpLossState">OFF</span></button>
-            <button id="devRoomBoundsToggle">Room Bounds <span class="devBadge" id="devRoomBoundsState">OFF</span></button>
-            <button id="devPathToggle">Pathing <span class="devBadge" id="devPathState">OFF</span></button>
-          </div>
-          <div class="devRow">
-            <input id="devGoldValue" type="number" min="0" step="1" value="9999" aria-label="Set gold amount">
-            <button id="devSetGold">Add Gold</button>
-          </div>
-          <div class="devRow">
-            <input id="devWaveValue" type="number" min="1" step="1" value="1" aria-label="Set next wave">
-            <button id="devSetWave">Set Next Wave</button>
-          </div>
-          <div class="devRow">
-            <select id="devArenaSelect" aria-label="Select arena">
-              <option value="field">Field</option>
-              <option value="choke">Choke</option>
-              <option value="ring">Ring</option>
-              <option value="split">Split</option>
-              <option value="proto">Prototype</option>
-              <option value="vertical">Long Fortress</option>
-              <option value="doubledeck">Double Deck</option>
-              <option value="eastwest">East / West</option>
-              <option value="spiral">Spiral Keep</option>
-              <option value="citadel">Outer Loops</option>
-              <option value="expedition01">Expedition 01</option>
-            </select>
-            <button id="devLoadArena">Load Arena</button>
-          </div>
-          <div class="devRow">
-            <button id="devSpawnBoss">Spawn Boss</button>
-            <button id="devKillBoss">Kill Boss</button>
-            <button id="devClearEnemies">Clear Enemies</button>
-          </div>
-          <div class="devRow">
-            <select id="devPowerupSelect" aria-label="Select powerup to trigger"></select>
-            <button id="devTriggerPowerup">Trigger Powerup</button>
-          </div>
-          <div class="devRow">
-            <select id="devMutagenSelect" aria-label="Select multiverse mutagen"></select>
-            <button id="devTriggerMutagen">Stage Mutagen</button>
-          </div>
-          <div class="devActionsRow" aria-label="Debug actions">
-            <button id="devKillHero"><span class="actionLabel">Damage Player</span><span class="actionMeta">F4</span></button>
-            <button id="devHealHero"><span class="actionLabel">Heal Player</span><span class="actionMeta">F4</span></button>
-            <button id="devResetCd"><span class="actionLabel">Reset Cooldowns</span><span class="actionMeta">Combat state</span></button>
-            <button id="devRestartMission"><span class="actionLabel">Restart Mission</span><span class="actionMeta">Reset current run</span></button>
-            <button id="devClearRoom"><span class="actionLabel">Clear Current Room</span><span class="actionMeta">Expedition only</span></button>
-            <button id="devRevealMap"><span class="actionLabel">Reveal Map</span><span class="actionMeta">Expedition only</span></button>
-            <button id="devDamageCore"><span class="actionLabel">Damage Core</span><span class="actionMeta">Expedition only</span></button>
-            <button id="devTeleportRelay"><span class="actionLabel">Teleport To Relay</span><span class="actionMeta">Expedition only</span></button>
+    <div id="devPanel" class="devPanel">
+      <details class="warRoomSection" open>
+        <summary>Debug Toggles</summary>
+        <div class="warRoomSectionBody">
+          <div class="devToggleList">
+            <button id="devGoldToggle"><span class="toggleCheck" aria-hidden="true"></span><span>Infinite Gold</span><span class="devBadge" id="devGoldState">OFF</span></button>
+            <button id="devInvToggle"><span class="toggleCheck" aria-hidden="true"></span><span>God Mode</span><span class="devBadge" id="devInvState">OFF</span></button>
+            <button id="devInfoToggle"><span class="toggleCheck" aria-hidden="true"></span><span>Debug Overlay</span><span class="devBadge" id="devInfoState">OFF</span></button>
+            <button id="devPowerupDebugToggle"><span class="toggleCheck" aria-hidden="true"></span><span>Powerup Debug</span><span class="devBadge" id="devPowerupDebugState">OFF</span></button>
+            <button id="devRiftGuardToggle"><span class="toggleCheck" aria-hidden="true"></span><span>Rift Guard</span><span class="devBadge" id="devRiftGuardState">OFF</span></button>
+            <button id="devRiftNoHpLossToggle"><span class="toggleCheck" aria-hidden="true"></span><span>Rift No HP Loss</span><span class="devBadge" id="devRiftNoHpLossState">OFF</span></button>
+            <button id="devRoomBoundsToggle"><span class="toggleCheck" aria-hidden="true"></span><span>Room Bounds</span><span class="devBadge" id="devRoomBoundsState">OFF</span></button>
+            <button id="devPathToggle"><span class="toggleCheck" aria-hidden="true"></span><span>Pathing</span><span class="devBadge" id="devPathState">OFF</span></button>
           </div>
         </div>
-      </div>
-    </details>
+      </details>
+      <details class="warRoomSection" open>
+        <summary>Debug Actions</summary>
+        <div class="warRoomSectionBody">
+          <div class="devUtilityGrid">
+            <div class="devRow">
+              <input id="devGoldValue" type="number" min="0" step="1" value="9999" aria-label="Set gold amount">
+              <button id="devSetGold">Add Gold</button>
+            </div>
+            <div class="devRow">
+              <input id="devWaveValue" type="number" min="1" step="1" value="1" aria-label="Set next wave">
+              <button id="devSetWave">Set Wave</button>
+            </div>
+            <div class="devRow">
+              <select id="devArenaSelect" aria-label="Select arena">
+                <option value="field">Field</option>
+                <option value="choke">Choke</option>
+                <option value="ring">Ring</option>
+                <option value="split">Split</option>
+                <option value="proto">Prototype</option>
+                <option value="vertical">Long Fortress</option>
+                <option value="doubledeck">Double Deck</option>
+                <option value="eastwest">East / West</option>
+                <option value="spiral">Spiral Keep</option>
+                <option value="citadel">Outer Loops</option>
+                <option value="expedition01">Expedition 01</option>
+              </select>
+              <button id="devLoadArena">Load</button>
+            </div>
+            <div class="devRow">
+              <select id="devPowerupSelect" aria-label="Select powerup to trigger"></select>
+              <button id="devTriggerPowerup">Trigger</button>
+            </div>
+            <div class="devRow">
+              <select id="devMutagenSelect" aria-label="Select multiverse mutagen"></select>
+              <button id="devTriggerMutagen">Stage</button>
+            </div>
+          </div>
+          <div class="devActionsRow" aria-label="Debug actions">
+            <button id="devSpawnBoon"><span class="actionLabel">Spawn Boon</span><span class="actionMeta">F2</span></button>
+            <button id="devSpawnSurge"><span class="actionLabel">Spawn Surge</span><span class="actionMeta">F3</span></button>
+            <button id="devSpawnBoss"><span class="actionLabel">Spawn Boss</span><span class="actionMeta">F6</span></button>
+            <button id="devKillBoss"><span class="actionLabel">Kill Boss</span><span class="actionMeta">Arena</span></button>
+            <button id="devClearEnemies"><span class="actionLabel">Clear Enemies</span><span class="actionMeta">Arena</span></button>
+            <button id="devKillHero"><span class="actionLabel">Damage Player</span><span class="actionMeta">F4</span></button>
+            <button id="devHealHero"><span class="actionLabel">Heal Player</span><span class="actionMeta">F4</span></button>
+            <button id="devResetCd"><span class="actionLabel">Reset Cooldowns</span><span class="actionMeta">Combat</span></button>
+            <button id="devRestartMission"><span class="actionLabel">Restart Mission</span><span class="actionMeta">Current run</span></button>
+            <button id="devClearRoom"><span class="actionLabel">Clear Room</span><span class="actionMeta">Expedition</span></button>
+            <button id="devRevealMap"><span class="actionLabel">Reveal Map</span><span class="actionMeta">Expedition</span></button>
+            <button id="devDamageCore"><span class="actionLabel">Damage Core</span><span class="actionMeta">Expedition</span></button>
+            <button id="devTeleportRelay"><span class="actionLabel">Teleport Relay</span><span class="actionMeta">Expedition</span></button>
+          </div>
+        </div>
+      </details>
+    </div>
     <details class="warRoomSection">
       <summary>Guide</summary>
       <div class="warRoomSectionBody">
         <button id="guideButton" class="guideButton" type="button">Open Guide</button>
         <p class="sectionNote">Reference tabs live in the modal. Keep the panel compact during playtests.</p>
-      </div>
-    </details>
-    <details class="warRoomSection">
-      <summary>Inspector</summary>
-      <div class="warRoomSectionBody">
-        <div id="selectedInfo" class="selectedInfoCard" aria-live="polite"></div>
       </div>
     </details>
     <details class="warRoomSection">
@@ -3465,6 +3531,13 @@ kbd {
           <kbd>1</kbd>–<kbd>8</kbd> build
         </p>
         <div class="sidebarFooter">Killbox <span id="sidebarVersion">7.9.0</span>. Still rude.</div>
+      </div>
+    </details>
+    <details class="warRoomSection">
+      <summary>Inspector</summary>
+      <div class="warRoomSectionBody">
+        <div id="info">Build phase. Slot murder metal, sell your mistakes, and try not to feed the lane.</div>
+        <div id="selectedInfo" class="selectedInfoCard" aria-live="polite"></div>
       </div>
     </details>
     <h2 class="debugHidden">Test Tools</h2>
@@ -6851,8 +6924,10 @@ function ui() {
     $('pause').title = S.paused ? 'Resume' : 'Pause';
     $('pause').setAttribute('aria-label', S.paused ? 'Resume' : 'Pause');
   }
-  const devPanel = $('devPanel');
-  if (devPanel) devPanel.classList.toggle('debugHidden', !S.devToolsOpen);
+  if ($('devToggle')) {
+    $('devToggle').textContent = S.devToolsOpen ? 'Debug On' : 'Debug Tools';
+    $('devToggle').classList.toggle('toggleOn', S.devToolsOpen);
+  }
   if ($('devGoldState')) $('devGoldState').textContent = S.devUnlimitedGold ? 'ON' : 'OFF';
   if ($('devInvState')) $('devInvState').textContent = S.devInvincible ? 'ON' : 'OFF';
   if ($('devInfoState')) $('devInfoState').textContent = S.devShowInfo ? 'ON' : 'OFF';
@@ -7328,6 +7403,11 @@ function dismissMissionBriefing() {
   catch (err) {}
   box.classList.add('hidden');
   box.setAttribute('aria-hidden', 'true');
+}
+
+function isRunMenuOpen() {
+  const briefing = $('missionBriefing');
+  return !!(isGuideOpen() || S.menuOpen || (briefing && !briefing.classList.contains('hidden')));
 }
 
 function showMissionHint(text, key = '', duration = 3.5) {
@@ -18174,6 +18254,8 @@ document.querySelectorAll('#start [data-mission-type]').forEach(btn => {
 $('devSpawnBoss').onclick = () => devSpawnSlimeKing();
 $('devKillBoss').onclick = () => devKillSlimeKing();
 $('devClearEnemies').onclick = () => devClearEnemies();
+$('devSpawnBoon').onclick = () => devSpawnBoonSelection();
+$('devSpawnSurge').onclick = () => devSpawnSurgeSelection();
 $('devTriggerPowerup').onclick = () => forcePowerupDebug($('devPowerupSelect')?.value);
 $('devTriggerMutagen').onclick = () => {
   const id = sanitizeMutagenId($('devMutagenSelect')?.value);
@@ -18331,6 +18413,10 @@ addEventListener('keydown', e => {
     return;
   }
   if (handleDeveloperHotkey(e)) return;
+  if (isRunMenuOpen()) {
+    if (e.key === 'Escape' && isGuideOpen()) return;
+    return;
+  }
   keys[e.key] = true; keys[e.key.toLowerCase()] = true; keys[e.code] = true;
   if (e.key.toLowerCase() === 'e' && (tryToggleExpeditionRiftCarry() || tryActivateExpeditionRift())) { e.preventDefault(); return; }
   const tKeys = S.loadout && S.loadout.length ? S.loadout : [];
@@ -18375,7 +18461,7 @@ function loop(now) {
     draw(now / 1000);
     return;
   }
-  if (S.started && !S.paused && !S.gameOver && $('clear').classList.contains('hidden') && S.gameState !== 'upgradeChoice') {
+  if (S.started && !S.paused && !S.gameOver && $('clear').classList.contains('hidden') && S.gameState !== 'upgradeChoice' && !isRunMenuOpen()) {
     step(dt * normalizeSpeedValue(S.speed));
   }
   sendHostSnapshot(now);
