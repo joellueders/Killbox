@@ -2984,6 +2984,7 @@ kbd {
         <button id="devInfoToggle">Debug Overlay <span class="devBadge" id="devInfoState">OFF</span></button>
         <button id="devPowerupDebugToggle">Powerup Debug <span class="devBadge" id="devPowerupDebugState">OFF</span></button>
         <button id="devRiftGuardToggle">Rift Guard <span class="devBadge" id="devRiftGuardState">OFF</span></button>
+        <button id="devRiftNoHpLossToggle">Rift No HP Loss <span class="devBadge" id="devRiftNoHpLossState">OFF</span></button>
       </div>
       <div class="devRow">
         <input id="devGoldValue" type="number" min="0" step="1" value="9999" aria-label="Set gold amount">
@@ -4311,7 +4312,7 @@ const S = {
   synergyLog: [],
   runStats: { heroKills: 0, towerKills: 0, otherKills: 0, leaked: 0, powerups: 0, goldEarned: 0, bonusGold: 0, interestGold: 0, wavesCleared: 0 },
   selected: null, sel: null, menuOpen: false, aiEngineerOwned: false, placeDir: 1,
-  devToolsOpen: false, devUnlimitedGold: false, devInvincible: false, devShowInfo: false, devRiftGuard: false,
+  devToolsOpen: false, devUnlimitedGold: false, devInvincible: false, devShowInfo: false, devRiftGuard: false, devRiftNoHpLoss: false,
   balanceReportLogged: false,
   powerupDebugMode: false, powerupDebugLog: [],
   devArenaChoice: 'field',
@@ -4841,6 +4842,16 @@ function damageExpeditionRift(e, dt) {
   if (!isExpeditionRun() || !rift || ex?.riftCarried || !e || e.dead || e.expeditionTarget !== 'rift') return false;
   const d = dist(e.x, e.y, rift.x, rift.y);
   if (d >= (e.rad || 12) + 42) return false;
+  if (S.devRiftNoHpLoss) {
+    rift.flash = Math.max(rift.flash || 0, .35);
+    e.slow = Math.max(e.slow || 0, .25);
+    e.riftBiteText = Math.max(0, (e.riftBiteText || 0) - dt);
+    if (e.riftBiteText <= 0) {
+      floatText('RIFT SAFE', rift.x - 28, rift.y - 42, '#8edcff');
+      e.riftBiteText = .9;
+    }
+    return true;
+  }
   const base = cfg?.riftHunterDamage ?? 22;
   const mult = (e.type === 'brute' || e.type === 'ogre' || e.type === 'siege') ? 1.7 : 1;
   rift.hp = Math.max(0, rift.hp - base * mult * dt);
@@ -6309,6 +6320,7 @@ function ui() {
   if ($('devInfoState')) $('devInfoState').textContent = S.devShowInfo ? 'ON' : 'OFF';
   if ($('devPowerupDebugState')) $('devPowerupDebugState').textContent = S.powerupDebugMode ? 'ON' : 'OFF';
   if ($('devRiftGuardState')) $('devRiftGuardState').textContent = S.devRiftGuard ? 'ON' : 'OFF';
+  if ($('devRiftNoHpLossState')) $('devRiftNoHpLossState').textContent = S.devRiftNoHpLoss ? 'ON' : 'OFF';
   if ($('devAudioState')) $('devAudioState').textContent = AUDIO.muted ? 'OFF' : 'ON';
   if ($('devVolumeState')) $('devVolumeState').textContent = `${Math.round(AUDIO.volume * 100)}%`;
   if ($('devVolume') && document.activeElement !== $('devVolume')) $('devVolume').value = Math.round(AUDIO.volume * 100);
@@ -6327,6 +6339,7 @@ function ui() {
   if ($('devInfoToggle')) $('devInfoToggle').classList.toggle('toggleOn', S.devShowInfo);
   if ($('devPowerupDebugToggle')) $('devPowerupDebugToggle').classList.toggle('toggleOn', S.powerupDebugMode);
   if ($('devRiftGuardToggle')) $('devRiftGuardToggle').classList.toggle('toggleOn', S.devRiftGuard);
+  if ($('devRiftNoHpLossToggle')) $('devRiftNoHpLossToggle').classList.toggle('toggleOn', S.devRiftNoHpLoss);
   const dbg = $('devInfoOverlay');
   if (dbg) {
     dbg.classList.toggle('debugHidden', !S.devToolsOpen || !S.devShowInfo);
@@ -6344,6 +6357,7 @@ function ui() {
         `weapon: ${S.hero.weapon}`,
         `mouse.down: ${mouse.down}`,
         `riftGuard: ${S.devRiftGuard ? 'ON' : 'OFF'}`,
+        `riftNoHpLoss: ${S.devRiftNoHpLoss ? 'ON' : 'OFF'}`,
         `lastBalance: ${JSON.stringify((S.balanceLog || [])[S.balanceLog.length - 1] || null)}`,
       ].join('\n');
     }
@@ -17185,6 +17199,7 @@ $('devInfoToggle').onclick = () => {
 };
 $('devPowerupDebugToggle').onclick = () => { S.powerupDebugMode = !S.powerupDebugMode; logPowerupDebug('mode', null, { enabled: S.powerupDebugMode }); ui(); toast(`Powerup Debug ${S.powerupDebugMode ? 'ON' : 'OFF'}`); };
 $('devRiftGuardToggle').onclick = () => { S.devRiftGuard = !S.devRiftGuard; ui(); toast(`Rift Guard ${S.devRiftGuard ? 'ON' : 'OFF'}`); };
+$('devRiftNoHpLossToggle').onclick = () => { S.devRiftNoHpLoss = !S.devRiftNoHpLoss; ui(); toast(`Rift No HP Loss ${S.devRiftNoHpLoss ? 'ON' : 'OFF'}`); };
 $('devAudioToggle').onclick = () => { unlockAudio(); setAudioMuted(!AUDIO.muted); toast(`Audio ${AUDIO.muted ? 'OFF' : 'ON'}`); };
 $('devVolume').oninput = e => { unlockAudio(); setAudioVolume((Number(e.target.value) || 0) / 100); };
 $('devSetGold').onclick = () => {

@@ -6,6 +6,7 @@ This repo is a tower defense game published to github pages.
 
 - Store project-specific AI-agent guidance in this repo so all contributors share the same source of truth. Do not keep repo-specific memory only in global user-directory files.
 - Treat `openspec/` as augmented memory for detailed requirements, active changes, designs, and task plans. Check relevant `openspec/specs/` and `openspec/changes/` entries before planning or implementing substantial work.
+- Read `docs/north-star.md` and `docs/terminology.md` before substantial design, gameplay, Expedition, narrative, or naming changes.
 - Put source code and runtime asset changes under `src/`. Do not create parallel root-level source files or duplicate runtime asset trees.
 - Put OpenSpec proposals, specs, designs, and task plans under `openspec/`.
 
