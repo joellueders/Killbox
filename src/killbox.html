@@ -2947,6 +2947,134 @@ kbd {
 }
 .hudSpeedBtn:hover { filter: brightness(1.15); }
 .hudSpeedBtn:focus { outline: 2px solid #7ac6e8; outline-offset: 1px; }
+.objectiveHud {
+  position: absolute;
+  top: 66px;
+  left: 18px;
+  z-index: 58;
+  width: min(266px, calc(100vw - 36px));
+  padding: 8px 11px 9px;
+  border: 1px solid rgba(177, 132, 69, .86);
+  border-radius: 7px;
+  background:
+    linear-gradient(90deg, rgba(115, 22, 14, .16), transparent 18%, transparent 82%, rgba(115, 22, 14, .16)),
+    linear-gradient(180deg, rgba(25, 19, 13, .94), rgba(12, 8, 5, .96));
+  box-shadow: 0 3px 0 #111, 0 0 12px #0008;
+  color: #fff0c9;
+  pointer-events: none;
+}
+.objectiveHud small {
+  display: block;
+  color: #f0c96b;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.objectiveHud b {
+  display: block;
+  margin-top: 3px;
+  font: 900 13px/1.2 Georgia, serif;
+  color: #fff6d6;
+  text-shadow: 0 1px 0 #110b06;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.objectiveHud.danger b { color: #ffddb0; }
+.missionBriefing {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 70;
+  pointer-events: none;
+}
+.missionBriefingCard {
+  width: min(390px, calc(100vw - 24px));
+  padding: 14px 16px 12px;
+  border: 1px solid #8f6434;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(39, 28, 19, .98), rgba(18, 12, 9, .96));
+  box-shadow: 0 16px 38px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.06);
+  color: #f6e9bf;
+  pointer-events: auto;
+}
+.missionBriefingTitle {
+  color: #f0c96b;
+  font: 900 14px Georgia, serif;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.missionBriefingBody {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+  color: #cfbb96;
+  font-size: 13px;
+  line-height: 1.35;
+}
+.missionBriefingBody h3 {
+  margin: 0 0 4px;
+  color: #fff0c9;
+  font: 900 11px Georgia, serif;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.missionBriefingBody p,
+.missionBriefingBody li {
+  margin: 0;
+}
+.missionBriefingBody ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}
+.missionBriefingClose {
+  width: 100%;
+  margin-top: 12px;
+}
+.missionHint {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%) translateY(8px);
+  z-index: 72;
+  padding: 8px 12px;
+  border: 1px solid rgba(177, 132, 69, .9);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(28, 21, 14, .96), rgba(12, 9, 6, .96));
+  color: #fff4cd;
+  box-shadow: 0 10px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);
+  font: 900 12px/1.2 Georgia, serif;
+  letter-spacing: .03em;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .22s ease, transform .22s ease;
+  white-space: nowrap;
+}
+.missionHint.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+@media (max-width: 620px) {
+  .objectiveHud {
+    top: 60px;
+    left: 12px;
+    width: calc(100vw - 24px);
+  }
+  .missionBriefing {
+    top: 70px;
+  }
+  .missionHint {
+    bottom: 14px;
+    width: min(92vw, 420px);
+    text-align: center;
+    white-space: normal;
+  }
+}
 .heroAbilityHud {
   display: none !important;
 }
@@ -2979,6 +3107,18 @@ kbd {
   </div>
   <div id="weaponHudBoxTop" class="heroAbilityHud"><span id="weaponChargeHudTop"></span></div>
 </div>
+<div id="objectiveHud" class="objectiveHud" aria-live="polite">
+  <small>OBJECTIVE</small>
+  <b id="objectiveHudValue">Ready</b>
+</div>
+<div id="missionBriefing" class="missionBriefing hidden" aria-hidden="true" role="dialog" aria-label="Mission briefing">
+  <div class="missionBriefingCard">
+    <div id="missionBriefingTitle" class="missionBriefingTitle">ARENA</div>
+    <div id="missionBriefingBody" class="missionBriefingBody"></div>
+    <button id="missionBriefingClose" class="primary missionBriefingClose" type="button">GOT IT</button>
+  </div>
+</div>
+<div id="missionHint" class="missionHint" aria-live="polite" aria-atomic="true"></div>
 <!-- ── Build Hotbar ─────────────────────── -->
 <div id="buildDock" class="buildDock">
   <div id="buildHotbar" class="buildRail"></div>
@@ -3124,15 +3264,15 @@ kbd {
       <button id="guideClose" class="guideClose" type="button" aria-label="Close guide">×</button>
     </div>
     <div class="guideTabs" role="tablist" aria-label="Guide tabs">
-      <button class="guideTab active" data-guide-tab="how" type="button" role="tab" aria-selected="true">How to Play</button>
+      <button class="guideTab active" data-guide-tab="briefing" type="button" role="tab" aria-selected="true">Mission Briefing</button>
       <button class="guideTab" data-guide-tab="weapons" type="button" role="tab" aria-selected="false">Weapons</button>
       <button class="guideTab" data-guide-tab="towers" type="button" role="tab" aria-selected="false">Towers &amp; Traps</button>
       <button class="guideTab" data-guide-tab="enemies" type="button" role="tab" aria-selected="false">Enemies</button>
-      <button class="guideTab" data-guide-tab="powerups" type="button" role="tab" aria-selected="false">Powerups</button>
+      <button class="guideTab" data-guide-tab="powerups" type="button" role="tab" aria-selected="false">Surges</button>
       <button class="guideTab" data-guide-tab="synergies" type="button" role="tab" aria-selected="false">Synergies</button>
     </div>
     <div class="guidePanelWrap">
-      <section class="guideTabPanel active" data-guide-panel="how" role="tabpanel">
+      <section class="guideTabPanel active" data-guide-panel="briefing" role="tabpanel">
         <div id="guideHowText" class="guideText"></div>
       </section>
       <section class="guideTabPanel" data-guide-panel="weapons" role="tabpanel"><div id="guideWeaponList" class="enemyList"></div></section>
@@ -3265,7 +3405,7 @@ kbd {
 <div id="mutation" class="overlay hidden">
   <div class="card">
     <h1>Between Waves</h1>
-    <p id="mutationSubtitle">Choose one upgrade or mutagen. The Quartermaster may occasionally arrive with run-based services.</p>
+    <p id="mutationSubtitle">Choose one upgrade or Boon. The Quartermaster may occasionally arrive with run-based services.</p>
     <div id="mutationWaveSummary" class="waveSummary mutationWaveSummary"></div>
     <div id="mutationChoices" class="pickerGrid"></div>
   </div>
@@ -4409,7 +4549,7 @@ const S = {
   cornerSkulls: [],
   cornerGhosts: [],
   guideOpen: false,
-  guideTab: 'how',
+  guideTab: 'briefing',
   guideTabDefaulted: false,
   expedition: null,
   mutationPending: false, // Upgrade modal is live and must be chosen before starting a new wave.
@@ -4436,6 +4576,10 @@ const LOADOUT_STATE = {
   expeditionId: 'expedition01'
 };
 const LOADOUT_STORAGE_KEY = 'killbox.lastLoadout.v1';
+const MISSION_BRIEFING_STORAGE_KEY = 'killbox.onboard.missionBriefing.v1';
+const MISSION_HINT_STORAGE_KEY = 'killbox.onboard.missionHints.v1';
+let missionHintHideTimer = 0;
+let missionHintClearTimer = 0;
 
 const ECONOMY_TUNING = {
   waveBonusBase: 20,
@@ -4684,7 +4828,7 @@ function createExpeditionState(levelId = S.levelId) {
     extractionRevealed: false,
     shortcutsOpen: false,
     completed: false,
-    message: 'Find the Rift.',
+    message: 'Find the Core.',
     messageTime: 5,
     prompt: '',
     promptTime: 0,
@@ -4714,7 +4858,7 @@ function resetExpeditionState() {
       S.expedition.riftActivated = true;
       S.expedition.riftCarried = false;
       S.expedition.extractionRevealed = true;
-      S.expedition.message = 'Rift online. Push into the facility.';
+      S.expedition.message = 'Core online. Push into the facility.';
       S.expedition.messageTime = 6;
       S.expedition.reinforceTimer = 1.2;
       if (cfg.startingRoomCleared) S.expedition.roomStates[cfg.startingRoomCleared] = 'cleared';
@@ -4725,7 +4869,7 @@ function resetExpeditionState() {
       }
       S.wave = Math.max(S.wave, 8);
     } else {
-      S.expedition.message = 'Explore the facility. No Rift signal detected.';
+      S.expedition.message = 'Explore the facility. No Core signal detected.';
       S.expedition.messageTime = 6;
     }
   }
@@ -4797,15 +4941,15 @@ function expeditionRoomState(roomId) {
 
 function expeditionEncounterDef(room) {
   const defs = {
-    entry:       { objective: 'clear', label: 'Clear the breach', enemies: ['grunt', 'grunt', 'runner'] },
-    security:    { objective: 'elite', label: 'Kill the warden', enemies: ['grunt', 'shield', 'warden'], elite: 'warden' },
-    barracks:    { objective: 'clear', label: 'Clear the barracks', enemies: ['grunt', 'runner', 'sapper', 'shield'] },
-    lab:         { objective: 'elite', label: 'Kill the hex caller', enemies: ['runner', 'healer', 'hexcaller'], elite: 'hexcaller' },
-    chapel:      { objective: 'clear', label: 'Purge the chapel', enemies: ['grunt', 'shield', 'healer'] },
-    reactor:     { objective: 'elite', label: 'Kill the brute', enemies: ['runner', 'brute', 'sapper'], elite: 'brute' },
-    flesh:       { objective: 'nest', label: 'Destroy the infestation', enemies: ['runner', 'runner', 'bomber'], nest: true },
-    rift:        { objective: 'elite', label: 'Secure the Rift chamber', enemies: ['shield', 'warden', 'hexcaller'], elite: 'warden' },
-    maintenance: { objective: 'clear', label: 'Clear maintenance', enemies: ['grunt', 'runner', 'sapper'] },
+    entry:       { objective: 'clear', label: 'Clear Entry Breach', enemies: ['grunt', 'grunt', 'runner'] },
+    security:    { objective: 'elite', label: 'Clear Security Wing', enemies: ['grunt', 'shield', 'warden'], elite: 'warden' },
+    barracks:    { objective: 'clear', label: 'Clear Barracks', enemies: ['grunt', 'runner', 'sapper', 'shield'] },
+    lab:         { objective: 'elite', label: 'Clear Laboratory Wing', enemies: ['runner', 'healer', 'hexcaller'], elite: 'hexcaller' },
+    chapel:      { objective: 'clear', label: 'Clear Chapel', enemies: ['grunt', 'shield', 'healer'] },
+    reactor:     { objective: 'elite', label: 'Clear Reactor Complex', enemies: ['runner', 'brute', 'sapper'], elite: 'brute' },
+    flesh:       { objective: 'nest', label: 'Clear Flesh Garden', enemies: ['runner', 'runner', 'bomber'], nest: true },
+    rift:        { objective: 'elite', label: 'Secure the Core Chamber', enemies: ['shield', 'warden', 'hexcaller'], elite: 'warden' },
+    maintenance: { objective: 'clear', label: 'Clear Maintenance Tunnels', enemies: ['grunt', 'runner', 'sapper'] },
   };
   return defs[room?.id] || { objective: 'clear', label: `Clear ${room?.name || 'room'}`, enemies: ['grunt', 'runner'] };
 }
@@ -4931,7 +5075,7 @@ function damageExpeditionRift(e, dt) {
     e.slow = Math.max(e.slow || 0, .25);
     e.riftBiteText = Math.max(0, (e.riftBiteText || 0) - dt);
     if (e.riftBiteText <= 0) {
-      floatText('RIFT SAFE', rift.x - 28, rift.y - 42, '#8edcff');
+    floatText('CORE SAFE', rift.x - 28, rift.y - 42, '#8edcff');
       e.riftBiteText = .9;
     }
     return true;
@@ -4943,7 +5087,7 @@ function damageExpeditionRift(e, dt) {
   e.slow = Math.max(e.slow || 0, .35);
   e.riftBiteText = Math.max(0, (e.riftBiteText || 0) - dt);
   if (e.riftBiteText <= 0) {
-    floatText('RIFT HIT', rift.x - 28, rift.y - 42, '#ff9b8a');
+    floatText('CORE HIT', rift.x - 28, rift.y - 42, '#ff9b8a');
     burst(rift.x, rift.y, '#ff9b8a', 5, 'spark', 80);
     e.riftBiteText = .9;
   }
@@ -4966,6 +5110,7 @@ function startExpeditionRoomEncounter(room) {
   assignExpeditionRoomTargets(spawned, room);
   ex.message = def.label;
   ex.messageTime = 6;
+  maybeShowMissionHint(def.label.includes('Relay') ? 'Activate the Relay.' : 'Clear the room.', `expedition-room-${room.id}`, 4);
   announceWave(`${room.name.toUpperCase()}: ${def.label.toUpperCase()}`, 'danger', 1);
   shockwave(S.hero.x, S.hero.y, '#ffcf6a', 110, .26);
   rebuildPath();
@@ -5030,15 +5175,16 @@ function activateExpeditionRift() {
   ex.riftActivated = true;
   ex.extractionRevealed = true;
   ex.riftFound = true;
-  ex.message = 'RIFT ACTIVE. Escort it to extraction.';
+  ex.message = 'CORE ACTIVE. Escort it to extraction.';
   ex.messageTime = 8;
   ex.reinforceTimer = 1.2;
   S.wave = Math.max(S.wave, 8);
   openExpeditionShortcuts();
-  announceWave('RIFT ACTIVE: EXTRACT NOW', 'danger', 1.1);
+  announceWave('CORE ACTIVE: EXTRACT NOW', 'danger', 1.1);
   shockwave(ex.rift.x, ex.rift.y, '#e6b8ff', 190, .45);
   burst(ex.rift.x, ex.rift.y, '#f0b8ff', 28, 'spark', 220);
   console.log('[expedition] rift activated', { level: S.levelId, extraction: cfg.extraction });
+  showMissionHint('Press E to pick up the Core.', 'expedition-core-pickup', 4);
   return true;
 }
 
@@ -5048,6 +5194,7 @@ function tryActivateExpeditionRift() {
   if (!ex || !cfg || ex.riftActivated) return false;
   const d = dist(S.hero.x, S.hero.y, cx(cfg.rift.c), cy(cfg.rift.r));
   if (d > 95) return false;
+  maybeShowMissionHint('Press E to pick up the Core.', 'expedition-core-pickup', 4);
   activateExpeditionRift();
   return true;
 }
@@ -5058,13 +5205,14 @@ function tryToggleExpeditionRiftCarry() {
   if (ex.riftCarried) {
     const hc = cellAt(S.hero.x, S.hero.y);
     if (!isRoad(hc.c, hc.r) || isExpeditionRoomBlockedCell(hc.c, hc.r)) {
-      toast('Deploy the Rift on open ground.');
+      maybeShowMissionHint('Deploy the Core before building.', 'expedition-core-deploy', 4);
+      toast('Deploy the Core on open ground.');
       return true;
     }
     ex.rift.x = cx(hc.c);
     ex.rift.y = cy(hc.r);
     ex.riftCarried = false;
-    ex.message = 'Rift deployed.';
+    ex.message = 'Core deployed.';
     ex.messageTime = 3;
     shockwave(ex.rift.x, ex.rift.y, '#e6b8ff', 120, .28);
     burst(ex.rift.x, ex.rift.y, '#f0b8ff', 12, 'spark', 120);
@@ -5077,7 +5225,8 @@ function tryToggleExpeditionRiftCarry() {
   ex.riftCarried = true;
   ex.rift.x = S.hero.x;
   ex.rift.y = S.hero.y;
-  ex.message = 'Rift carried. Deploy it to build.';
+  ex.message = 'Core carried. Deploy it to build.';
+  showMissionHint('Deploy the Core before building.', 'expedition-core-deploy', 4);
   ex.messageTime = 4;
   shockwave(S.hero.x, S.hero.y, '#f0b8ff', 95, .22);
   for (const e of S.enemies) {
@@ -5131,8 +5280,8 @@ function completeExpedition() {
   S.enemies = [];
   document.querySelector('#clear .card').classList.add('clearCard');
   $('clearTitle').textContent = 'Extraction Complete';
-  $('clearText').textContent = 'The Rift reached the pad intact. Persistent defenses, opened shortcuts, and the return route are now proven for Expedition.';
-  if ($('clearStats')) $('clearStats').innerHTML = `<div><small>Rift HP</small><b>${Math.round(ex.rift.hp)} / ${ex.rift.max}</b></div><div><small>Mapped cells</small><b>${ex.discoveredCount || 0}</b></div>`;
+  $('clearText').textContent = 'The Core reached the pad intact. Persistent defenses, opened shortcuts, and the return route are now proven for Expedition.';
+  if ($('clearStats')) $('clearStats').innerHTML = `<div><small>Core HP</small><b>${Math.round(ex.rift.hp)} / ${ex.rift.max}</b></div><div><small>Mapped cells</small><b>${ex.discoveredCount || 0}</b></div>`;
   if ($('clearCountdownValue')) $('clearCountdownValue').textContent = '0';
   $('clearBtn').textContent = 'Run Complete';
   $('clear').classList.remove('hidden');
@@ -5164,12 +5313,12 @@ function updateExpedition(dt) {
   const riftDist = dist(S.hero.x, S.hero.y, cx(cfg.rift.c), cy(cfg.rift.r));
   if (!ex.riftFound && riftDist < 260) {
     ex.riftFound = true;
-    ex.message = 'Rift signal found.';
+    ex.message = 'Core signal found.';
     ex.messageTime = 5;
     shockwave(cx(cfg.rift.c), cy(cfg.rift.r), '#f0b8ff', 120, .28);
   }
   if (!ex.riftActivated && riftDist < 95) {
-    ex.prompt = 'Press E to activate the Rift.';
+    ex.prompt = 'Press E to activate the Core.';
     ex.promptTime = .25;
   }
 
@@ -5198,7 +5347,7 @@ function updateExpedition(dt) {
     for (const e of S.enemies) damageExpeditionRift(e, dt);
   }
   if (rift.hp <= 0) {
-    offerRestart('The Rift collapsed');
+    offerRestart('The Core collapsed');
     return;
   }
 
@@ -6060,7 +6209,7 @@ const EFFECT_VISUALS = {
   haste: { label: 'OVERCLOCK', icon: '⏩', color: '#6ad6ff' },
   freeze: { label: 'FROSTBITE', icon: '❄', color: '#9fe8ff' },
   asColdAsLife: { label: 'AS COLD AS LIFE', icon: '❄', color: '#dff4ff' },
-  rift: { label: 'RIFT SHIELD', icon: '◌', color: '#8edcff' },
+  rift: { label: 'CORE SHIELD', icon: '◌', color: '#8edcff' },
   thunder: { label: 'STORM CLOUD', icon: '⚡', color: '#fff34d' },
   orbital: { label: 'ORBITAL BEAM', icon: '☄', color: '#fff0b8' },
   stampede: { label: 'STAMPEDE', icon: '♞', color: '#d99b54' },
@@ -6458,6 +6607,7 @@ function ui() {
   if ($('waveSpeedState')) $('waveSpeedState').textContent = speedText;
   if ($('gameSpeedSelect') && document.activeElement !== $('gameSpeedSelect')) $('gameSpeedSelect').value = String(S.speed);
   updateLoadoutSummary();
+  updateObjectiveHud();
 
   // Flash lives when low
   $('statLives').classList.toggle('danger-flash', S.lives <= 3);
@@ -6833,6 +6983,143 @@ function developerOverlayText() {
   ].join('\n');
 }
 
+function currentMissionType() {
+  return LOADOUT_STATE.missionType === 'expedition' ? 'expedition' : 'arena';
+}
+
+function missionBriefingSeenKey(type) {
+  return `${MISSION_BRIEFING_STORAGE_KEY}.${type}`;
+}
+
+function missionHintSeenKey(key) {
+  return `${MISSION_HINT_STORAGE_KEY}.${key}`;
+}
+
+function missionBriefingCopy(type = currentMissionType()) {
+  if (type === 'expedition') {
+    return {
+      title: 'EXPEDITION',
+      objective: 'Carry the Core.\nActivate Relays.\nPush deeper into hostile territory.',
+      flow: ['Carry Core.', 'Deploy Core.', 'Build defenses.', 'Clear facility.', 'Activate Relay.', 'Choose Boon.', 'Continue.'],
+      controls: ['WASD Move', 'LMB Fire', 'RMB Secondary Fire / Sell Tower', 'E Pick Up or Deploy Core'],
+    };
+  }
+  return {
+    title: 'ARENA',
+    objective: 'Protect the Rift.\nSurvive increasingly difficult waves.',
+    flow: ['Build defenses.', 'Fight waves.', 'Choose Boons.', 'Survive.'],
+    controls: ['WASD Move', 'LMB Fire', 'RMB Secondary Fire', 'Space Start Wave'],
+  };
+}
+
+function renderMissionBriefingHTML(type = currentMissionType()) {
+  const copy = missionBriefingCopy(type);
+  return `
+    <div>
+      <h3>Objective</h3>
+      <p>${copy.objective.split('\n').join('<br>')}</p>
+    </div>
+    <div>
+      <h3>Flow</h3>
+      <ul>${copy.flow.map(step => `<li>${step}</li>`).join('')}</ul>
+    </div>
+    <div>
+      <h3>Key Controls</h3>
+      <ul>${copy.controls.map(step => `<li>${step}</li>`).join('')}</ul>
+    </div>`;
+}
+
+function updateMissionBriefingOverlay() {
+  const box = $('missionBriefing');
+  const title = $('missionBriefingTitle');
+  const body = $('missionBriefingBody');
+  if (!box || !title || !body) return;
+  const copy = missionBriefingCopy();
+  title.textContent = copy.title;
+  body.innerHTML = renderMissionBriefingHTML();
+}
+
+function showMissionBriefing(force = false) {
+  const box = $('missionBriefing');
+  if (!box) return false;
+  const type = currentMissionType();
+  const key = missionBriefingSeenKey(type);
+  try {
+    if (!force && localStorage.getItem(key)) return false;
+  } catch (err) {}
+  updateMissionBriefingOverlay();
+  box.classList.remove('hidden');
+  box.setAttribute('aria-hidden', 'false');
+  return true;
+}
+
+function dismissMissionBriefing() {
+  const box = $('missionBriefing');
+  if (!box) return;
+  const type = currentMissionType();
+  try { localStorage.setItem(missionBriefingSeenKey(type), '1'); }
+  catch (err) {}
+  box.classList.add('hidden');
+  box.setAttribute('aria-hidden', 'true');
+}
+
+function showMissionHint(text, key = '', duration = 3.5) {
+  const el = $('missionHint');
+  if (!el || !text) return false;
+  try {
+    if (key && localStorage.getItem(missionHintSeenKey(key))) return false;
+  } catch (err) {}
+  if (missionHintHideTimer) clearTimeout(missionHintHideTimer);
+  if (missionHintClearTimer) clearTimeout(missionHintClearTimer);
+  missionHintHideTimer = 0;
+  missionHintClearTimer = 0;
+  el.textContent = text;
+  el.classList.add('show');
+  try { if (key) localStorage.setItem(missionHintSeenKey(key), '1'); }
+  catch (err) {}
+  missionHintHideTimer = setTimeout(() => {
+    el.classList.remove('show');
+    missionHintClearTimer = setTimeout(() => {
+      el.textContent = '';
+      missionHintClearTimer = 0;
+      missionHintHideTimer = 0;
+    }, 240);
+  }, Math.max(1.2, duration) * 1000);
+  return true;
+}
+
+function maybeShowMissionHint(text, key, duration) {
+  if (!text) return false;
+  return showMissionHint(text, key, duration);
+}
+
+function missionObjectiveText() {
+  if (!S.started || S.gameOver) return 'Ready';
+  if (isExpeditionRun()) {
+    const ex = S.expedition;
+    if (!ex) return 'Explore the facility';
+    if (ex.activeRoomId && ex.roomObjective?.label) return ex.roomObjective.label;
+    if (!ex.riftFound) return 'Find the Core';
+    if (!ex.riftActivated) return 'Activate the Core';
+    if (ex.riftCarried) return 'Deploy the Core';
+    if (ex.extractionRevealed) return 'Push to Extraction';
+    return 'Carry the Core';
+  }
+  const nextWave = S.waveActive ? S.wave : Math.max(1, S.wave + 1);
+  if (nextWave > 0 && nextWave % 3 === 0) return 'Boss Wave';
+  return `Survive Wave ${nextWave || 1}`;
+}
+
+function updateObjectiveHud() {
+  const box = $('objectiveHud');
+  const value = $('objectiveHudValue');
+  if (!box || !value) return;
+  const text = missionObjectiveText();
+  value.textContent = text;
+  box.classList.toggle('hidden', !S.started || S.gameOver);
+  box.classList.toggle('danger', /boss/i.test(text) || /relay/i.test(text));
+}
+
 function loadoutItemLabel(k) {
   return WEAPONS[k]?.shortName || WEAPONS[k]?.name || TOWERS[k]?.n || TRINKETS[k]?.shortName || TRINKETS[k]?.name || shortTowerName(k) || k;
 }
@@ -7012,8 +7299,9 @@ function startGameFromLoadout() {
   } else {
     startPlayerSpawnIntro(S.hero, 0);
   }
-  toast('The warden descends...');
+  toast(expeditionStart ? 'The Core awakens...' : 'The warden descends...');
   ui();
+  showMissionBriefing();
   console.log('[loadout] startGameFromLoadout completes');
 }
 
@@ -7099,51 +7387,13 @@ function handleDeveloperHotkey(e) {
 }
 
 function renderCodices() {
+  const missionType = currentMissionType();
   const guideHowText = $('guideHowText');
+  if (guideHowText && guideHowText.dataset.missionType !== missionType) {
+    guideHowText.innerHTML = renderMissionBriefingHTML(missionType);
+    guideHowText.dataset.missionType = missionType;
+  }
   if (guideHowText && !guideHowText.dataset.done) {
-    guideHowText.innerHTML = `
-      <div>
-        <h3>Objective</h3>
-        <p>Protect the Rift and survive as many waves as possible.</p>
-      </div>
-      <div>
-        <h3>Controls</h3>
-        <ul>
-          <li>WASD = Move</li>
-          <li>Mouse = Aim</li>
-          <li>Left Click = Fire</li>
-          <li>Right Click = Secondary Weapon</li>
-          <li>Shift = Sprint/Run</li>
-          <li>Space = Start Wave</li>
-          <li>P = Pause</li>
-          <li>Drag loadout cards to equip weapons, towers, and traps</li>
-          <li>Select towers to upgrade, repair, or sell</li>
-        </ul>
-      </div>
-      <div>
-        <h3>Game Flow</h3>
-        <ol>
-          <li>Build your loadout.</li>
-          <li>Place towers and traps during the build phase.</li>
-          <li>Start the wave with Space or wait for the timer.</li>
-          <li>Fight enemies and protect the Rift.</li>
-          <li>Earn rewards between waves.</li>
-          <li>Upgrade your equipment.</li>
-          <li>Choose mutations, powerups, and other bonuses.</li>
-          <li>Survive increasingly difficult waves.</li>
-        </ol>
-      </div>
-      <div>
-        <h3>Tips</h3>
-        <ul>
-          <li>Towers weaken enemies before they reach you.</li>
-          <li>Some enemies are resistant to certain defenses.</li>
-          <li>Upgrade frequently.</li>
-          <li>Synergies between towers, weapons, and powerups are often stronger than raw damage.</li>
-          <li>Positioning matters.</li>
-          <li>Do not spend all resources immediately.</li>
-        </ul>
-      </div>`;
     guideHowText.dataset.done = 1;
   }
   const guideTowerText = $('guideTowerText');
@@ -7314,7 +7564,7 @@ function renderPowerupCodex(powerupList) {
     });
   const header = document.createElement('div');
   header.className = 'powerupCodexHeader';
-  header.innerHTML = `<b>${entries.length} powerups logged</b><span>Pickups trigger immediately when the hero touches the orb. Timed effects show their active window.</span>`;
+  header.innerHTML = `<b>${entries.length} surges logged</b><span>Pickups trigger immediately when the hero touches the orb. Timed surges show their active window.</span>`;
   powerupList.appendChild(header);
   for (const rarity of rarityOrder) {
     const groupEntries = entries.filter(([, p]) => p.rarity === rarity);
@@ -7350,7 +7600,7 @@ function isGuideOpen() {
 }
 
 function setGuideTab(tabId, { focus = false } = {}) {
-  const next = tabId || S.guideTab || 'how';
+  const next = tabId || S.guideTab || 'briefing';
   S.guideTab = next;
   const tabs = [...document.querySelectorAll('.guideTab')];
   const panels = [...document.querySelectorAll('.guideTabPanel')];
@@ -7371,7 +7621,7 @@ function openGuide(tabId = null) {
   const modal = $('guideModal');
   if (!modal) return;
   if (!S.guideTabDefaulted) {
-    S.guideTab = 'how';
+    S.guideTab = 'briefing';
     S.guideTabDefaulted = true;
   }
   if (tabId) S.guideTab = tabId;
@@ -7429,7 +7679,7 @@ function renderMutationOverlay() {
   const cardMeta = (u) => {
     const kind = u.kind === 'mutagen' ? 'mutiverse' : u.kind;
     const category = kind === 'mutiverse'
-      ? 'MULTIVERSE BREACH'
+      ? 'SURGE'
       : (u.kind === 'weapon' ? 'WEAPON UPGRADE' : 'TOWER UPGRADE');
     const mechanics = u.desc || u.raw?.desc || '';
     const footer = u.kind === 'mutagen'
@@ -7444,14 +7694,14 @@ function renderMutationOverlay() {
     box.appendChild(msg);
     const b = document.createElement('button');
     b.className = 'pickerTile';
-    b.innerHTML = `<span class="name">Keep Going</span><span class="meta">No mutagen. Same violence.</span>`;
+    b.innerHTML = `<span class="name">Keep Going</span><span class="meta">No boon. Same violence.</span>`;
     b.onclick = () => {
       S.mutationPending = false;
       S.pendingUpgrade = false;
       S.gameState = 'betweenWaves';
       clearCombatInputState();
       $('mutation').classList.add('hidden');
-      toast('No mutagen. Fine. Move on.');
+      toast('No boon. Fine. Move on.');
     };
     box.appendChild(b);
   } else {
@@ -7476,11 +7726,11 @@ function renderMutationOverlay() {
     }
   }
   const title = mutationEl.querySelector('h1');
-  if (title) title.textContent = 'Choose Your Reward';
+  if (title) title.textContent = 'Choose a Boon';
   const subtitle = mutationEl.querySelector('#mutationSubtitle') || mutationEl.querySelector('p');
   const cost = getRewardRerollCost();
   const freeNote = (S.freeRewardRerolls || 0) > 0 ? ' One reserve reroll is free.' : '';
-  if (subtitle) subtitle.textContent = `Choose one of three random rewards from your loadout upgrades. Mutagens appear some waves, not all of them.${freeNote}`;
+  if (subtitle) subtitle.textContent = `Choose one of three random rewards from your loadout upgrades. Surges appear some waves, not all of them.${freeNote}`;
   let footer = mutationEl.querySelector('.mutationFooter');
   if (!footer) {
     footer = document.createElement('div');
@@ -7488,7 +7738,7 @@ function renderMutationOverlay() {
     mutationEl.querySelector('.card')?.appendChild(footer);
   }
   footer.innerHTML = `
-    <button id="mutationRerollBtn" class="secondary wide diceButton" type="button" aria-label="Reroll reward options">
+      <button id="mutationRerollBtn" class="secondary wide diceButton" type="button" aria-label="Reroll reward options">
       <span class="diceIcon">🎲</span>
       <span class="diceText">Reroll Options${cost ? ` - ${cost}g` : (S.freeRewardRerolls || 0) > 0 ? ' - FREE' : ''}</span>
     </button>
@@ -7502,7 +7752,7 @@ function renderMutationOverlay() {
         <div class="quartermasterHint">Gold: <b id="shopGoldDisplay">0g</b></div>
       </div>
       <div id="shopGrid" class="shopGrid"></div>
-      <div class="shopNote">Run-based logistics only. No direct combat buffs or mutations.</div>
+      <div class="shopNote">Run-based logistics only. No direct combat buffs or boons.</div>
     </div>`;
   const rerollBtn = footer.querySelector('#mutationRerollBtn');
   if (rerollBtn) {
@@ -7581,6 +7831,7 @@ function showMutationOverlay() {
   S.mutationPending = true;
   S.gameState = 'upgradeChoice';
   S.paused = false;
+  maybeShowMissionHint('Choose a Boon.', 'arena-boon-choice', 4);
   $('clear').classList.add('hidden');
   if ($('mutation')?.parentElement !== document.body) document.body.appendChild($('mutation'));
   renderMutationOverlay();
@@ -7602,7 +7853,7 @@ function chooseMutation(choice) {
     S.lastWaveMutagen = u.id;
     if (S.waveStats) (S.waveStats.upgradesSelected = S.waveStats.upgradesSelected || []).push(`mutagen:${u.id}`);
     console.log('[reward] selected multiverse mutagen', u.id);
-    toast(`Next wave mutagen: ${u.name}`);
+    toast(`Next wave surge: ${u.name}`);
   } else {
     const up = HERO_UPGRADES[u.id] || TRAP_UPGRADES[u.id] || BOSS_UPGRADES[u.id];
     if (!up) return;
@@ -7620,7 +7871,7 @@ function chooseMutation(choice) {
       S.hero.upgradeLevel = (S.hero.upgradeLevel || 0) + 1;
     }
     if (S.waveStats) (S.waveStats.upgradesSelected = S.waveStats.upgradesSelected || []).push(`${u.kind}:${u.id}`);
-    toast(`Mutation: ${up.name}`);
+    toast(`Boon: ${up.name}`);
   }
   S.mutationPending = false;
   S.pendingUpgrade = false;
@@ -7917,7 +8168,7 @@ function forcePowerupDebug(type) {
   }
   if (type === 'rift') {
     S.mods.riftShieldUntil = Math.max(S.mods.riftShieldUntil || 0, now + 8);
-    floatText('RIFT SHIELD', S.hero.x - 34, S.hero.y - 20, '#8edcff');
+    floatText('CORE SHIELD', S.hero.x - 34, S.hero.y - 20, '#8edcff');
     return true;
   }
   if (POWERUP_DEFS[type] || ['thunder','orbital','stampede','bullethell','blackhole','tinyarmy','goblinunion','kittens','goose','bees','summoncat','physics','wronggame'].includes(type)) {
@@ -8349,7 +8600,7 @@ function renderPreview() {
   const selectedLevel = getSelectedMissionLevel() || S.devArenaChoice || S.levelId;
   if (isExpeditionLevel(selectedLevel)) {
     $('preview').dataset.previewKey = `expedition-${selectedLevel}`;
-    $('preview').innerHTML = '<b>Expedition:</b> Explore the facility, find the Rift, then escort it to extraction. Persistent defenses stay for the whole run.';
+    $('preview').innerHTML = '<b>Expedition:</b> Explore the facility, find the Core, then escort it to extraction. Persistent defenses stay for the whole run.';
     return;
   }
   // Only recompute when the wave number has changed (cache via data attribute)
@@ -8484,8 +8735,8 @@ function place(px, py) {
   const d = TOWERS[S.selected];
   if (!d) return;
   if (WEAPONS[S.selected] || isTrinketItem(S.selected)) return;
-  if (isExpeditionRun() && S.expedition?.riftCarried) return toast('Deploy the Rift first.');
-  if (!isWithinExpeditionRiftBuildRadius(px, py)) return toast('Too far from the Rift.');
+  if (isExpeditionRun() && S.expedition?.riftCarried) return toast('Deploy the Core first.');
+  if (!isWithinExpeditionRiftBuildRadius(px, py)) return toast('Too far from the Core.');
   if (!canBuild(px, py)) return;
   const { c, r } = getSnappedBuildTile(px, py);
   if (!S.devUnlimitedGold && S.gold < d.c) return toast('Not enough gold.');
@@ -9770,7 +10021,7 @@ function startWave() {
   if (isExpeditionRun()) {
     const ex = S.expedition;
     if (ex && !ex.riftActivated) {
-      ex.message = 'Expedition has no wave button. Explore until you find the Rift.';
+      ex.message = 'Expedition has no wave button. Explore until you find the Core.';
       ex.messageTime = 4;
     } else if (ex) {
       ex.message = 'Keep moving. The extraction pad is marked on the map.';
@@ -9781,7 +10032,7 @@ function startWave() {
   }
   if (S.hero.spawnState === 'spawning') return toast('Arriving...');
   if (S.gameState === 'upgradeChoice' || S.pendingUpgrade) {
-    return toast('Pick a mutagen first.');
+    return toast('Pick a Boon first.');
   }
   if (!S.started || S.waveActive || S.gameOver) return;
   if (!(S.loadout || []).some(k => !!WEAPONS[k])) return toast('Pick at least one gun. Do not be a coward.');
@@ -11308,7 +11559,7 @@ const POWERUP_DEFS = {
   haste: { rarity: 'common', label: 'OVERCLOCK', icon: '⏩', desc: 'All fire rates spike.' },
   freeze: { rarity: 'common', label: 'FROSTBITE', icon: '❄', desc: 'Damage slows enemies.' },
   asColdAsLife: { rarity: 'common', label: 'AS COLD AS LIFE', icon: '❄', desc: 'Your secondary weapon has no cooldown.' },
-  rift: { rarity: 'common', label: 'RIFT SHIELD', icon: '◌', desc: 'The rift absorbs the next leaks briefly.' },
+  rift: { rarity: 'common', label: 'CORE SHIELD', icon: '◌', desc: 'The Core absorbs the next leaks briefly.' },
   bomb: { rarity: 'rare', label: 'CHAIN REACTION', icon: '✹', desc: 'Enemies explode on death.' },
   reset: { rarity: 'rare', label: 'RICHOCHET', icon: '↺', desc: 'Projectiles bounce harder.' },
   thunder: { rarity: 'rare', label: 'THUNDERSTORM', icon: '⚡', desc: 'Random lightning strikes.' },
@@ -12120,7 +12371,7 @@ function applyPowerupEffect(type, orb) {
   }
   if (type === 'rift') {
     S.mods.riftShieldUntil = Math.max(S.mods.riftShieldUntil || 0, now + 8);
-    floatText('RIFT SHIELD', orb.x - 34, orb.y - 14, '#8edcff');
+    floatText('CORE SHIELD', orb.x - 34, orb.y - 14, '#8edcff');
     return;
   }
   if (type === 'bomb') {
@@ -12384,7 +12635,7 @@ function collectHealthOrbs(dt) {
   } else if (type === 'rift') {
       const now = performance.now() / 1000;
       S.mods.riftShieldUntil = Math.max(S.mods.riftShieldUntil || 0, now + (o.rift || 8));
-      floatText('RIFT SHIELD', o.x - 34, o.y - 14, '#8edcff');
+      floatText('CORE SHIELD', o.x - 34, o.y - 14, '#8edcff');
       } else if (['thunder','orbital','stampede','bullethell','blackhole','tinyarmy','goblinunion','kittens','goose','bees','summoncat','physics','wronggame'].includes(type)) {
         applyPowerupEffect(type, o);
       } else {
@@ -13055,7 +13306,7 @@ function followPath(e, dt, slow) {
     if (S.waveStats) S.waveStats.leaked += lifeLoss;
     if (S.runStats) S.runStats.leaked += lifeLoss;
     if (lifeLoss > 0) floatText('-' + lifeLoss + ' life', e.x, e.y, '#ffb0a0');
-    else floatText('RIFT SHIELD', e.x - 26, e.y - 20, '#8edcff');
+    else floatText('CORE SHIELD', e.x - 26, e.y - 20, '#8edcff');
     shake(6, .3);
     if (S.lives <= 0) offerRestart('The Village Falls');
     ui();
@@ -14842,7 +15093,7 @@ function drawExpeditionObjects(t) {
     ctx.fillStyle = '#fff4ff';
     ctx.font = 'bold 11px Georgia';
     ctx.textAlign = 'center';
-    ctx.fillText('RIFT', ex.rift.x, ex.rift.y - 98);
+    ctx.fillText('CORE', ex.rift.x, ex.rift.y - 98);
     ctx.restore();
 
     const exX = cx(cfg.extraction.c);
@@ -14906,11 +15157,11 @@ function drawExpeditionHud(t) {
   ctx.fillText(`${ex.discoveredCount || 0} cells mapped`, x + 12, y + h - 12);
   ctx.restore();
 
-  const title = ex.riftActivated ? (ex.riftCarried ? 'CARRYING THE RIFT' : 'ESCORT THE RIFT') : 'FIND THE RIFT';
+  const title = ex.riftActivated ? (ex.riftCarried ? 'CARRYING THE CORE' : 'ESCORT THE CORE') : 'FIND THE CORE';
   const body = ex.roomObjective?.label
     ? `ROOM SEALED: ${ex.roomObjective.label}`
     : ex.riftActivated
-      ? ex.riftCarried ? 'Deploy it to build defenses.' : 'Press E near the Rift to carry it.'
+      ? ex.riftCarried ? 'Deploy the Core to build defenses.' : 'Press E near the Core to carry it.'
       : 'No compass. No marker. Build defenses that may save the return trip.';
   ctx.save();
   ctx.textAlign = 'center';
@@ -17669,7 +17920,7 @@ $('clearBtn').onclick = () => {
     location.reload();
     return;
   }
-  if (S.mutationPending) return toast('Choose a mutation first.');
+  if (S.mutationPending) return toast('Choose a Boon first.');
   document.querySelector('#clear .card').classList.remove('clearCard');
   $('clear').classList.add('hidden');
   clearCombatInputState();
@@ -17776,6 +18027,7 @@ if ($('loadoutPreviewRail')) {
 }
 if ($('guideButton')) $('guideButton').onclick = () => toggleGuide();
 if ($('guideClose')) $('guideClose').onclick = () => closeGuide();
+if ($('missionBriefingClose')) $('missionBriefingClose').onclick = () => dismissMissionBriefing();
 if ($('guideModal')) {
   $('guideModal').addEventListener('click', e => {
     if (e.target === $('guideModal')) closeGuide();
