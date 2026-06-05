@@ -6886,14 +6886,32 @@ function shake(amt, dur) {
 }
 
 // ── UI render ─────────────────────────────────────────────────────
-function ui() {
-  syncDevGold();
-  const expeditionMode = isExpeditionRun() || isExpeditionLevel(S.levelId);
+function getUiOwnershipState() {
   const startVisible = !$('start').classList.contains('hidden');
   const briefingVisible = !!($('missionBriefing') && !$('missionBriefing').classList.contains('hidden'));
   const mutationVisible = !!($('mutation') && !$('mutation').classList.contains('hidden'));
   const clearVisible = !!($('clear') && !$('clear').classList.contains('hidden'));
-  const hideGameplayHud = !S.started || startVisible || S.menuOpen || isGuideOpen() || briefingVisible || mutationVisible || clearVisible;
+  const guideVisible = isGuideOpen();
+  const menuVisible = !!S.menuOpen;
+  const gameplayBlocked = !S.started || startVisible || menuVisible || guideVisible || briefingVisible || mutationVisible || clearVisible;
+  return {
+    startVisible,
+    briefingVisible,
+    mutationVisible,
+    clearVisible,
+    guideVisible,
+    menuVisible,
+    gameplayBlocked,
+    countdownBlocked: gameplayBlocked || S.gameOver,
+    objectiveBlocked: gameplayBlocked || S.gameOver,
+  };
+}
+
+function ui() {
+  syncDevGold();
+  const expeditionMode = isExpeditionRun() || isExpeditionLevel(S.levelId);
+  const uiOwnership = getUiOwnershipState();
+  const hideGameplayHud = uiOwnership.gameplayBlocked;
   const displayWave = S.waveActive ? S.wave : (S.started && !S.gameOver ? S.wave + 1 : S.wave);
   const displayArch = waveArchetypeForDisplay();
   $('lives').textContent = S.lives;
@@ -6920,7 +6938,7 @@ function ui() {
   if ($('waveSpeedState')) $('waveSpeedState').textContent = speedText;
   if ($('gameSpeedSelect') && document.activeElement !== $('gameSpeedSelect')) $('gameSpeedSelect').value = String(S.speed);
   updateLoadoutSummary();
-  updateObjectiveHud();
+  updateObjectiveHud(uiOwnership);
 
   // Flash lives when low
   $('statLives').classList.toggle('danger-flash', S.lives <= 3);
@@ -7009,11 +7027,11 @@ function ui() {
   const playCountdownValue = $('playfieldCountdownValue');
   if (playCountdown && playCountdownValue) {
     const readyState = !S.started || (!activeCountdown && S.wave === 0);
-    playCountdown.classList.toggle('show', activeCountdown);
+    playCountdown.classList.toggle('show', activeCountdown && !uiOwnership.countdownBlocked);
     playCountdown.classList.toggle('warn', activeCountdown && secs <= 10 && secs > 5);
     playCountdown.classList.toggle('urgent', activeCountdown && secs <= 5 && secs > 0);
     playCountdown.classList.toggle('ready', readyState);
-    playCountdownValue.textContent = readyState ? 'READY' : (activeCountdown && secs > 0 ? `${secs}` : '—');
+    playCountdownValue.textContent = readyState ? 'READY' : (activeCountdown && !uiOwnership.countdownBlocked && secs > 0 ? `${secs}` : '—');
   }
 }
 
@@ -7409,6 +7427,7 @@ function showMissionBriefing(force = false) {
   updateMissionBriefingOverlay();
   box.classList.remove('hidden');
   box.setAttribute('aria-hidden', 'false');
+  ui();
   return true;
 }
 
@@ -7420,6 +7439,7 @@ function dismissMissionBriefing() {
   catch (err) {}
   box.classList.add('hidden');
   box.setAttribute('aria-hidden', 'true');
+  ui();
 }
 
 function isRunMenuOpen() {
@@ -7474,13 +7494,13 @@ function missionObjectiveText() {
   return `Survive Wave ${nextWave || 1}`;
 }
 
-function updateObjectiveHud() {
+function updateObjectiveHud(uiOwnership = getUiOwnershipState()) {
   const box = $('objectiveHud');
   const value = $('objectiveHudValue');
   if (!box || !value) return;
   const text = missionObjectiveText();
   value.textContent = text;
-  box.classList.toggle('hidden', !S.started || S.gameOver);
+  box.classList.toggle('hidden', uiOwnership.objectiveBlocked);
   box.classList.toggle('danger', /boss/i.test(text) || /relay/i.test(text));
 }
 
