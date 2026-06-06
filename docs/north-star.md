@@ -119,6 +119,10 @@ It should feel like a dungeon crawl mixed with tower defense and twin-stick shoo
 
 Expedition should alternate between fast arcade run-and-gun overworld sections and stronghold assaults.
 
+The overworld is not downtime between strongholds.
+
+The overworld is one half of the game.
+
 In stronghold assaults, players deploy the Core, establish a foothold, explore, build defenses, defeat a boss, and activate a Relay before pushing deeper north.
 
 The player pushes into unknown territory, then temporarily turns part of it into civilization.
