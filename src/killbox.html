@@ -55,6 +55,9 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
   height: 38px;
   padding: 0;
 }
+body.menuOpen #menuToggle {
+  right: 308px;
+}
 .menuOpen .gamePlayArea { right: 338px; }
 .menuClosed .gamePlayArea { right: 10px; }
 .gamePlayArea canvas {
@@ -66,8 +69,10 @@ canvas { display: block; width: 100vw; height: 100vh; background: linear-gradien
 }
 body.hideGameplayHud #topHud,
 body.hideGameplayHud #objectiveHud,
-body.hideGameplayHud #menuToggle,
 body.hideGameplayHud #playfieldCountdown {
+  display: none !important;
+}
+body:not(.gameplayStarted) #menuToggle {
   display: none !important;
 }
 .ui {
@@ -487,6 +492,10 @@ body.hideGameplayHud #playfieldCountdown {
     position: fixed;
     z-index: 120;
   }
+  body.menuOpen #menuToggle {
+    top: 54px;
+    right: 6px;
+  }
 }
 .warRoomSection {
   margin-top: 4px;
@@ -549,6 +558,24 @@ body.hideGameplayHud #playfieldCountdown {
 .warRoomKeyValue {
   display: grid;
   gap: 2px;
+}
+.warRoomDangerZone {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,.12);
+}
+.warRoomDangerZone h2 {
+  margin: 0 0 6px;
+  color: #dfb274;
+  font: 800 11px/1.1 Arial, Helvetica, sans-serif;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.warRoomDangerZone p {
+  margin: 0 0 8px;
+  color: #b9aa8b;
+  font-size: 11px;
+  line-height: 1.35;
 }
 .devPanel .devToggleList,
 .devPanel .devUtilityGrid,
@@ -1457,6 +1484,10 @@ textarea {
   position: relative;
   overflow: hidden;
   text-align: center;
+  width: min(1040px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
+  padding: clamp(12px, 2vw, 22px);
   background:
     radial-gradient(circle at 18% 88%, #ff8a1f44 0 7%, transparent 21%),
     radial-gradient(circle at 82% 88%, #ff4a1f3338 0 8%, transparent 24%),
@@ -1639,8 +1670,10 @@ textarea {
 .deathCard h1 {
   color: #ffd6a0;
   text-shadow: 0 0 16px #ff4a1f33, 0 4px 0 #270905;
-  letter-spacing: .02em;
-  font-size: 28pt;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-size: clamp(17px, 2vw, 26px);
+  margin: 0 0 8px;
 }
 .breachLine .deathPoem,
 .deathCard .deathPoem {
@@ -1654,11 +1687,85 @@ textarea {
   text-shadow: 0 1px 0 #000, 0 0 6px rgba(0,0,0,.45);
 }
 .deathQuote {
-  margin-top: 6px;
+  margin: 0;
   color: #fff1c9;
   font-style: italic;
-  font-size: 20pt;
-  text-shadow: 0 1px 0 #000, 0 0 4px rgba(0,0,0,.4);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(30px, 4.5vw, 52px);
+  line-height: 1.02;
+  text-wrap: balance;
+  text-align: center;
+  text-shadow: 0 3px 0 #000, 0 0 24px rgba(255,122,38,.34);
+  overflow-wrap: anywhere;
+}
+.deathQuote.long {
+  font-size: clamp(24px, 3.6vw, 40px);
+  line-height: 1.06;
+}
+.deathQuote.epitaph {
+  font-size: clamp(34px, 5.2vw, 58px);
+}
+.deathQuoteAuthor {
+  margin-top: 10px;
+  color: #ffd28d;
+  font-size: clamp(11px, 1.35vw, 15px);
+  font-weight: 900;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.deathRecap {
+  display: grid;
+  grid-template-columns: minmax(250px, .82fr) minmax(320px, 1.18fr);
+  gap: 10px;
+  align-items: stretch;
+  margin: 8px 0;
+  text-align: left;
+}
+.deathDossier,
+.deathSnapshot,
+.deathQuoteBlock,
+.deathStatsPanel {
+  border: 1px solid rgba(255, 187, 112, .32);
+  background: rgba(12, 5, 4, .7);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.45), 0 16px 34px rgba(0,0,0,.22);
+}
+.deathDossier,
+.deathSnapshot {
+  padding: 8px;
+}
+.deathDossier {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+.deathPanelTitle {
+  color: #ffb971;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+.deathFact {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 7px;
+  padding-top: 5px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+.deathFact small {
+  color: #c99d73;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.deathFact b {
+  min-width: 0;
+  color: #fff1c9;
+  font-size: clamp(13px, 1.45vw, 16px);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
 }
 .deathCause {
   margin-top: 8px;
@@ -1675,10 +1782,53 @@ textarea {
   border-radius: 999px;
   color: #ffe6b0;
 }
+.deathSnapshot img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 6.2;
+  object-fit: cover;
+  border: 1px solid rgba(255,255,255,.16);
+  filter: sepia(.18) contrast(1.08) saturate(.82);
+  background: #090403;
+}
+.deathSnapshotMissing {
+  margin-top: 6px;
+  color: #d9bc82;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.deathQuoteBlock {
+  padding: clamp(10px, 2.1vw, 22px) clamp(10px, 2.6vw, 30px);
+  margin: 6px 0;
+  border-color: rgba(255, 210, 140, .46);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 149, 59, .13), transparent 58%),
+    rgba(12, 5, 4, .72);
+}
+.deathStatsPanel {
+  padding: 6px 8px;
+  margin-top: 6px;
+}
+.deathStatsPanel .waveSummary {
+  margin: 6px 0 0;
+  opacity: .72;
+}
+.deathStatsPanel .waveSummary div {
+  padding: 5px 6px;
+  background: rgba(18, 11, 7, .54);
+}
+.deathStatsPanel .waveSummary small {
+  font-size: 9px;
+}
+.deathStatsPanel .waveSummary b {
+  font-size: 12px;
+}
 .breachLife,
 .deathButtons button,
 .deathButtons .primary {
-  font-size: 20pt;
+  font-size: clamp(15px, 1.7vw, 20px);
 }
 .waveSummary {
   display: grid;
@@ -1714,11 +1864,89 @@ textarea {
 @media (max-width: 620px) {
   .waveSummary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+@media (max-width: 760px) {
+  .deathCard {
+    width: min(100vw - 18px, 620px);
+    max-height: calc(100vh - 18px);
+  }
+  .deathRecap {
+    grid-template-columns: 1fr;
+    gap: 5px;
+    margin: 5px 0;
+  }
+  .deathDossier,
+  .deathSnapshot {
+    padding: 6px;
+  }
+  .deathDossier {
+    gap: 3px;
+  }
+  .deathFact {
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 5px;
+    padding-top: 3px;
+  }
+  .deathFact small {
+    font-size: 7px;
+  }
+  .deathFact b {
+    font-size: 11px;
+  }
+  .deathSnapshot img {
+    aspect-ratio: 16 / 5.2;
+  }
+  .deathQuote {
+    font-size: clamp(25px, 8.2vw, 36px);
+  }
+  .deathQuote.long {
+    font-size: clamp(20px, 6.8vw, 29px);
+  }
+  .deathQuote.epitaph {
+    font-size: clamp(28px, 9.2vw, 40px);
+  }
+  .deathQuoteBlock {
+    padding: 7px 8px;
+    margin: 5px 0;
+  }
+  .deathQuoteAuthor {
+    margin-top: 6px;
+    font-size: 10px;
+  }
+  .deathStatsPanel {
+    padding: 4px 5px;
+    margin-top: 4px;
+  }
+  .deathStatsPanel .waveSummary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3px;
+    margin-top: 4px;
+  }
+  .deathStatsPanel .waveSummary div {
+    padding: 3px 4px;
+  }
+  .deathStatsPanel .waveSummary small {
+    font-size: 8px;
+  }
+  .deathStatsPanel .waveSummary b {
+    font-size: 11px;
+    margin-top: 1px;
+  }
+  .deathButtons {
+    grid-template-columns: 1fr;
+    gap: 5px;
+    margin-top: 5px;
+  }
+  .deathButtons button,
+  .deathButtons .primary {
+    padding: 6px 8px;
+    font-size: 15px;
+  }
+}
 .deathButtons {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 8px;
 }
 .deathButtons .wide { grid-column: auto; text-align: center; }
 @keyframes deathFlames {
@@ -3147,7 +3375,7 @@ kbd {
 .hudSpeedBtn:focus { outline: 2px solid #7ac6e8; outline-offset: 1px; }
 .objectiveHud {
   position: absolute;
-  top: 42px;
+  top: 49px;
   left: 18px;
   z-index: 58;
   width: min(360px, calc(100vw - 36px));
@@ -3348,6 +3576,524 @@ kbd {
   display: none !important;
 }
 
+/* ── Typography-first production UI reset ─────────────────────────
+   Information defaults to text. Containers stay only where interaction
+   needs a visible target. */
+:root {
+  --ui-ink: #fff6df;
+  --ui-muted: #f1d9a6;
+  --ui-warn-text: #ffd16c;
+  --ui-danger-text: #ff7866;
+  --ui-read-shadow:
+    -2px -2px 0 #050302,
+     2px -2px 0 #050302,
+    -2px  2px 0 #050302,
+     2px  2px 0 #050302,
+     0 4px 12px rgba(0,0,0,.95),
+     0 0 22px rgba(0,0,0,.8);
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.gamePlayArea {
+  inset: 0;
+}
+
+.menuOpen .gamePlayArea,
+.menuClosed .gamePlayArea {
+  right: 0;
+}
+
+.ui {
+  inset: 12px;
+  grid-template-columns: 1fr minmax(260px, 292px);
+  gap: 8px;
+}
+
+.ui.combat {
+  grid-template-columns: 1fr minmax(260px, 292px);
+}
+
+.stats {
+  display: none !important;
+}
+
+.topHud {
+  top: 54px;
+  left: 20px;
+  max-width: min(760px, calc(100vw - 52px));
+  gap: 12px;
+  color: var(--ui-muted);
+  font: 900 15px/1 Arial, Helvetica, sans-serif;
+  text-shadow: var(--ui-read-shadow);
+  -webkit-text-stroke: 0;
+}
+
+.hudStat,
+.hudSpeedWrap {
+  gap: 5px;
+}
+
+.hudLabel,
+.hudSpeedWrap span {
+  color: var(--ui-muted);
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.hudValue {
+  color: var(--ui-ink);
+  font-size: 23px;
+  font-weight: 900;
+  letter-spacing: -.02em;
+}
+
+.hudWaveArchetype {
+  color: var(--ui-muted);
+  font-size: 11px;
+  letter-spacing: .04em;
+}
+
+.hudSep {
+  display: none;
+}
+
+.hudSpeedBtn,
+.gameHudToggle {
+  border: 1px solid rgba(255,255,255,.36);
+  background: rgba(6, 7, 8, .58);
+  color: var(--ui-ink);
+  box-shadow: 0 2px 10px rgba(0,0,0,.48);
+  text-shadow: none;
+}
+
+.hudSpeedBtn {
+  height: 26px;
+  min-width: 62px;
+  border-radius: 6px;
+  font: 900 12px/1 Arial, Helvetica, sans-serif;
+}
+
+.objectiveHud {
+  top: 18px;
+  left: 20px;
+  width: min(760px, calc(100vw - 52px));
+  color: var(--ui-ink);
+  text-shadow: var(--ui-read-shadow);
+  -webkit-text-stroke: 0;
+}
+
+.objectiveHud small {
+  display: block;
+  color: var(--ui-muted);
+  font: 900 11px/1 Arial, Helvetica, sans-serif;
+  letter-spacing: .14em;
+}
+
+.objectiveHud b {
+  display: block;
+  margin: 1px 0 0;
+  color: var(--ui-ink);
+  font: 900 clamp(18px, 2.2vw, 30px)/1 Arial, Helvetica, sans-serif;
+  letter-spacing: -.03em;
+}
+
+.objectiveHud.danger b {
+  color: var(--ui-danger-text);
+}
+
+.playfieldCountdown .title,
+.playfieldCountdown .sub,
+.playfieldCountdown .value {
+  font-family: Arial, Helvetica, sans-serif;
+  text-shadow: var(--ui-read-shadow);
+  -webkit-text-stroke: 0;
+}
+
+.playfieldCountdown .title,
+.playfieldCountdown .sub {
+  color: var(--ui-muted);
+}
+
+.waveBanner,
+.comboBanner {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  color: var(--ui-ink);
+  font-family: Arial, Helvetica, sans-serif;
+  text-shadow: var(--ui-read-shadow);
+  -webkit-text-stroke: 0;
+}
+
+.waveBanner {
+  top: 96px;
+  font-size: clamp(26px, 4vw, 46px);
+}
+
+.comboBanner {
+  right: 22px;
+  bottom: 122px;
+  min-width: 0;
+  max-width: min(34vw, 280px);
+  color: var(--ui-warn-text);
+}
+
+.buildDock {
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  padding: 0;
+  gap: 8px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.buildRail {
+  gap: 8px;
+}
+
+.buildCard {
+  width: 88px;
+  flex-basis: 88px;
+  min-height: 90px;
+  border-color: rgba(255,255,255,.28);
+  background: rgba(7, 8, 9, .74);
+  box-shadow: 0 8px 20px rgba(0,0,0,.44);
+}
+
+.buildCard:hover {
+  background: rgba(12, 14, 16, .86);
+}
+
+.buildCard .buildName,
+.buildCard .buildPrice,
+.buildCard .buildHint,
+.buildCard .hotkey,
+.upgradeLevelBadge {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.panel {
+  padding: 8px;
+  background: rgba(5, 6, 7, .38);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 10px;
+  box-shadow: none;
+  backdrop-filter: blur(3px);
+}
+
+.inspectorSticky {
+  top: -8px;
+  margin: -8px -8px 8px;
+  padding: 8px;
+  background: rgba(5, 6, 7, .58);
+  border-bottom: 1px solid rgba(255,255,255,.12);
+  box-shadow: none;
+}
+
+h1,
+h2,
+.inspectorLabel,
+.warRoomSection > summary,
+.guideModalBar .title,
+.quartermasterTitle,
+.shopItemName,
+#start .missionChoice strong {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+h2,
+.inspectorLabel,
+.warRoomSection > summary {
+  color: var(--ui-muted);
+}
+
+.warRoomSection {
+  margin-top: 6px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(7, 8, 9, .42);
+  box-shadow: none;
+}
+
+.warRoomSection > summary {
+  padding: 7px 8px;
+  border-bottom-color: rgba(255,255,255,.09);
+}
+
+.warRoomSectionBody {
+  padding: 7px 8px 8px;
+}
+
+.warRoomStatusRow span,
+.warRoomStatusRow b,
+.warRoomStatusRow small,
+.sectionNote,
+#info,
+.sidebarFooter,
+.multiplayerStatus,
+#preview {
+  text-shadow: 0 2px 8px rgba(0,0,0,.72);
+}
+
+.selectedInfoCard {
+  border: 0;
+  border-radius: 0;
+  padding: 4px 0 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.inspectorSticky {
+  margin-bottom: 10px;
+}
+
+.warRoomSection {
+  border-color: rgba(255,255,255,.09);
+  background: transparent;
+}
+
+.warRoomSection > summary {
+  padding: 8px 0 5px;
+  border-bottom-color: rgba(255,255,255,.07);
+}
+
+.warRoomSectionBody {
+  padding: 7px 0 9px;
+}
+
+.warRoomStatusGrid {
+  gap: 5px;
+}
+
+.warRoomStatusRow {
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 9px;
+  line-height: 1.25;
+}
+
+#preview,
+.multiplayerStatus {
+  border: 0;
+  border-radius: 0;
+  padding: 2px 0;
+  background: transparent;
+}
+
+.selectedInfoCard .selIcon {
+  border-color: rgba(255,255,255,.18);
+  background: rgba(0,0,0,.22);
+  box-shadow: none;
+}
+
+.missionHint {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--ui-ink);
+  font: 900 17px/1.15 Arial, Helvetica, sans-serif;
+  text-shadow: var(--ui-read-shadow);
+}
+
+#start.overlay {
+  z-index: 160;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(120, 31, 18, .22), transparent 38%),
+    rgba(0,0,0,.82);
+}
+
+#clear,
+#mutation {
+  z-index: 160;
+}
+
+#start .card {
+  width: min(1480px, calc(100vw - 24px));
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 12px;
+  background: rgba(7, 8, 9, .72);
+  box-shadow: 0 20px 70px rgba(0,0,0,.58);
+  backdrop-filter: blur(4px);
+}
+
+#start .loadoutMasthead {
+  min-height: 100px;
+  padding: 0 2px 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#start .loadoutTitle h1 {
+  color: var(--ui-ink);
+  font: 900 clamp(48px, 6.5vw, 92px)/.82 Arial, Helvetica, sans-serif;
+  letter-spacing: -.08em;
+  text-shadow: var(--ui-read-shadow);
+  -webkit-text-stroke: 0;
+}
+
+#start .loadoutVersion {
+  margin-top: 2px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--ui-muted);
+  font: 900 clamp(18px, 2vw, 28px)/1 Arial, Helvetica, sans-serif;
+  text-shadow: var(--ui-read-shadow);
+}
+
+#start .arenaPick {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#start .missionChoice {
+  border-color: rgba(255,255,255,.24);
+  background: rgba(7,8,9,.62);
+  box-shadow: 0 8px 18px rgba(0,0,0,.28);
+}
+
+#start .missionChoice.active {
+  border-color: #7ac6e8;
+  background: rgba(10, 29, 40, .76);
+  box-shadow: 0 0 0 1px rgba(122,198,232,.46) inset, 0 0 16px rgba(122,198,232,.22);
+}
+
+#start .loadoutCatalog,
+#start .loadoutInspectorPanel,
+#start .loadoutRailWrap,
+#start .startActions {
+  border-color: rgba(255,255,255,.12);
+  background: rgba(5, 6, 7, .42);
+  box-shadow: none;
+}
+
+#start .loadoutInspectorPanel h2,
+#start .loadoutRailTitle {
+  padding: 8px 12px;
+  border-bottom-color: rgba(255,255,255,.1);
+  background: transparent;
+  color: var(--ui-muted);
+}
+
+#start .loadoutBar {
+  border-bottom-color: rgba(255,255,255,.08);
+}
+
+#start .loadoutTab {
+  border-color: rgba(255,255,255,.2);
+  background: rgba(7,8,9,.58);
+  box-shadow: none;
+}
+
+#start .loadoutTab[data-loadout-tab].active {
+  background: rgba(10, 25, 34, .78);
+  box-shadow: 0 0 0 1px currentColor inset;
+}
+
+#start .loadoutGrid .pickerTile.small {
+  background: rgba(8, 9, 10, .72);
+  border-color: rgba(255,255,255,.24);
+  box-shadow: 0 8px 18px rgba(0,0,0,.28);
+}
+
+#start .selectedInfoCard .selIcon {
+  background: rgba(0,0,0,.22);
+  border-color: rgba(255,255,255,.18);
+}
+
+#start .loadoutStat {
+  padding: 4px 0;
+  border: 0;
+  border-top: 1px solid rgba(255,255,255,.1);
+  border-radius: 0;
+  background: transparent;
+}
+
+.howPanel,
+.clearCountdownBox {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.clearCountdownLabel,
+.clearCountdownValue {
+  font-family: Arial, Helvetica, sans-serif;
+  text-shadow: var(--ui-read-shadow);
+}
+
+@media (max-width: 700px) {
+  .gamePlayArea {
+    inset: 0;
+  }
+
+  .panel {
+    max-height: calc(100vh - 20px);
+    background: rgba(5, 6, 7, .78);
+  }
+}
+
+@media (max-width: 620px) {
+  .topHud {
+    top: 66px;
+    left: 12px;
+    max-width: calc(100vw - 76px);
+    width: calc(100vw - 76px);
+    gap: 6px;
+    font-size: 13px;
+  }
+
+  .hudValue {
+    font-size: 19px;
+  }
+
+  .objectiveHud {
+    top: 14px;
+    left: 12px;
+    width: calc(100vw - 76px);
+  }
+
+  .objectiveHud b {
+    font-size: 19px;
+  }
+}
+
+#start .card.deathCard {
+  width: min(980px, calc(100vw - 24px));
+  max-height: none;
+  overflow: visible;
+  overflow-y: visible;
+  padding: clamp(10px, 1.5vw, 16px);
+}
+
+@media (max-width: 760px) {
+  #start .card.deathCard {
+    width: min(100vw - 18px, 620px);
+    max-height: none;
+    padding: 6px;
+  }
+
+  #start .card.deathCard .deathButtons {
+    grid-template-columns: 1fr;
+  }
+}
+
 </style>
 </head>
 <body class="hideGameplayHud">
@@ -3424,8 +4170,8 @@ kbd {
     <div class="inspectorSticky">
       <div class="inspectorTop">
         <h2 class="inspectorLabel">War Room</h2>
-        <button id="exitToLoadoutBtn" class="exitRunButton" title="Exit to loadout screen" aria-label="Exit to loadout screen">Exit</button>
         <button id="devToggle" class="devToggle" title="Toggle debug tools" aria-label="Toggle debug tools">Debug Tools</button>
+        <button id="closeWarRoomBtn" class="exitRunButton" title="Close War Room" aria-label="Close War Room">×</button>
       </div>
     </div>
     <details class="warRoomSection" open>
@@ -3571,6 +4317,11 @@ kbd {
       <button id="save" class="primary">Forge Seal</button>
       <button id="load">Read Seal</button>
     </div>
+    <section class="warRoomDangerZone" aria-label="Run exit actions">
+      <h2>Quit Run</h2>
+      <p>Leave the current mission and return to loadout. Current run progress will be lost.</p>
+      <button id="exitToLoadoutBtn" class="exitRunButton danger" title="Return to loadout screen" aria-label="Return to loadout screen">Return To Loadout</button>
+    </section>
   </div>
 </div>
 
@@ -4878,7 +5629,7 @@ const S = {
   quartermasterUpgrades: { fieldRepairs: 0, coffeeRations: 0, emergencyReserve: false, logistics: 0, betterMaps: false, expandedToolbelt: false, insurance: false },
   buildPhaseDuration: 0,
   gameState: 'betweenWaves', // Special modal / flow state; separate from paused.
-  mutationWaveType: 'hero', heroMutations: [], trapMutations: [], pendingMutationChoices: [], pendingWaveMutagen: null, activeWaveMutagen: null, activeMutagenState: {}, lastWaveMutagen: null, waveBanner: '', waveBannerKind: '', waveBannerTime: 0, waveBannerKey: '', spawningActors: [], lastDeathCause: '', lowHealthPulse: 0, lowHealthFlash: 0, lowHealthBeep: 0, lowHealthState: 0,
+  mutationWaveType: 'hero', heroMutations: [], trapMutations: [], pendingMutationChoices: [], pendingWaveMutagen: null, activeWaveMutagen: null, activeMutagenState: {}, lastWaveMutagen: null, waveBanner: '', waveBannerKind: '', waveBannerTime: 0, waveBannerKey: '', spawningActors: [], lastDeathCause: '', lastDamageTaken: 0, lastDeathSource: null, deathSnapshot: '', lowHealthPulse: 0, lowHealthFlash: 0, lowHealthBeep: 0, lowHealthState: 0,
   hero: { x: cx(2), y: cy(13), hp: 100, max: 100, level: 1, cool: 0, inv: 0, shoveCd: 0, weapon: 'blunderbuss', weaponCd: 0, secondaryCd: 0, charge: 0, charging: false, weaponRecoil: 0, spawnState: 'active', spawnLock: 0, ghostGrabbed: false, ghostId: null, flaskCharges: 0, shieldHits: 0, blunderShieldUntil: 0, blunderShieldMult: 1, slimeDebuffUntil: 0, upgrades: [], upgradeChoices: [], upgradeLevel: 0, fireRateMult: 1, damageMult: 1, shoveForceMult: 1, critChance: 0, pierceCount: 0, freezeDurationMult: 1, freezeTrapVuln: 0, chainBonus: 0, stormChainBonus: 0, stormStunMult: 1, crossbowStunMult: 1, crossbowKnockbackMult: 1, blunderDamageMult: 1, goldMult: 1, trapCooldownMult: 1, trinketAttackSlow: 0, trinketFireRateMult: 1, trinketMoveMult: 1, trinketFireRateActiveMult: 1, trinketMoveActiveMult: 1, trinketGoldActiveMult: 1, overclockAura: false, lastStandBeacon: false, lastStandBeaconActive: false, heroScale: 1 },
   hoverInspectId: null,
   engineer: { active: false, x: cx(3), y: cy(13), hp: 90, max: 90, cool: 0, inv: 0, dash: 0, dashCd: 0, aimX: cx(8), aimY: cy(8), volleyCd: 0, oilCd: 0, shoveCd: 0 },
@@ -5399,6 +6150,9 @@ function damageExpeditionRift(e, dt) {
   }
   const base = cfg?.riftHunterDamage ?? 22;
   const mult = (e.type === 'brute' || e.type === 'ogre' || e.type === 'siege') ? 1.7 : 1;
+  S.lastDeathCause = `core:${e.type || 'enemy'}`;
+  S.lastDamageTaken = base * mult * dt;
+  S.lastDeathSource = { x: rift.x, y: rift.y };
   rift.hp = Math.max(0, rift.hp - base * mult * dt);
   rift.flash = Math.max(rift.flash || 0, .55);
   e.slow = Math.max(e.slow || 0, .35);
@@ -5856,7 +6610,7 @@ function destroyCornerSkull(skull, source = 'shot') {
     const damage = d <= killThreshold
       ? currentHp + 25
       : Math.max(1, Math.round(currentHp * .5 * falloff));
-    hurtHero(damage, 'skull');
+    hurtHero(damage, 'skull', { x, y });
     if (isFinite(S.hero.x) && isFinite(S.hero.y)) {
       const a = Math.atan2(S.hero.y - y, S.hero.x - x);
       S.hero.kx = Math.cos(a) * 260 * falloff;
@@ -5998,7 +6752,7 @@ function updateCornerSkulls(dt) {
       s.y += (ty - s.y) / d * sp * dt;
       s.flash = Math.max(s.flash || 0, .45);
       if (dist(s.x, s.y, S.hero.x, S.hero.y) < (s.rad || 17) + 14) {
-        hurtHero(14, 'skull');
+        hurtHero(14, 'skull', s);
         destroyCornerSkull(s, 'impact');
       }
     }
@@ -6957,11 +7711,12 @@ function ui() {
   $('ui').classList.toggle('starting', !$('start').classList.contains('hidden'));
   document.body.classList.toggle('menuOpen', !!S.menuOpen);
   document.body.classList.toggle('menuClosed', !S.menuOpen);
+  document.body.classList.toggle('gameplayStarted', !!S.started);
   document.body.classList.toggle('hideGameplayHud', hideGameplayHud);
   if ($('menuToggle')) {
     $('menuToggle').textContent = S.menuOpen ? '✕' : '⚙';
-    $('menuToggle').title = S.menuOpen ? 'Hide right menu' : 'Show right menu';
-    $('menuToggle').setAttribute('aria-label', S.menuOpen ? 'Hide right menu' : 'Show right menu');
+    $('menuToggle').title = S.menuOpen ? 'Close War Room' : 'Open War Room';
+    $('menuToggle').setAttribute('aria-label', S.menuOpen ? 'Close War Room' : 'Open War Room');
   }
   if ($('pause')) {
     $('pause').textContent = S.paused ? '▶' : '❚❚';
@@ -9863,21 +10618,23 @@ function deathPoem(cause) {
 }
 
 const DEATH_QUOTES = [
-  { quote: 'To be, or not to be.', author: 'William Shakespeare' },
   { quote: 'The rest is silence.', author: 'William Shakespeare' },
-  { quote: 'Cowards die many times before their deaths.', author: 'William Shakespeare' },
   { quote: 'Out, out, brief candle!', author: 'William Shakespeare' },
-  { quote: 'Tomorrow, and tomorrow, and tomorrow.', author: 'William Shakespeare' },
+  { quote: 'Cowards die many times before their deaths.', author: 'William Shakespeare' },
+  { quote: 'All that lives must die.', author: 'William Shakespeare' },
+  { quote: 'Golden lads and girls all must, as chimney-sweepers, come to dust.', author: 'William Shakespeare' },
   { quote: 'Because I could not stop for Death', author: 'Emily Dickinson' },
-  { quote: 'He kindly stopped for me—', author: 'Emily Dickinson' },
-  { quote: 'Death is a dialogue between', author: 'Emily Dickinson' },
+  { quote: 'He kindly stopped for me.', author: 'Emily Dickinson' },
+  { quote: 'Death is a dialogue between the spirit and the dust.', author: 'Emily Dickinson' },
   { quote: 'Death, be not proud.', author: 'John Donne' },
   { quote: 'One short sleep past, we wake eternally.', author: 'John Donne' },
-  { quote: 'Do not go gentle into that good night.', author: 'Dylan Thomas' },
-  { quote: 'Rage, rage against the dying of the light.', author: 'Dylan Thomas' },
+  { quote: 'Any man\'s death diminishes me.', author: 'John Donne' },
   { quote: 'Into the valley of Death rode the six hundred.', author: 'Alfred, Lord Tennyson' },
   { quote: 'I have a rendezvous with Death.', author: 'Alan Seeger' },
-  { quote: 'The dead outnumber the living.', author: 'H. P. Lovecraft' },
+  { quote: 'Is he dead, my lord?', author: 'William Shakespeare' },
+  { quote: 'The report of my death was an exaggeration.', author: 'Mark Twain' },
+  { quote: 'The best of men cannot suspend their fate.', author: 'Homer, translated by Alexander Pope' },
+  { quote: 'The end crowns all.', author: 'William Shakespeare' },
 ];
 
 function randomDeathQuote() {
@@ -9886,11 +10643,35 @@ function randomDeathQuote() {
 
 function restartTitle(reason) {
   const r = (reason || '').toLowerCase();
-  if (r.includes('slimeking')) return 'THE SLIME KING HAS THE LAST WORD';
-  if (r.includes('runner')) return 'RUNNERS, ARRANGING A FATAL APPOINTMENT';
+  if (r.includes('core collapsed')) return 'CORE COLLAPSE';
+  if (r.includes('village falls')) return 'THE BREACH';
+  if (r.includes('slimeking')) return 'THE CROWN REPLIES';
+  if (r.includes('slinger')) return 'A BAD ANGLE';
+  if (r.includes('runner')) return 'THE RUNNER’S ARGUMENT';
+  if (r.includes('bomber')) return 'A PREVENTABLE INCIDENT';
+  if (r.includes('barrel') || r.includes('skull')) return 'POOR POSITIONING';
+  if (r.includes('burning ground') || r.includes('slime pool')) return 'STANDING ORDERS';
   if (r.includes('projectile') || r.includes('enemy shot')) return 'A MOST UNFORTUNATE BALLAD';
-  if (r.includes('boss')) return 'A ROYAL INCONVENIENCE';
-  return 'AN INDISCREET ENDING';
+  if (r.includes('boss')) return 'THE LARGER PROBLEM';
+  return 'AN ABRUPT CONCLUSION';
+}
+
+function escHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[ch]));
+}
+
+function enemyDisplayName(type) {
+  const t = String(type || '').toLowerCase();
+  if (!t) return '';
+  if (t === 'slimeking') return 'Slime King';
+  if (ENEMY_ARCHETYPE_LABELS[t]) return ENEMY_ARCHETYPE_LABELS[t];
+  return t.replace(/[-_]+/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase());
 }
 
 function deathCauseLine(reason) {
@@ -9904,8 +10685,173 @@ function deathCauseLine(reason) {
   return 'You were killed by the siege.';
 }
 
+function deathKillerName(reason) {
+  const r = (reason || '').toLowerCase();
+  if (r.includes('core collapsed')) {
+    const coreCause = String(S.lastDeathCause || '').toLowerCase();
+    if (coreCause.startsWith('core:')) return `Core Collapse (${enemyDisplayName(coreCause.slice(5))})`;
+    return 'Core Collapse';
+  }
+  if (r.includes('village falls')) return 'Core Breach';
+  if (r.includes('slimeking')) return 'Slime King';
+  if (r.includes('slinger')) return 'Stone Slinger';
+  if (r.includes('ogre')) return 'Gate Ogre';
+  if (r.includes('brute')) return 'Butcher Brute';
+  if (r.includes('hunter')) return 'Saboteur';
+  if (r.includes('shield')) return 'Shield Bearer';
+  if (r.includes('healer')) return 'Plague Monk';
+  if (r.includes('siege')) return 'Ram Beast';
+  if (r.includes('sapper')) return 'Sapper Imp';
+  if (r.includes('warden')) return 'Aegis Warden';
+  if (r.includes('phase')) return 'Phase Skulk';
+  if (r.includes('splitter')) return 'Splitter';
+  if (r.includes('hexcaller')) return 'Hex Caller';
+  if (r.includes('runner')) return 'Runner';
+  if (r.includes('bomber')) return 'Bomber';
+  if (r.includes('barrel')) return 'Barrel';
+  if (r.includes('skull')) return 'Corner Skull';
+  if (r.includes('burning ground')) return 'Burning Ground';
+  if (r.includes('projectile') || r.includes('enemy shot')) return 'Enemy Fire';
+  if (r.includes('melee')) return 'Melee Contact';
+  return 'The Siege';
+}
+
+function deathFinalBlow(reason) {
+  const r = (reason || '').toLowerCase();
+  if (r.includes('core collapsed')) return 'Core integrity failed';
+  if (r.includes('village falls')) return 'The last life leaked out';
+  const dmg = Math.max(0, Math.round(S.lastDamageTaken || 0));
+  return dmg ? `${dmg} damage` : 'Unknown';
+}
+
+function deathLocationName() {
+  if (isExpeditionRun()) {
+    const cfg = expeditionConfig();
+    const room = expeditionRoomAtHero()
+      || (cfg?.rooms || []).find(x => x.id === S.expedition?.activeRoomId)
+      || null;
+    if (room?.name) return room.name;
+    return LEVELS[S.levelId]?.label || 'Expedition';
+  }
+  return LEVELS[S.levelId]?.label || 'Arena';
+}
+
+function deathWaveLabel() {
+  if (isExpeditionRun()) {
+    const active = S.expedition?.roomObjective?.label;
+    return active || 'Expedition';
+  }
+  return `Wave ${S.wave || 0}`;
+}
+
+function deathCoreStatus() {
+  if (isExpeditionRun()) {
+    const rift = S.expedition?.rift;
+    if (!rift) return 'No Core signal';
+    if ((rift.hp || 0) <= 0) return 'Destroyed';
+    return `${Math.ceil(rift.hp)}/${rift.max || 100}`;
+  }
+  return S.lives <= 0 ? 'Destroyed' : 'Alive';
+}
+
+function captureDeathSnapshot() {
+  if (!canvas || !canvas.width || !canvas.height) return '';
+  try {
+    const snap = document.createElement('canvas');
+    const heroScreenX = Number.isFinite(S.hero?.x) ? (S.hero.x - CAMERA.x) : W / 2;
+    const heroScreenY = Number.isFinite(S.hero?.y) ? (S.hero.y - CAMERA.y) : H / 2;
+    const source = S.lastDeathSource || {};
+    const sourceScreenX = Number.isFinite(source.x) ? (source.x - CAMERA.x) : heroScreenX;
+    const sourceScreenY = Number.isFinite(source.y) ? (source.y - CAMERA.y) : heroScreenY;
+    const centerCssX = clamp((heroScreenX + sourceScreenX) / 2, 0, W);
+    const centerCssY = clamp((heroScreenY + sourceScreenY) / 2, 0, H);
+    const sourceDist = Math.hypot(sourceScreenX - heroScreenX, sourceScreenY - heroScreenY);
+    const cropCssW = clamp(Math.max(Math.min(W * .38, 470), sourceDist * 1.45 + 180), 280, Math.max(280, Math.min(W, 620)));
+    const cropCssH = cropCssW / 1.9;
+    const srcW = Math.min(canvas.width, Math.round(cropCssW * D));
+    const srcH = Math.min(canvas.height, Math.round(cropCssH * D));
+    const centerX = Math.round(centerCssX * D);
+    const centerY = Math.round(centerCssY * D);
+    const srcX = clamp(centerX - srcW / 2, 0, Math.max(0, canvas.width - srcW));
+    const srcY = clamp(centerY - srcH / 2, 0, Math.max(0, canvas.height - srcH));
+    snap.width = srcW;
+    snap.height = srcH;
+    const snapCtx = snap.getContext('2d');
+    if (!snapCtx) return '';
+    snapCtx.drawImage(canvas, srcX, srcY, srcW, srcH, 0, 0, snap.width, snap.height);
+    return snap.toDataURL('image/jpeg', .78);
+  } catch (err) {
+    console.warn('[death] snapshot unavailable', err);
+    return '';
+  }
+}
+
+function deathSnapshotHtml() {
+  const src = S.deathSnapshot || '';
+  if (!src) {
+    return `
+      <div class="deathSnapshot deathSnapshotFallback">
+        <div class="deathPanelTitle">Last Moments</div>
+        <div class="deathSnapshotMissing">No scene photo recovered.</div>
+      </div>
+    `;
+  }
+  return `
+    <div class="deathSnapshot">
+      <div class="deathPanelTitle">Last Moments</div>
+      <img src="${src}" alt="Last moments before death">
+    </div>
+  `;
+}
+
+function deathDossierHtml(cause) {
+  const facts = [
+    ['Killed By', deathKillerName(cause)],
+    ['Final Blow', deathFinalBlow(cause)],
+    ['Location', deathLocationName()],
+    ['Wave', deathWaveLabel()],
+    ['Core Status', deathCoreStatus()],
+  ];
+  return facts.map(([label, value]) => `
+    <div class="deathFact">
+      <small>${escHtml(label)}</small>
+      <b>${escHtml(value)}</b>
+    </div>
+  `).join('');
+}
+
+function deathQuoteHtml(q) {
+  const len = String(q?.quote || '').length;
+  const quoteClass = len > 54 ? 'deathQuote long' : len <= 24 ? 'deathQuote epitaph' : 'deathQuote';
+  return `
+    <div class="deathQuoteBlock">
+      <div class="${quoteClass}">“${escHtml(q.quote)}”</div>
+      <div class="deathQuoteAuthor">${escHtml(q.author)}</div>
+    </div>
+  `;
+}
+
+function deathRecapHtml(cause, q) {
+  return `
+    <h1>${escHtml(restartTitle(cause))}</h1>
+    <div class="deathRecap">
+      <div class="deathDossier">
+        <div class="deathPanelTitle">Death Recap</div>
+        ${deathDossierHtml(cause)}
+      </div>
+      ${deathSnapshotHtml()}
+    </div>
+    ${deathQuoteHtml(q)}
+    <div class="deathStatsPanel">
+      <div class="deathPanelTitle">Run Statistics</div>
+      ${runSummaryHtml()}
+    </div>
+  `;
+}
+
 function offerRestart(reason) {
   if (S.gameOver) return;
+  S.deathSnapshot = captureDeathSnapshot();
   S.gameOver = true; S.paused = true;
   S.lowHealthPulse = 0;
   S.lowHealthFlash = 0;
@@ -9936,7 +10882,6 @@ function offerRestart(reason) {
       $('restartWave').onclick = () => { document.querySelector('#start').classList.remove('breachOverlay'); document.querySelector('#start .card').classList.remove('breachCard'); document.querySelector('#start .card').classList.remove('deathCard'); document.querySelector('#start .card').classList.remove('clearCard'); $('start').classList.add('hidden'); restoreWaveSnapshot(); };
     }, 0);
   } else {
-    const seal = finalHarvestSeal();
     const q = randomDeathQuote();
     $('start').classList.remove('hidden');
     $('start').classList.remove('breachOverlay');
@@ -9944,17 +10889,14 @@ function offerRestart(reason) {
     card.classList.add('deathCard');
     card.classList.remove('breachCard');
     card.innerHTML =
-      `<h1>${restartTitle(cause)}</h1>
-       <div class="deathQuote">“${q.quote}” — ${q.author}</div>
-       <div class="deathCause">${deathCauseLine(cause)}</div>
-       ${runSummaryHtml()}
+      `${deathRecapHtml(cause, q)}
        <div class="deathButtons">
-         <button id="copyFinalPass" class="primary wide">Copy Password</button>
-         <button id="newRun" class="wide">Start New Game</button>
+         <button id="newRun" class="primary wide">Start New Game</button>
+         <button id="returnLoadout" class="wide">Return To Loadout</button>
        </div>`;
     setTimeout(() => {
-      $('copyFinalPass').onclick = () => copyTextToClipboard(seal, 'Password copied.');
       $('newRun').onclick = () => location.reload();
+      $('returnLoadout').onclick = () => exitToLoadoutScreen();
     }, 0);
   }
 }
@@ -11025,7 +11967,7 @@ function kill(e, tower, byHero = false) {
   // Note: ui() for gold/score updates is handled by the step loop epilogue, not per-kill
 }
 
-function hurtHero(dmg, cause = 'enemy shot') {
+function hurtHero(dmg, cause = 'enemy shot', source = null) {
   if (S.devInvincible) return;
   if (S.hero.inv > 0) return;
   if ((S.hero.shieldHits || 0) > 0) {
@@ -11040,6 +11982,12 @@ function hurtHero(dmg, cause = 'enemy shot') {
   S.hero.hp -= dmg;
   if (S.waveStats) S.waveStats.damageTaken = (S.waveStats.damageTaken || 0) + dmg;
   S.lastDeathCause = cause;
+  S.lastDamageTaken = dmg;
+  if (source && Number.isFinite(source.x) && Number.isFinite(source.y)) {
+    S.lastDeathSource = { x: source.x, y: source.y };
+  } else {
+    S.lastDeathSource = null;
+  }
   S.hero.inv  = .45;
   playSfx('hurt');
   boom(S.hero.x, S.hero.y, '#c9674333', 4);
@@ -11076,7 +12024,7 @@ function explodeBarrel(b) {
     }
   }
   if (victims >= 3) maybeNeighborhood({ x: b.x, y: b.y, dead: false }, b.x, b.y, null, false, 82);
-  if (dist(b.x, b.y, S.hero.x, S.hero.y) < 120) hurtHero(18, 'barrel');
+  if (dist(b.x, b.y, S.hero.x, S.hero.y) < 120) hurtHero(18, 'barrel', b);
   floatText('BOOM!', b.x - 22, b.y - 22, '#ffcf3d');
 }
 
@@ -11810,7 +12758,7 @@ function slimeKingStep(e, dt) {
       pulse.y += Math.sin(a) * shove;
     }
     if (dist(e.x, e.y, S.hero.x, S.hero.y) < 96) {
-      hurtHero((appearance >= 4 ? 18 : appearance >= 3 ? 15 : 12) + Math.floor(S.wave * .45), 'slimeking');
+      hurtHero((appearance >= 4 ? 18 : appearance >= 3 ? 15 : 12) + Math.floor(S.wave * .45), 'slimeking', e);
     }
     boom(e.x, e.y, '#2e7f3b33', appearance >= 4 ? 18 : 12);
     burst(e.x, e.y, '#7bdf5b', appearance >= 4 ? 22 : 16, 'goo', 180 + (appearance >= 4 ? 60 : 0));
@@ -11887,6 +12835,7 @@ function slimeBulletStorm(e, target = S.hero) {
         vx: Math.cos(base + spread) * sp,
         vy: Math.sin(base + spread) * sp,
         life: 2.9, dmg: (7 + S.wave * .35) * (appearance >= 4 ? 1.2 : appearance >= 3 ? 1.1 : 1), slime: true, source: 'slimeking',
+        sourceX: e.x, sourceY: e.y,
       });
     }
   }
@@ -13222,6 +14171,9 @@ function enemyStep(e, dt) {
         vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
         life: 1.25,
         dmg:  e.type === 'ogre' ? 14 : 8 + S.wave * .45,
+        source: e.type,
+        sourceX: e.x,
+        sourceY: e.y,
       });
       e.shoot = e.type === 'ogre' ? 2.6 : e.type === 'slinger' ? (0.7 + Math.random() * 0.35) : (1.2 + Math.random() * 0.7);
     }
@@ -13277,7 +14229,7 @@ function enemyStep(e, dt) {
   // Melee contact with hero only — engineer is not a valid melee target
   const heroScale = S.activeWaveMutagen === 'giantism' ? 1.6 : (S.hero.heroScale || 1);
   if (dist(e.x, e.y, S.hero.x, S.hero.y) < e.rad + 14 * heroScale) {
-    hurtHero(e.type === 'ogre' ? 18 : 8, e.type === 'runner' ? 'runners' : e.type === 'slimeking' ? 'slimeking' : 'melee');
+    hurtHero(e.type === 'ogre' ? 18 : 8, e.type === 'runner' ? 'runner' : e.type === 'slimeking' ? 'slimeking' : e.type || 'melee', e);
     e.slow = Math.max(e.slow, .2);
     if (S.activeWaveMutagen === 'giantism') {
       hit(e, 10 + S.wave * .3, null, false);
@@ -13480,7 +14432,7 @@ function bomberStep(e, dt) {
       shockwave(e.x, e.y, '#ffcf3d', 110, .4);
       // Damage scales with proximity, max 1/3 hp at ground zero, less at edge
       const heroD = dist(e.x, e.y, S.hero.x, S.hero.y);
-      if (heroD < 110) hurtHero(Math.ceil(S.hero.max / 3 * Math.max(0.35, 1 - heroD / 110)), 'bomber');
+      if (heroD < 110) hurtHero(Math.ceil(S.hero.max / 3 * Math.max(0.35, 1 - heroD / 110)), 'bomber', e);
       if (S.engineer.active && S.engineer.hp > 0) {
         const engD = dist(e.x, e.y, S.engineer.x, S.engineer.y);
         if (engD < 110) hurtEngineer(Math.ceil(S.engineer.max / 3 * Math.max(0.35, 1 - engD / 110)));
@@ -13997,7 +14949,7 @@ function projectiles(dt) {
     s.x += s.vx * dt;
     s.y += s.vy * dt;
     if (dist(s.x, s.y, S.hero.x, S.hero.y) < 17) {
-      hurtHero(s.dmg, s.source || (s.slime ? 'slimeking' : 'enemy projectile')); s.dead = true;
+      hurtHero(s.dmg, s.source || (s.slime ? 'slimeking' : 'enemy projectile'), Number.isFinite(s.sourceX) && Number.isFinite(s.sourceY) ? { x: s.sourceX, y: s.sourceY } : s); s.dead = true;
       boom(s.x, s.y, s.slime ? '#7cff4f' : '#ff1f1f', 5);
     } else if (S.engineer.active && S.engineer.hp > 0 && !S.aiEngineerOwned
                && dist(s.x, s.y, S.engineer.x, S.engineer.y) < 17) {
@@ -14808,7 +15760,7 @@ function applyBattlefieldScars(dt) {
         S.hero.burnScarTick = Math.max(0, (S.hero.burnScarTick || 0) - dt);
         if (S.hero.burnScarTick <= 0) {
           S.hero.burnScarTick = .55;
-          hurtHero(1 + Math.floor(S.wave * .06), 'burning ground');
+          hurtHero(1 + Math.floor(S.wave * .06), 'burning ground', s);
         }
       }
       if (Math.random() < dt * .7) burst(s.x + (Math.random() - .5) * s.r, s.y + (Math.random() - .5) * s.r, '#ff7f2a', 1, 'ember', 22);
@@ -15550,23 +16502,23 @@ function drawExpeditionHud(t) {
   const cfg = expeditionConfig();
   if (!isExpeditionRun() || !ex || !cfg) return;
   ctx.save();
-  const w = 230, h = 170;
-  const x = 18, y = 74;
-  ctx.fillStyle = '#120a06dd';
+  const w = 188, h = 136;
+  const x = 18, y = 88;
+  ctx.fillStyle = 'rgba(0, 0, 0, .42)';
   ctx.fillRect(x, y, w, h);
-  ctx.strokeStyle = '#b18442';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(x, y, w, h);
   ctx.fillStyle = '#ffe09c';
-  ctx.font = 'bold 14px Georgia';
-  ctx.fillText('EXPEDITION MAP', x + 12, y + 22);
-  const scale = Math.min((w - 24) / COLS, (h - 48) / ROWS);
-  const mx = x + 12, my = y + 34;
-  ctx.fillStyle = '#050403';
+  ctx.font = '900 12px Arial';
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = '#050302';
+  ctx.strokeText('EXPEDITION MAP', x + 10, y + 18);
+  ctx.fillText('EXPEDITION MAP', x + 10, y + 18);
+  const scale = Math.min((w - 20) / COLS, (h - 42) / ROWS);
+  const mx = x + 10, my = y + 28;
+  ctx.fillStyle = 'rgba(0, 0, 0, .62)';
   ctx.fillRect(mx, my, COLS * scale, ROWS * scale);
   for (const k of Object.keys(ex.discovered || {})) {
     const [c, r] = k.split(',').map(Number);
-    ctx.fillStyle = isRoad(c, r) ? '#c3a56d' : '#40352d';
+    ctx.fillStyle = isRoad(c, r) ? 'rgba(223, 190, 123, .9)' : 'rgba(74, 65, 55, .82)';
     ctx.fillRect(mx + c * scale, my + r * scale, Math.max(1, scale), Math.max(1, scale));
   }
   if (ex.shortcutsOpen) {
@@ -15584,8 +16536,9 @@ function drawExpeditionHud(t) {
     ctx.beginPath(); ctx.arc(mx + (cfg.extraction.c + .5) * scale, my + (cfg.extraction.r + .5) * scale, 4.5, 0, 7); ctx.fill();
   }
   ctx.fillStyle = '#d8c59a';
-  ctx.font = 'bold 10px Georgia';
-  ctx.fillText(`${ex.discoveredCount || 0} cells mapped`, x + 12, y + h - 12);
+  ctx.font = '900 10px Arial';
+  ctx.strokeText(`${ex.discoveredCount || 0} cells mapped`, x + 10, y + h - 10);
+  ctx.fillText(`${ex.discoveredCount || 0} cells mapped`, x + 10, y + h - 10);
   ctx.restore();
 
   const title = ex.riftActivated ? (ex.riftCarried ? 'CARRYING THE CORE' : 'ESCORT THE CORE') : 'FIND THE CORE';
@@ -15599,21 +16552,21 @@ function drawExpeditionHud(t) {
   ctx.lineWidth = 5;
   ctx.strokeStyle = '#120805';
   ctx.fillStyle = '#ffe09c';
-  ctx.font = 'bold 24px Georgia';
+  ctx.font = '900 24px Arial';
   ctx.strokeText(title, W / 2, 90);
   ctx.fillText(title, W / 2, 90);
-  ctx.font = 'bold 13px Georgia';
+  ctx.font = '900 13px Arial';
   ctx.fillStyle = '#fff6d6';
   ctx.strokeText(body, W / 2, 116);
   ctx.fillText(body, W / 2, 116);
   if ((ex.messageTime || 0) > 0 && ex.message) {
-    ctx.font = 'bold 18px Georgia';
+    ctx.font = '900 18px Arial';
     ctx.fillStyle = '#f0c96b';
     ctx.strokeText(ex.message, W / 2, 146);
     ctx.fillText(ex.message, W / 2, 146);
   }
   if ((ex.promptTime || 0) > 0 && ex.prompt) {
-    ctx.font = 'bold 22px Georgia';
+    ctx.font = '900 22px Arial';
     ctx.fillStyle = '#f0b8ff';
     ctx.strokeText(ex.prompt, W / 2, H - 178);
     ctx.fillText(ex.prompt, W / 2, H - 178);
@@ -18254,13 +19207,29 @@ function toggleSpeed() {
 }
 if ($('hudSpeedBtn')) $('hudSpeedBtn').onclick = toggleSpeed;
 if ($('waveSpeedBtn')) $('waveSpeedBtn').onclick = toggleSpeed;
-const toggleMenu = () => {
-  S.menuOpen = !S.menuOpen;
-  ui();
+function refreshWarRoomLayout() {
   setTimeout(resize, 0);
   setTimeout(resize, 260);
-};
+}
+function openWarRoom() {
+  S.menuOpen = true;
+  S.paused = true;
+  ui();
+  refreshWarRoomLayout();
+}
+function closeWarRoom() {
+  S.menuOpen = false;
+  S.paused = false;
+  ui();
+  refreshWarRoomLayout();
+}
+function toggleWarRoom() {
+  if (S.menuOpen) closeWarRoom();
+  else openWarRoom();
+}
+const toggleMenu = toggleWarRoom;
 if ($('menuToggle')) $('menuToggle').onclick = toggleMenu;
+if ($('closeWarRoomBtn')) $('closeWarRoomBtn').onclick = closeWarRoom;
 $('devToggle').onclick = () => {
   S.devToolsOpen = !S.devToolsOpen;
   if (S.devToolsOpen) {
@@ -18488,7 +19457,10 @@ addEventListener('keydown', e => {
   }
   if (handleDeveloperHotkey(e)) return;
   if (isRunMenuOpen()) {
-    if (e.key === 'Escape' && isGuideOpen()) return;
+    if (e.key === 'Escape' && S.menuOpen) {
+      e.preventDefault();
+      closeWarRoom();
+    }
     return;
   }
   keys[e.key] = true; keys[e.key.toLowerCase()] = true; keys[e.code] = true;
